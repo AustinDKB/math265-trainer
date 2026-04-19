@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MATH 265 Algebra Trainer</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b22;
+    --bg3: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --green: #4ade80;
+    --red: #f87171;
+    --blue: #58a6ff;
+    --yellow: #fbbf24;
+    --purple: #a78bfa;
+    --accent: #238636;
+    --radius: 8px;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-ui); }
+
+  /* ── LAYOUT ── */
+  #app { display: flex; flex-direction: column; height: 100vh; max-width: 900px; margin: 0 auto; padding: 0 16px; }
+  #header { padding: 12px 0 8px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  #header h1 { font-size: 13px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.05em; }
+  #timer { font-family: var(--font-mono); font-size: 13px; color: var(--muted); transition: color 0.3s; }
+  #timer.warning { color: var(--yellow); }
+  #timer.danger { color: var(--red); }
+
+  /* ── TABS ── */
+  #tabs { display: flex; gap: 4px; padding: 10px 0 0; flex-shrink: 0; flex-wrap: wrap; }
+  .tab { padding: 6px 14px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg2); color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s; user-select: none; }
+  .tab:hover { border-color: var(--blue); color: var(--text); }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: #0f1117; font-weight: 600; }
+
+  /* ── SUBBAR ── */
+  #subbar { display: flex; align-items: center; gap: 8px; padding: 8px 0 4px; flex-shrink: 0; flex-wrap: wrap; }
+  #subbar label { font-size: 12px; color: var(--muted); }
+  .diff-btn { padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg2); color: var(--muted); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .diff-btn:hover { border-color: var(--purple); color: var(--text); }
+  .diff-btn.active { background: var(--purple); border-color: var(--purple); color: #0f1117; font-weight: 600; }
+  #mode-btns { margin-left: auto; display: flex; gap: 6px; }
+  .mode-btn { padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg2); color: var(--muted); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .mode-btn:hover { border-color: var(--yellow); color: var(--text); }
+  .mode-btn.active { background: var(--yellow); border-color: var(--yellow); color: #0f1117; font-weight: 600; }
+
+  /* ── MAIN PROBLEM AREA ── */
+  #main { flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; padding: 8px 0; }
+  #problem-display { text-align: center; padding: 24px 16px 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+  #problem-display .katex-display { margin: 0; }
+  #problem-display .katex { font-size: 2.2rem; }
+
+  /* ── INPUT AREA ── */
+  #input-area { padding: 0 0 8px; }
+  #input-row { display: flex; gap: 8px; align-items: center; }
+  #answer-input {
+    flex: 1; padding: 10px 14px; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--text); font-family: var(--font-mono);
+    font-size: 15px; outline: none; transition: border-color 0.15s;
+  }
+  #answer-input:focus { border-color: var(--blue); }
+  #answer-input.correct { border-color: var(--green); background: rgba(74,222,128,0.08); }
+  #answer-input.wrong { border-color: var(--red); background: rgba(248,113,113,0.08); }
+  #check-btn {
+    padding: 10px 20px; background: var(--accent); border: 1px solid #2ea043;
+    border-radius: var(--radius); color: #fff; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  #check-btn:hover { background: #2ea043; }
+  #check-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* live preview */
+  #live-preview { min-height: 28px; padding: 4px 8px; font-size: 13px; color: var(--muted); }
+  #live-preview .katex { font-size: 1.1rem; }
+  #parse-error { font-size: 12px; color: var(--red); font-family: var(--font-mono); padding: 2px 8px; }
+
+  /* feedback */
+  #feedback { min-height: 26px; padding: 4px 8px; font-size: 13px; font-weight: 600; transition: all 0.3s; }
+  #feedback.correct { color: var(--green); }
+  #feedback.wrong { color: var(--red); }
+  #feedback.info { color: var(--blue); }
+
+  /* ── STEPS ── */
+  #steps-area { border-top: 1px solid var(--border); padding: 10px 0 4px; }
+  #steps-controls { display: flex; gap: 8px; align-items: center; padding-bottom: 8px; }
+  #reveal-step-btn {
+    padding: 6px 14px; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--text); font-size: 13px; cursor: pointer; transition: all 0.15s;
+  }
+  #reveal-step-btn:hover:not(:disabled) { border-color: var(--yellow); color: var(--yellow); }
+  #reveal-step-btn:disabled { opacity: 0.4; cursor: default; }
+  #skip-btn {
+    padding: 6px 14px; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s;
+    margin-left: auto;
+  }
+  #skip-btn:hover { border-color: var(--muted); color: var(--text); }
+  #steps-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+  .step-item { padding: 8px 12px; background: var(--bg2); border-radius: var(--radius); border-left: 3px solid var(--border); animation: fadeIn 0.2s ease; }
+  .step-item.revealed { border-left-color: var(--yellow); }
+  .step-label { font-size: 11px; color: var(--yellow); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .step-math { }
+  .step-math .katex { font-size: 1rem; }
+  .step-note { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── STATS BAR ── */
+  #stats-bar { border-top: 1px solid var(--border); padding: 8px 0 10px; flex-shrink: 0; }
+  #stats-row { display: flex; align-items: center; gap: 16px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+  #stats-row strong { color: var(--text); }
+  #progress-bar-wrap { flex: 1; min-width: 100px; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  #progress-bar-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.3s; }
+  #streak-display { font-family: var(--font-mono); }
+  #readiness { font-size: 11px; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); }
+  #readiness.ready { border-color: var(--green); color: var(--green); }
+  #readiness.not-ready { border-color: var(--border); color: var(--muted); }
+
+  /* ── DASHBOARD OVERLAY ── */
+  #dashboard-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(10,10,15,0.92);
+    z-index: 100; overflow-y: auto; padding: 24px 16px;
+  }
+  #dashboard-overlay.visible { display: block; }
+  #dash-inner { max-width: 700px; margin: 0 auto; }
+  #dash-inner h2 { font-size: 18px; margin-bottom: 16px; }
+  .dash-close { float: right; background: none; border: 1px solid var(--border); color: var(--text); padding: 4px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+  .dash-section { margin-bottom: 20px; }
+  .dash-section h3 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+  .module-card { background: var(--bg2); border-radius: var(--radius); padding: 12px; border: 1px solid var(--border); }
+  .module-card h4 { font-size: 12px; color: var(--blue); margin-bottom: 8px; }
+  .diff-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 2px 0; }
+  .diff-row .acc { font-family: var(--font-mono); }
+  .acc.high { color: var(--green); }
+  .acc.mid { color: var(--yellow); }
+  .acc.low { color: var(--red); }
+  .spark-chart { display: flex; align-items: flex-end; gap: 3px; height: 40px; margin-top: 6px; }
+  .spark-bar { flex: 1; background: var(--blue); border-radius: 2px 2px 0 0; opacity: 0.7; min-height: 2px; }
+  .badge-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; border: 1px solid var(--border); color: var(--muted); }
+  .badge.earned { border-color: var(--yellow); color: var(--yellow); background: rgba(251,191,36,0.08); }
+  #session-summary-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(10,10,15,0.95);
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  #session-summary-overlay.visible { display: flex; }
+  #summary-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 32px; max-width: 480px; width: 100%; }
+  #summary-card h2 { font-size: 22px; margin-bottom: 6px; }
+  #summary-card .big-acc { font-size: 48px; font-family: var(--font-mono); font-weight: 700; margin: 16px 0; }
+  .summary-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .summary-row:last-child { border-bottom: none; }
+  #summary-continue-btn { margin-top: 20px; width: 100%; padding: 12px; background: var(--accent); border: none; border-radius: var(--radius); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+
+  /* flash animations */
+  @keyframes flashGreen { 0%,100% { background: var(--bg); } 30% { background: rgba(74,222,128,0.15); } }
+  @keyframes flashRed { 0%,100% { background: var(--bg); } 30% { background: rgba(248,113,113,0.1); } }
+  .flash-correct { animation: flashGreen 0.6s ease; }
+  .flash-wrong { animation: flashRed 0.6s ease; }
+
+  /* mobile */
+  @media (max-width: 600px) {
+    #problem-display .katex { font-size: 1.6rem; }
+    #answer-input { font-size: 13px; }
+    #tabs { gap: 3px; }
+    .tab { padding: 5px 10px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>MATH 265 · Algebra Trainer</h1>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <button id="dash-btn" class="mode-btn" style="margin:0;">Stats</button>
+      <span id="timer">—</span>
+    </div>
+  </div>
+
+  <div id="tabs">
+    <button class="tab active" data-module="factoring">Factoring</button>
+    <button class="tab" data-module="exponents">Exponents</button>
+    <button class="tab" data-module="fractions">Fractions</button>
+    <button class="tab" data-module="all">All</button>
+  </div>
+
+  <div id="subbar">
+    <label>Difficulty:</label>
+    <button class="diff-btn" data-diff="1">1</button>
+    <button class="diff-btn" data-diff="2">2</button>
+    <button class="diff-btn" data-diff="3">3</button>
+    <button class="diff-btn active" data-diff="auto">Auto</button>
+    <div id="mode-btns">
+      <button class="mode-btn active" data-mode="endless">Endless</button>
+      <button class="mode-btn" data-mode="sprint">Sprint 25</button>
+      <button class="mode-btn" data-mode="exam">Exam Sim</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="problem-display"><span style="color:var(--muted);font-size:14px;">Loading...</span></div>
+    <div id="input-area">
+      <div id="input-row">
+        <input id="answer-input" type="text" placeholder="type answer here" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button id="check-btn">Check</button>
+      </div>
+      <div id="live-preview"></div>
+      <div id="parse-error"></div>
+      <div id="feedback"></div>
+    </div>
+    <div id="steps-area">
+      <div id="steps-controls">
+        <button id="reveal-step-btn" disabled>Reveal step 1</button>
+        <button id="skip-btn">Skip →</button>
+      </div>
+      <div id="steps-list"></div>
+    </div>
+  </div>
+
+  <div id="stats-bar">
+    <div id="stats-row">
+      <span>Session: <strong id="stat-correct">0</strong>/<strong id="stat-total">0</strong></span>
+      <div id="progress-bar-wrap"><div id="progress-bar-fill" style="width:0%"></div></div>
+      <span id="streak-display">Streak: <strong id="stat-streak">0</strong></span>
+      <span>Best: <strong id="stat-best">0</strong></span>
+      <span id="readiness" class="not-ready">exam ready?</span>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard-overlay">
+  <div id="dash-inner">
+    <button class="dash-close" id="dash-close-btn">✕ Close</button>
+    <h2>Progress Dashboard</h2>
+    <div class="dash-section">
+      <h3>Accuracy by Module &amp; Difficulty</h3>
+      <div class="module-grid" id="module-grid"></div>
+    </div>
+    <div class="dash-section">
+      <h3>Session Accuracy (last 10)</h3>
+      <div class="spark-chart" id="spark-chart"></div>
+    </div>
+    <div class="dash-section">
+      <h3>Mastery Badges</h3>
+      <div class="badge-grid" id="badge-grid"></div>
+    </div>
+    <div class="dash-section">
+      <h3>Totals</h3>
+      <div id="dash-totals" style="font-size:13px;line-height:2;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Session Summary -->
+<div id="session-summary-overlay">
+  <div id="summary-card">
+    <h2 id="summary-title">Session Complete</h2>
+    <div class="big-acc" id="summary-acc">—%</div>
+    <div id="summary-rows"></div>
+    <button id="summary-continue-btn">Continue Drilling</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILITY
+// ─────────────────────────────────────────────────────────────────────────────
+const R = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const pick = arr => arr[R(0,arr.length-1)];
+const gcd = (a,b) => b===0?Math.abs(a):gcd(b,a%b);
+const lcm = (a,b) => Math.abs(a*b)/gcd(a,b);
+function simplifyFrac(n,d){ const g=gcd(Math.abs(n),Math.abs(d)); return [n/g,d/g]; }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFIG — edit parameter ranges here
+// ─────────────────────────────────────────────────────────────────────────────
+const CONFIG = {
+  factoring: {
+    diffSquares_a:        [2, 15],   // x² − a²: root range
+    simpleTrinomial_pq:   [-12, 12], // x²+bx+c roots p,q
+    gcf_k:                [2, 7],    // GCF coefficient
+    gcf_pq:               [-8, 8],   // GCF inner roots
+    leadCoeff_a:          [2,3,5,6], // leading coeff choices (array)
+    leadCoeff_pq:         [-8, 8],   // (ax+p)(x+q) inner values
+    cubes_a:              [2, 6],    // x³±a³ root
+    quartic_a:            [2, 4],    // x⁴−a⁴ root
+    grouping_ab:          [-8, 8],   // grouping a,b
+    quadDisguise_pq:      [-8, 8],   // u-sub roots
+    allXterms_k:          [2, 6],    // GCF·x factor for all-x-terms type
+    allXterms_pq:         [-8, 8],   // roots of inner trinomial
+  },
+  exponents: {
+    sameBase_ab:          [1, 8],    // x^a · x^b
+    divideBase_b:         [1, 8],    // denominator exp
+    divideBase_aExtra:    [1, 4],    // numerator = b + this
+    powerPower_ab:        [2, 5],    // (x^a)^b
+    negExp_a:             [1, 5],    // x^(-a)
+    radicalToExp_m:       [1, 5],    // mth power under radical
+    radicalToExp_n:       [2,3,4],   // radical index (array)
+    fracExpArith_num:     [1, 3],    // fractional exp numerators
+    fracExpArith_den:     [2,3,4],   // fractional exp denominators (array)
+    coeffRewrite_k:       [2, 10],   // k/(x^a√x) coefficient
+    coeffRewrite_a:       [1, 3],    // x^a in denominator
+    higherRadical_n:      [3,4,5],   // higher radical index (array)
+    higherRadical_m:      [2, 7],    // power under higher radical
+  },
+  fractions: {
+    addFrac_num:          [1, 5],    // a/b + c/d numerators
+    addFrac_den:          [2, 9],    // denominators
+    divFrac_all:          [1, 9],    // (a/b)÷(c/d) all values
+    cancelFrac_a:         [1, 8],    // (x²−a²)/(x+a) root
+    threeTermLCD_a:       [1, 5],    // 1/(x±a) + … root
+    quotientRule_n:       [2, 4],    // derivative degree
+    quotientRule_a:       [1, 5],    // (x+a) denominator
+  },
+  adaptive: {
+    bumpUpStreak:   5,   // correct-in-a-row to increase difficulty
+    dropDownWrong:  3,   // wrongs-in-last-5 to decrease difficulty
+    dedupWindow:    30,  // how many recent problems to avoid repeating
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// wait for KaTeX
+function renderKaTeX(tex, el, display=false){
+  try {
+    if(typeof katex==='undefined'){ el.textContent=tex; return; }
+    katex.render(tex, el, { displayMode: display, throwOnError: false, trust: true });
+  } catch(e){ el.textContent = tex; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STORAGE
+// ─────────────────────────────────────────────────────────────────────────────
+const STORE_KEY = 'math265_v3';
+function loadStore(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) return JSON.parse(raw);
+  } catch(e){}
+  return defaultStore();
+}
+function defaultStore(){
+  const mk = ()=>({1:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},2:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},3:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]}});
+  return { factoring: mk(), exponents: mk(), fractions: mk(), sessions:[], badges:{} };
+}
+function saveStore(){ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+let store = loadStore();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SESSION STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let state = {
+  module: 'factoring',
+  difficulty: 'auto',
+  mode: 'endless',
+  currentProblem: null,
+  stepsRevealed: 0,
+  answered: false,
+  sessionCorrect: 0,
+  sessionTotal: 0,
+  sessionStreak: 0,
+  sessionBestStreak: 0,
+  timerSeconds: 0,
+  timerInterval: null,
+  sprintEnd: null,
+  examProblems: [],
+  examIdx: 0,
+  examAnswers: [],
+  problemTimer: 0,
+  problemTimerInterval: null,
+  autoDiff: { factoring:1, exponents:1, fractions:1, all:1 },
+  recentProblems: [], // dedup window — size governed by CONFIG.adaptive.dedupWindow
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROBLEM GENERATORS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/* ── FACTORING ── */
+const factoring = {};
+
+factoring.diff1 = [
+  // difference of squares
+  ()=>{
+    const [dsMin,dsMax]=CONFIG.factoring.diffSquares_a;
+    const a=R(dsMin,dsMax);
+    return {
+      problemTex:`x^2 - ${a*a}`,
+      answerTex:`(x+${a})(x-${a})`,
+      answerNorm: expandPoly(`(x+${a})(x-${a})`),
+      originalExpanded: expandPoly(`x^2-${a*a}`),
+      steps:[
+        {label:'Recognize pattern',math:`x^2 - ${a*a} = x^2 - ${a}^2`,note:'Difference of squares: a²−b²'},
+        {label:'Apply formula',math:`(x+${a})(x-${a})`,note:'a²−b² = (a+b)(a−b)'},
+      ]
+    };
+  },
+  // simple trinomial
+  ()=>{
+    const [tMin,tMax]=CONFIG.factoring.simpleTrinomial_pq;
+    let p,q,attempts=0;
+    do { p=R(tMin,tMax); q=R(tMin,tMax); attempts++; } while((p===0||q===0||p===q)&&attempts<50);
+    const b=p+q, c=p*q;
+    const bStr = b>=0?`+${b}`:`${b}`;
+    const cStr = c>=0?`+${c}`:`${c}`;
+    const f1=p>=0?`x+${p}`:`x${p}`;
+    const f2=q>=0?`x+${q}`:`x${q}`;
+    return {
+      problemTex:`x^2 ${bStr}x ${cStr}`,
+      answerTex:`(${f1})(${f2})`,
+      answerNorm: expandPoly(`(${f1})(${f2})`),
+      originalExpanded: polyToTex([1,b,c]),
+      steps:[
+        {label:'Find two numbers',math:`p+q=${b},\\; pq=${c}`,note:`Need two numbers that add to ${b} and multiply to ${c}`},
+        {label:'Those numbers',math:`p=${p},\\; q=${q}`,note:'Check: sum='+b+', product='+c},
+        {label:'Write factors',math:`(${f1})(${f2})`,note:''},
+      ]
+    };
+  },
+];
+
+factoring.diff2 = [
+  // GCF extraction
+  ()=>{
+    const [kMin,kMax]=CONFIG.factoring.gcf_k;
+    const [gMin,gMax]=CONFIG.factoring.gcf_pq;
+    const k=R(kMin,kMax);
+    let p,q,attempts=0;
+    do { p=R(gMin,gMax); q=R(gMin,gMax); attempts++; } while((p===0||q===0)&&attempts<50);
+    const b=p+q, c=p*q;
+    const bStr=b>=0?`+${b}`:`${b}`;
+    const cStr=c>=0?`+${c}`:`${c}`;
+    const f1=p>=0?`x+${p}`:`x${p}`;
+    const f2=q>=0?`x+${q}`:`x${q}`;
+    const kb=k*b, kc=k*c;
+    const kbStr=kb>=0?`+${kb}`:`${kb}`;
+    const kcStr=kc>=0?`+${kc}`:`${kc}`;
+    return {
+      problemTex:`${k}x^2 ${kbStr}x ${kcStr}`,
+      answerTex:`${k}(${f1})(${f2})`,
+      answerNorm: expandPoly(`${k}*(${f1})*(${f2})`),
+      originalExpanded: polyToTex([k,kb,kc]),
+      steps:[
+        {label:'Factor out GCF',math:`${k}(x^2 ${bStr}x ${cStr})`,note:`GCF = ${k}`},
+        {label:'Factor trinomial',math:`${k}(${f1})(${f2})`,note:'Now factor the trinomial inside'},
+      ]
+    };
+  },
+  // leading coeff ≠ 1: (ax+p)(x+q)
+  ()=>{
+    const aVals=CONFIG.factoring.leadCoeff_a;
+    const [lMin,lMax]=CONFIG.factoring.leadCoeff_pq;
+    const a=pick(aVals);
+    let p,q,attempts=0;
+    do { p=R(lMin,lMax); q=R(lMin,lMax); attempts++; } while((p===0||q===0)&&attempts<60);
+    // (ax+p)(x+q) = ax² + (aq+p)x + pq
+    const B=a*q+p, C=p*q;
+    const Bstr=B>=0?`+${B}`:`${B}`;
+    const Cstr=C>=0?`+${C}`:`${C}`;
+    const f1p=p>=0?`${a}x+${p}`:`${a}x${p}`;
+    const f2q=q>=0?`x+${q}`:`x${q}`;
+    return {
+      problemTex:`${a}x^2 ${Bstr}x ${Cstr}`,
+      answerTex:`(${f1p})(${f2q})`,
+      answerNorm: expandPoly(`(${f1p})*(${f2q})`),
+      originalExpanded: polyToTex([a,B,C]),
+      steps:[
+        {label:'AC method: find ac',math:`a\\cdot c = ${a}\\cdot${C} = ${a*C}`,note:''},
+        {label:'Find factors of ac summing to b',math:`${p}\\cdot${a*q}=${a*C},\\quad ${p}+${a*q}=${B}`,note:''},
+        {label:'Split middle term',math:`${a}x^2 ${p>=0?`+${p}`:`${p}`}x ${a*q>=0?`+${a*q}`:`${a*q}`}x ${Cstr}`,note:''},
+        {label:'Factor by grouping',math:`(${f1p})(${f2q})`,note:''},
+      ]
+    };
+  },
+  // difference of cubes
+  ()=>{
+    const [cMin,cMax]=CONFIG.factoring.cubes_a;
+    const a=R(cMin,cMax);
+    const a3=a*a*a;
+    return {
+      problemTex:`x^3 - ${a3}`,
+      answerTex:`(x-${a})(x^2+${a}x+${a*a})`,
+      answerNorm: expandPoly(`(x-${a})*(x^2+${a}*x+${a*a})`),
+      originalExpanded: `x^3 - ${a3}`,
+      steps:[
+        {label:'Recognize difference of cubes',math:`x^3 - ${a}^3`,note:'a³−b³=(a−b)(a²+ab+b²)'},
+        {label:'Apply formula',math:`(x-${a})(x^2+${a}x+${a*a})`,note:`a=x, b=${a}`},
+      ]
+    };
+  },
+  // sum of cubes
+  ()=>{
+    const [cMin,cMax]=CONFIG.factoring.cubes_a;
+    const a=R(cMin,cMax);
+    const a3=a*a*a;
+    return {
+      problemTex:`x^3 + ${a3}`,
+      answerTex:`(x+${a})(x^2-${a}x+${a*a})`,
+      answerNorm: expandPoly(`(x+${a})*(x^2-${a}*x+${a*a})`),
+      originalExpanded: `x^3 + ${a3}`,
+      steps:[
+        {label:'Recognize sum of cubes',math:`x^3 + ${a}^3`,note:'a³+b³=(a+b)(a²−ab+b²)'},
+        {label:'Apply formula',math:`(x+${a})(x^2-${a}x+${a*a})`,note:`a=x, b=${a}`},
+      ]
+    };
+  },
+];
+
+factoring.diff3 = [
+  // x⁴ − a⁴
+  ()=>{
+    const [qMin,qMax]=CONFIG.factoring.quartic_a;
+    const a=R(qMin,qMax);
+    const a2=a*a, a4=a*a*a*a;
+    return {
+      problemTex:`x^4 - ${a4}`,
+      answerTex:`(x^2+${a2})(x+${a})(x-${a})`,
+      answerNorm: expandDeg4(`(x^2+${a2})*(x+${a})*(x-${a})`),
+      originalExpanded: `x^4 - ${a4}`,
+      steps:[
+        {label:'Difference of squares (outer)',math:`(x^2)^2-(${a2})^2=(x^2+${a2})(x^2-${a2})`,note:''},
+        {label:'Factor second bracket further',math:`x^2-${a2}=(x+${a})(x-${a})`,note:'Difference of squares again'},
+        {label:'Final answer',math:`(x^2+${a2})(x+${a})(x-${a})`,note:'First bracket is irreducible over ℝ'},
+      ]
+    };
+  },
+  // grouping: x³ + ax² + bx + ab
+  ()=>{
+    const [grMin,grMax]=CONFIG.factoring.grouping_ab;
+    let a,b,attempts=0;
+    do { a=R(grMin,grMax); b=R(grMin,grMax); attempts++; } while((a===0||b===0)&&attempts<50);
+    const B=a+b, C=a*b; // x³+ax²+bx+ab: coeffs 1, a, b, ab
+    const f1a=a>=0?`+${a}`:`${a}`;
+    const f1b=b>=0?`+${b}`:`${b}`;
+    // problem: x³ + ax² + bx + ab  (careful: it's x³ + a·x² + b·x + a·b)
+    const term2=a>=0?`+${a}x^2`:`${a}x^2`;
+    const term3=b>=0?`+${b}x`:`${b}x`;
+    const term4=a*b>=0?`+${a*b}`:`${a*b}`;
+    return {
+      problemTex:`x^3${term2}${term3}${term4}`,
+      answerTex:`(x^2${term3})(x${f1a})`,
+      answerNorm: null, // use string check
+      originalExpanded: `x^3${term2}${term3}${term4}`,
+      isGrouping: true, a, b,
+      steps:[
+        {label:'Group first two and last two',math:`(x^3${term2})+(${b}x${term4})`,note:''},
+        {label:'Factor out from each group',math:`x^2(x${f1a})+${b}(x${f1a})`,note:''},
+        {label:'Factor common binomial',math:`(x^2${term3})(x${f1a})`,note:''},
+      ]
+    };
+  },
+  // quadratic in disguise: (x²+p)(x²+q)
+  ()=>{
+    const [qdMin,qdMax]=CONFIG.factoring.quadDisguise_pq;
+    let p,q,attempts=0;
+    do { p=R(qdMin,qdMax); q=R(qdMin,qdMax); attempts++; } while((p===0||q===0||p===q)&&attempts<60);
+    const B=p+q, C=p*q;
+    const Bstr=B>=0?`+${B}`:`${B}`;
+    const Cstr=C>=0?`+${C}`:`${C}`;
+    const f1p=p>=0?`x^2+${p}`:`x^2${p}`;
+    const f2q=q>=0?`x^2+${q}`:`x^2${q}`;
+    return {
+      problemTex:`x^4${Bstr}x^2${Cstr}`,
+      answerTex:`(${f1p})(${f2q})`,
+      answerNorm: null,
+      isQuadDisguise: true, p, q,
+      originalExpanded: `x^4${Bstr}x^2${Cstr}`,
+      steps:[
+        {label:'Substitute u = x²',math:`u^2${Bstr}u${Cstr}`,note:'Quadratic in disguise'},
+        {label:'Factor as quadratic',math:`(u${p>=0?`+${p}`:`${p}`})(u${q>=0?`+${q}`:`${q}`})`,note:''},
+        {label:'Substitute back u = x²',math:`(${f1p})(${f2q})`,note:''},
+      ]
+    };
+  },
+];
+
+// all-x-terms: kx³ + kbx² + kcx — every term has x as factor → kx(x+p)(x+q)
+factoring.diff1.push(()=>{
+  const [kMin,kMax]=CONFIG.factoring.allXterms_k;
+  const [axMin,axMax]=CONFIG.factoring.allXterms_pq;
+  const k=R(kMin,kMax);
+  let p,q,attempts=0;
+  do { p=R(axMin,axMax); q=R(axMin,axMax); attempts++; } while((p===0||q===0||p===q)&&attempts<50);
+  const b=p+q, c=p*q;
+  const bStr=b>=0?`+${b}`:`${b}`;
+  const cStr=c>=0?`+${c}`:`${c}`;
+  const f1=p>=0?`x+${p}`:`x${p}`;
+  const f2=q>=0?`x+${q}`:`x${q}`;
+  const kb=k*b, kc=k*c;
+  const kbStr=kb>=0?`+${kb}`:`${kb}`;
+  const kcStr=kc>=0?`+${kc}`:`${kc}`;
+  return {
+    problemTex:`${k}x^3${kbStr}x^2${kcStr}x`,
+    answerTex:`${k}x(${f1})(${f2})`,
+    answerNorm: expandPoly(`${k}*x*(${f1})*(${f2})`),
+    originalExpanded: polyToTex([k, kb, kc, 0]),
+    steps:[
+      {label:'Factor out GCF — every term has x',math:`${k}x(x^2${bStr}x${cStr})`,note:`GCF = ${k}x`},
+      {label:'Find roots of inner trinomial',math:`p+q=${b},\\; pq=${c}`,note:`p=${p}, q=${q}`},
+      {label:'Write all factors',math:`${k}x(${f1})(${f2})`,note:'Three factors total'},
+    ]
+  };
+});
+
+/* ── EXPONENTS ── */
+const exponents = {};
+
+exponents.diff1 = [
+  // multiply same base: x^a · x^b
+  ()=>{
+    const [sbMin,sbMax]=CONFIG.exponents.sameBase_ab;
+    const a=R(sbMin,sbMax),b=R(sbMin,sbMax);
+    return {
+      problemTex:`x^{${a}} \\cdot x^{${b}}`,
+      answerTex:`x^{${a+b}}`,
+      answerNorm:`x^${a+b}`,
+      steps:[
+        {label:'Product rule',math:`x^a \\cdot x^b = x^{a+b}`,note:'Add exponents'},
+        {label:'Apply',math:`x^{${a}+${b}} = x^{${a+b}}`,note:''},
+      ]
+    };
+  },
+  // divide same base
+  ()=>{
+    const [dbMin,dbMax]=CONFIG.exponents.divideBase_b;
+    const [dxMin,dxMax]=CONFIG.exponents.divideBase_aExtra ? [CONFIG.exponents.divideBase_aExtra[0],CONFIG.exponents.divideBase_aExtra[1]] : [1,4];
+    const b=R(dbMin,dbMax), a=R(b+dxMin, b+dxMax);
+    return {
+      problemTex:`\\dfrac{x^{${a}}}{x^{${b}}}`,
+      answerTex:`x^{${a-b}}`,
+      answerNorm:`x^${a-b}`,
+      steps:[
+        {label:'Quotient rule',math:`\\frac{x^a}{x^b}=x^{a-b}`,note:'Subtract exponents'},
+        {label:'Apply',math:`x^{${a}-${b}}=x^{${a-b}}`,note:''},
+      ]
+    };
+  },
+  // power of power
+  ()=>{
+    const [ppMin,ppMax]=CONFIG.exponents.powerPower_ab;
+    const a=R(ppMin,ppMax),b=R(ppMin,ppMax);
+    return {
+      problemTex:`(x^{${a}})^{${b}}`,
+      answerTex:`x^{${a*b}}`,
+      answerNorm:`x^${a*b}`,
+      steps:[
+        {label:'Power rule',math:`(x^a)^b=x^{ab}`,note:'Multiply exponents'},
+        {label:'Apply',math:`x^{${a}\\cdot${b}}=x^{${a*b}}`,note:''},
+      ]
+    };
+  },
+  // negative exponent
+  ()=>{
+    const [neMin,neMax]=CONFIG.exponents.negExp_a;
+    const a=R(neMin,neMax);
+    return {
+      problemTex:`x^{-${a}}`,
+      answerTex:`\\dfrac{1}{x^{${a}}}`,
+      answerNorm:`1/x^${a}`,
+      steps:[
+        {label:'Negative exponent rule',math:`x^{-a}=\\frac{1}{x^a}`,note:''},
+        {label:'Apply',math:`x^{-${a}}=\\frac{1}{x^{${a}}}`,note:''},
+      ]
+    };
+  },
+];
+
+exponents.diff2 = [
+  // radical to exponent
+  ()=>{
+    const [rmMin,rmMax]=CONFIG.exponents.radicalToExp_m;
+    const m=R(rmMin,rmMax), n=pick(CONFIG.exponents.radicalToExp_n);
+    const [sn,sd]=simplifyFrac(m,n);
+    const fracTex=sd===1?`${sn}`:`\\frac{${sn}}{${sd}}`;
+    return {
+      problemTex:`\\sqrt[${n}]{x^{${m}}}`,
+      answerTex:`x^{${fracTex}}`,
+      answerNorm:`x^(${sn}/${sd})`,
+      steps:[
+        {label:'Radical to exponent',math:`\\sqrt[n]{x^m}=x^{m/n}`,note:''},
+        {label:'Apply',math:`x^{${m}/${n}}=x^{${fracTex}}`,note: sn!==m?`Simplified: ${m}/${n} = ${sn}/${sd}`:''},
+      ]
+    };
+  },
+  // fractional exp arithmetic
+  ()=>{
+    const [fanMin,fanMax]=CONFIG.exponents.fracExpArith_num;
+    const a1=R(fanMin,fanMax),b1=pick(CONFIG.exponents.fracExpArith_den),
+          a2=R(fanMin,fanMax),b2=pick(CONFIG.exponents.fracExpArith_den);
+    const num=a1*b2+a2*b1, den=b1*b2;
+    const [sn,sd]=simplifyFrac(num,den);
+    const fracTex=sd===1?`${sn}`:`\\frac{${sn}}{${sd}}`;
+    return {
+      problemTex:`x^{${a1}/${b1}} \\cdot x^{${a2}/${b2}}`,
+      answerTex:`x^{${fracTex}}`,
+      answerNorm:`x^(${sn}/${sd})`,
+      steps:[
+        {label:'Product rule: add exponents',math:`\\frac{${a1}}{${b1}}+\\frac{${a2}}{${b2}}=\\frac{${a1*b2}+${a2*b1}}{${den}}=\\frac{${num}}{${den}}`,note:''},
+        {label:'Simplify fraction',math:`\\frac{${num}}{${den}}=\\frac{${sn}}{${sd}}`,note:''},
+        {label:'Final',math:`x^{${fracTex}}`,note:''},
+      ]
+    };
+  },
+];
+
+exponents.diff3 = [
+  // rewrite 1/√x
+  ()=>({
+    problemTex:`\\dfrac{1}{\\sqrt{x}}`,
+    answerTex:`x^{-1/2}`,
+    answerNorm:`x^(-1/2)`,
+    steps:[
+      {label:'Rewrite radical',math:`\\frac{1}{x^{1/2}}`,note:'√x = x^(1/2)'},
+      {label:'Negative exponent',math:`x^{-1/2}`,note:'1/x^a = x^(-a)'},
+    ]
+  }),
+  // rewrite 1/(x²√x) = x^(-5/2)
+  ()=>({
+    problemTex:`\\dfrac{1}{x^2\\sqrt{x}}`,
+    answerTex:`x^{-5/2}`,
+    answerNorm:`x^(-5/2)`,
+    steps:[
+      {label:'Rewrite √x',math:`\\frac{1}{x^2 \\cdot x^{1/2}}`,note:''},
+      {label:'Product rule in denominator',math:`\\frac{1}{x^{2+1/2}}=\\frac{1}{x^{5/2}}`,note:''},
+      {label:'Negative exponent',math:`x^{-5/2}`,note:''},
+    ]
+  }),
+  // mixed with coefficients: k/(x^a √x)
+  ()=>{
+    const [crMin,crMax]=CONFIG.exponents.coeffRewrite_k;
+    const [caMin,caMax]=CONFIG.exponents.coeffRewrite_a;
+    const k=R(crMin,crMax), a=R(caMin,caMax);
+    const num=2*a+1, expStr=num===1?`1/2`:`${num}/2`;
+    return {
+      problemTex:`\\dfrac{${k}}{x^{${a}}\\sqrt{x}}`,
+      answerTex:`${k}x^{-${expStr}}`,
+      answerNorm:`${k}*x^(-${num}/2)`,
+      steps:[
+        {label:'Rewrite √x',math:`\\frac{${k}}{x^{${a}} \\cdot x^{1/2}}`,note:''},
+        {label:'Combine base',math:`\\frac{${k}}{x^{${a}+1/2}}=\\frac{${k}}{x^{${expStr}}}`,note:''},
+        {label:'Apply negative exponent',math:`${k}x^{-${expStr}}`,note:''},
+      ]
+    };
+  },
+  // ³√(x⁵) with higher index
+  ()=>{
+    const n=pick(CONFIG.exponents.higherRadical_n);
+    const [hrMin,hrMax]=CONFIG.exponents.higherRadical_m;
+    const m=R(hrMin,hrMax);
+    const [sn,sd]=simplifyFrac(m,n);
+    const fracTex=sd===1?`${sn}`:`\\frac{${sn}}{${sd}}`;
+    return {
+      problemTex:`\\sqrt[${n}]{x^{${m}}}`,
+      answerTex:`x^{${fracTex}}`,
+      answerNorm:`x^(${sn}/${sd})`,
+      steps:[
+        {label:'Radical to exponent',math:`x^{${m}/${n}}`,note:''},
+        sn!==m ? {label:'Simplify',math:`x^{${fracTex}}`,note:''} : {label:'Already simplified',math:`x^{${fracTex}}`,note:''},
+      ]
+    };
+  },
+];
+
+/* ── FRACTIONS ── */
+const fractions = {};
+
+fractions.diff1 = [
+  // add simple fractions: a/b + c/d (numeric)
+  ()=>{
+    const [afnMin,afnMax]=CONFIG.fractions.addFrac_num;
+    const [afdMin,afdMax]=CONFIG.fractions.addFrac_den;
+    const a=R(afnMin,afnMax),b=R(afdMin,afdMax),c=R(afnMin,afnMax),d=R(afdMin,afdMax);
+    const L=lcm(b,d);
+    const n=a*(L/b)+c*(L/d);
+    const [sn,sd]=simplifyFrac(n,L);
+    return {
+      problemTex:`\\dfrac{${a}}{${b}}+\\dfrac{${c}}{${d}}`,
+      answerTex: sd===1?`${sn}`:`\\dfrac{${sn}}{${sd}}`,
+      answerNorm:`${sn}/${sd}`,
+      steps:[
+        {label:'Find LCD',math:`\\text{LCD}(${b},${d})=${L}`,note:''},
+        {label:'Rewrite with LCD',math:`\\frac{${a*(L/b)}}{${L}}+\\frac{${c*(L/d)}}{${L}}`,note:''},
+        {label:'Add numerators',math:`\\frac{${n}}{${L}}`,note:''},
+        sn!==n||sd!==L ? {label:'Simplify',math:`\\frac{${sn}}{${sd}}`,note:`GCF = ${gcd(n,L)}`} : {label:'Already simplified',math:`\\frac{${sn}}{${sd}}`,note:''},
+      ]
+    };
+  },
+  // divide fractions: (a/b)/(c/d)
+  ()=>{
+    const [dfMin,dfMax]=CONFIG.fractions.divFrac_all;
+    const a=R(dfMin,dfMax),b=R(dfMin+1,dfMax),c=R(dfMin,dfMax),d=R(dfMin+1,dfMax);
+    const [sn,sd]=simplifyFrac(a*d,b*c);
+    return {
+      problemTex:`\\dfrac{${a}/${b}}{${c}/${d}}`,
+      answerTex: sd===1?`${sn}`:`\\dfrac{${sn}}{${sd}}`,
+      answerNorm:`${sn}/${sd}`,
+      steps:[
+        {label:'Flip and multiply',math:`\\frac{${a}}{${b}}\\cdot\\frac{${d}}{${c}}`,note:'Keep-Change-Flip'},
+        {label:'Multiply',math:`\\frac{${a*d}}{${b*c}}`,note:''},
+        sn!==a*d||sd!==b*c ? {label:'Simplify',math:`\\frac{${sn}}{${sd}}`,note:''} : {label:'Done',math:`\\frac{${sn}}{${sd}}`,note:''},
+      ]
+    };
+  },
+];
+
+fractions.diff2 = [
+  // factor and cancel: (x²-a²)/(x+a) = x-a
+  ()=>{
+    const [cfMin,cfMax]=CONFIG.fractions.cancelFrac_a;
+    const a=R(cfMin,cfMax);
+    const aTex=a>=0?`+${a}`:`${a}`;
+    return {
+      problemTex:`\\dfrac{x^2-${a*a}}{x+${a}}`,
+      answerTex:`x-${a}`,
+      answerNorm:`x-${a}`,
+      steps:[
+        {label:'Factor numerator',math:`\\frac{(x+${a})(x-${a})}{x+${a}}`,note:'Difference of squares'},
+        {label:'Cancel common factor',math:`x-${a}`,note:`Assuming x ≠ ${-a}`},
+      ]
+    };
+  },
+  // complex fraction: [1/(x+h) - 1/x] / h
+  ()=>({
+    problemTex:`\\dfrac{\\dfrac{1}{x+h}-\\dfrac{1}{x}}{h}`,
+    answerTex:`\\dfrac{-1}{x(x+h)}`,
+    answerNorm:`-1/(x(x+h))`,
+    steps:[
+      {label:'Common denominator in numerator',math:`\\frac{\\frac{x-(x+h)}{x(x+h)}}{h}`,note:'LCD = x(x+h)'},
+      {label:'Simplify numerator',math:`\\frac{\\frac{-h}{x(x+h)}}{h}`,note:'x−(x+h)=−h'},
+      {label:'Divide by h',math:`\\frac{-h}{x(x+h)} \\cdot \\frac{1}{h}=\\frac{-1}{x(x+h)}`,note:'Cancel h (h≠0)'},
+    ]
+  }),
+  // three-term LCD: 1/(x-a) + 1/(x+a) + 1/(x²-a²)
+  ()=>{
+    const [ttMin,ttMax]=CONFIG.fractions.threeTermLCD_a;
+    const a=R(ttMin,ttMax);
+    const a2=a*a;
+    return {
+      problemTex:`\\dfrac{1}{x-${a}}+\\dfrac{1}{x+${a}}+\\dfrac{1}{x^2-${a2}}`,
+      answerTex:`\\dfrac{2x+1}{x^2-${a2}}`,
+      answerNorm:`(2x+1)/(x^2-${a2})`,
+      steps:[
+        {label:'Factor last denominator',math:`x^2-${a2}=(x-${a})(x+${a})`,note:''},
+        {label:'LCD',math:`\\text{LCD}=(x-${a})(x+${a})`,note:''},
+        {label:'Rewrite all fractions',math:`\\frac{(x+${a})+(x-${a})+1}{(x-${a})(x+${a})}`,note:''},
+        {label:'Simplify numerator',math:`\\frac{2x+1}{x^2-${a2}}`,note:''},
+      ]
+    };
+  },
+];
+
+fractions.diff3 = [
+  // quotient rule cleanup: f=x^n, g=x+a
+  ()=>{
+    const [qrMin,qrMax]=CONFIG.fractions.quotientRule_n;
+    const [qaMin,qaMax]=CONFIG.fractions.quotientRule_a;
+    const n=R(qrMin,qrMax), a=R(qaMin,qaMax);
+    const aStr=a>=0?`+${a}`:`${a}`;
+    return {
+      problemTex:`\\dfrac{${n}x^{${n-1}}(x${aStr})-x^{${n}}}{(x${aStr})^2}`,
+      answerTex:`\\dfrac{x^{${n-1}}(${n-1}x${aStr.replace(/\+/,'+')}${n>=2?``:``})}{(x${aStr})^2}`,
+      answerNorm: `x^${n-1}*((${n-1})x+${a})/(x${aStr})^2`,
+      isQuotientRule: true, n, a,
+      steps:[
+        {label:'Factor numerator: pull out x^(n-1)',math:`\\frac{x^{${n-1}}[${n}(x${aStr})-x]}{(x${aStr})^2}`,note:''},
+        {label:'Expand bracket',math:`\\frac{x^{${n-1}}[${n-1}x${aStr}]}{(x${aStr})^2}`,note:`${n}(x${aStr})−x = ${n-1}x+${a*n} → wait, simplify: ${n}x+${n*a}-x=${n-1}x+${n*a}`},
+        {label:'Final form',math:`\\frac{x^{${n-1}}(${n-1}x+${n*a})}{(x${aStr})^2}`,note:''},
+      ]
+    };
+  },
+  // fractional exponent cleanup: [ax^(p/q) - bx^(r/s)] / (cx)
+  ()=>{
+    const a=R(2,5), b=R(2,5), c=R(1,4);
+    const pq=pick([[3,2],[1,2],[2,3],[5,2]]);
+    const rs=pick([[1,2],[1,3],[3,2]]);
+    const [p,q]=pq,[r,s]=rs;
+    const [sn1,sd1]=simplifyFrac(p-q,q); // subtract 1 from exp (divide by x=x^1)
+    const [sn2,sd2]=simplifyFrac(r-s,s);
+    const frac1=sd1===1?`${sn1}`:`${sn1}/${sd1}`;
+    const frac2=sd2===1?`${sn2}`:`${sn2}/${sd2}`;
+    return {
+      problemTex:`\\dfrac{${a}x^{${p}/${q}} - ${b}x^{${r}/${s}}}{${c}x}`,
+      answerTex:`\\dfrac{${a}x^{${frac1}} - ${b}x^{${frac2}}}{${c}}`,
+      answerNorm:`(${a}x^(${sn1}/${sd1})-${b}x^(${sn2}/${sd2}))/${c}`,
+      steps:[
+        {label:'Divide each term by cx',math:`\\frac{${a}x^{${p}/${q}}}{${c}x} - \\frac{${b}x^{${r}/${s}}}{${c}x}`,note:''},
+        {label:'Subtract exponent 1 from each',math:`\\frac{${a}}{${c}}x^{${p}/${q}-1} - \\frac{${b}}{${c}}x^{${r}/${s}-1}`,note:'Dividing by x = subtracting 1 from exp'},
+        {label:'Simplify exponents',math:`\\frac{${a}}{${c}}x^{${frac1}} - \\frac{${b}}{${c}}x^{${frac2}}`,note:''},
+      ]
+    };
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POLYNOMIAL HELPERS (for answer validation)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Represent polynomial as array of coefficients [a_n, ..., a_1, a_0]
+// We expand input strings to coefficients for comparison
+
+function parseAndExpand(expr){
+  // Returns null if can't parse, else canonical polynomial array (up to degree 4)
+  try {
+    return expandExpression(expr);
+  } catch(e){ return null; }
+}
+
+// Very small CAS: expand products of linear/quadratic factors with integer coeffs
+// Handles: (ax+b)(cx+d), c*(f1)*(f2), x^n, integers, sums
+function expandExpression(expr){
+  // Normalize input
+  let s = expr.trim()
+    .replace(/\s+/g,'')
+    .replace(/\^/g,'**')
+    .replace(/}{/g,'}*{') // KaTeX braces
+    .replace(/\{([^}]*)\}/g,'($1)')
+    .replace(/\\[a-z]+/g,'') // strip remaining latex
+    .replace(/([0-9x\)])(\()/g,'$1*$2') // implicit multiply
+    .replace(/\)(\()/g,')*$2')
+    .replace(/([0-9\)])([a-z])/g,'$1*$2');
+  // evaluate as polynomial in x using BigInt-safe approach
+  // Use numeric polynomial multiplication
+  return evalPoly(s);
+}
+
+// Polynomial represented as Map: degree->coeff
+function polyAdd(a,b){
+  const r=new Map(a);
+  for(const [k,v] of b) r.set(k,(r.get(k)||0)+v);
+  return r;
+}
+function polyMul(a,b){
+  const r=new Map();
+  for(const [ka,va] of a) for(const [kb,vb] of b) r.set(ka+kb,(r.get(ka+kb)||0)+va*vb);
+  return r;
+}
+function polyScale(a,s){ const r=new Map(); for(const [k,v] of a) r.set(k,v*s); return r; }
+function polyConst(c){ return new Map([[0,c]]); }
+function polyX(){ return new Map([[1,1]]); }
+function polyPow(p,n){
+  let r=new Map([[0,1]]);
+  for(let i=0;i<n;i++) r=polyMul(r,p);
+  return r;
+}
+function normalizePoly(p){
+  const r=new Map();
+  for(const [k,v] of p) if(Math.abs(v)>1e-9) r.set(k,Math.round(v*1e6)/1e6);
+  return r;
+}
+function polyToArr(p, maxDeg=4){
+  const arr=[];
+  for(let i=maxDeg;i>=0;i--) arr.push((p.get(i)||0));
+  return arr;
+}
+function arrEq(a,b){ return a.length===b.length&&a.every((v,i)=>Math.abs(v-b[i])<0.001); }
+
+// Simple recursive descent parser for polynomial expressions
+function evalPoly(expr){
+  const tokens = tokenize(expr);
+  let pos=0;
+  function peek(){ return pos<tokens.length?tokens[pos]:null; }
+  function consume(){ return tokens[pos++]; }
+  function parseExpr(){ return parseAddSub(); }
+  function parseAddSub(){
+    let left=parseMulDiv();
+    while(peek()==='+' || peek()==='-'){
+      const op=consume();
+      const right=parseMulDiv();
+      if(op==='+') left=polyAdd(left,right);
+      else left=polyAdd(left,polyScale(right,-1));
+    }
+    return left;
+  }
+  function parseMulDiv(){
+    let left=parseUnary();
+    while(peek()==='*' || peek()==='/'){
+      const op=consume();
+      const right=parseUnary();
+      if(op==='*') left=polyMul(left,right);
+      else {
+        // Division: only support constant divisor
+        const arr=polyToArr(right,0);
+        const c=arr[arr.length-1];
+        if(c===0) throw new Error('div by zero');
+        left=polyScale(left,1/c);
+      }
+    }
+    return left;
+  }
+  function parseUnary(){
+    if(peek()==='-'){ consume(); return polyScale(parsePow(),-1); }
+    if(peek()==='+') { consume(); return parsePow(); }
+    return parsePow();
+  }
+  function parsePow(){
+    let base=parseAtom();
+    while(peek()==='**'){
+      consume();
+      const exp=parseAtom();
+      const expArr=polyToArr(exp,0);
+      const n=expArr[expArr.length-1];
+      if(Number.isInteger(n)&&n>=0) base=polyPow(base,n);
+      else throw new Error('non-integer exponent in polynomial');
+    }
+    return base;
+  }
+  function parseAtom(){
+    const t=peek();
+    if(t==='('){
+      consume();
+      const v=parseExpr();
+      if(peek()===')') consume();
+      return v;
+    }
+    if(t==='x'||t==='X'){ consume(); return polyX(); }
+    if(t!==null && !isNaN(Number(t))){ consume(); return polyConst(Number(t)); }
+    throw new Error('unexpected token: '+t);
+  }
+  const result = parseExpr();
+  return normalizePoly(result);
+}
+
+function tokenize(expr){
+  const tokens=[];
+  let i=0;
+  while(i<expr.length){
+    const c=expr[i];
+    if(c===' '){ i++; continue; }
+    if(c==='x'||c==='X'){ tokens.push('x'); i++; continue; }
+    if(c==='*'&&expr[i+1]==='*'){ tokens.push('**'); i+=2; continue; }  // must be before single-* check
+    if('+-*/()'.includes(c)){ tokens.push(c); i++; continue; }
+    if((c>='0'&&c<='9')||c==='.'){
+      let n='';
+      while(i<expr.length&&((expr[i]>='0'&&expr[i]<='9')||expr[i]==='.')) n+=expr[i++];
+      tokens.push(n); continue;
+    }
+    i++;
+  }
+  return tokens;
+}
+
+// Expand specifically for our generated factored forms (avoid parsing LaTeX)
+function expandPoly(factored){
+  try {
+    const p = evalPoly(factored.replace(/\^/g,'**'));
+    return p;
+  } catch(e){ return null; }
+}
+
+function expandDeg4(expr){
+  try { return evalPoly(expr.replace(/\^/g,'**')); } catch(e){ return null; }
+}
+
+function polyToTex(coeffs){
+  // coeffs = [a_n, ..., a_1, a_0], degree = coeffs.length-1
+  const deg=coeffs.length-1;
+  let parts=[];
+  for(let i=0;i<=deg;i++){
+    const c=coeffs[i];
+    const power=deg-i;
+    if(c===0) continue;
+    let term='';
+    if(power===0) term=`${Math.abs(c)}`;
+    else if(power===1) term=`${Math.abs(c)===1?'':Math.abs(c)}x`;
+    else term=`${Math.abs(c)===1?'':Math.abs(c)}x^{${power}}`;
+    parts.push({sign:c<0?'-':'+', term});
+  }
+  if(parts.length===0) return '0';
+  let result=parts[0].sign==='-'?`-${parts[0].term}`:parts[0].term;
+  for(let i=1;i<parts.length;i++) result+=` ${parts[i].sign} ${parts[i].term}`;
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INPUT PARSER / LIVE PREVIEW
+// ─────────────────────────────────────────────────────────────────────────────
+
+function userInputToTex(input){
+  // Convert user text input to KaTeX-renderable string
+  let s = input.trim();
+  if(!s) return '';
+
+  // x^(3/2) -> x^{3/2}
+  s = s.replace(/x\^\((-?\d+)\/(\d+)\)/g, (m,n,d)=>`x^{${n}/${d}}`);
+  s = s.replace(/x\^(-?\d+)\/(\d+)/g, (m,n,d)=>`x^{${n}/${d}}`);
+  s = s.replace(/x\^(-?\d+)/g, (m,n)=>`x^{${n}}`);
+  s = s.replace(/x\^{(-?\d+)\/(\d+)}/g, (m,n,d)=>`x^{${n}/${d}}`);
+
+  // Algebraic fractions — must come before numeric fraction rule
+  // (A)/(B)  ->  \dfrac{A}{B}   (non-nested numerator, any denominator)
+  s = s.replace(/\(([^()]+)\)\/\((.+)\)$/, (m,a,b)=>`\\dfrac{${a}}{${b}}`);
+  // constant / (B)  ->  \dfrac{constant}{B}  e.g. -1/(x(x+h))
+  if(!s.includes('\\dfrac'))
+    s = s.replace(/^(-?\d+)\/\((.+)\)$/, (m,a,b)=>`\\dfrac{${a}}{${b}}`);
+
+  // pure numeric fractions: 3/4 -> \dfrac{3}{4}
+  s = s.replace(/(\d+)\/(\d+)/g, (m,a,b)=>`\\dfrac{${a}}{${b}}`);
+
+  return s;
+}
+
+function userInputToNorm(input){
+  // Normalize input for comparison
+  let s = input.trim()
+    .replace(/\s+/g,'')
+    .toLowerCase()
+    .replace(/x\^{([^}]*)}/g,'x^($1)')  // x^{3} -> x^(3)
+    .replace(/x\^(-?\d+(?:\/\d+)?)/g,'x^($1)')
+    ;
+  return s;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANSWER VALIDATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+function checkAnswer(problem, userInput){
+  const u = userInput.trim();
+  if(!u) return {result:'empty'};
+
+  // For polynomial factoring problems: expand user input and compare to problem expansion
+  if(problem.module === 'factoring'){
+    return checkFactoringAnswer(problem, u);
+  }
+  if(problem.module === 'exponents'){
+    return checkExponentAnswer(problem, u);
+  }
+  if(problem.module === 'fractions'){
+    return checkFractionAnswer(problem, u);
+  }
+  return {result:'unknown'};
+}
+
+function checkFactoringAnswer(problem, u){
+  // Try to expand user's answer and compare to original
+  const orig = problem.originalExpanded;
+
+  // Normalize user input for polynomial parser (use expandExpression so implicit
+  // multiplication like (x+4)(x-4) is handled before tokenizing)
+  let userPoly = null;
+  try { userPoly = expandExpression(u); } catch(e){}
+
+  let origPoly = null;
+  try {
+    if(typeof orig === 'string'){
+      origPoly = expandExpression(orig);
+    } else if(orig instanceof Map){
+      origPoly = orig;
+    }
+  } catch(e){}
+
+  if(userPoly && origPoly){
+    // Compare up to degree 4
+    const maxDeg = Math.max(...Array.from(userPoly.keys()), ...Array.from(origPoly.keys()), 0);
+    let match = true;
+    for(let i=0;i<=maxDeg;i++){
+      if(Math.abs((userPoly.get(i)||0)-(origPoly.get(i)||0))>0.001){ match=false; break; }
+    }
+    if(match){
+      // Check if user actually factored (has parentheses or is simpler than original)
+      const factored = u.includes('(') || problem.isGrouping || problem.isQuadDisguise;
+      if(!factored && !problem.isGrouping && !problem.isQuadDisguise){
+        return {result:'partial', msg:'Expanded correctly but not factored — keep going'};
+      }
+      return {result:'correct'};
+    }
+  }
+
+  // String fallback: normalize and compare
+  const normUser = u.toLowerCase().replace(/\s+/g,'').replace(/\*/g,'');
+  const normAns = problem.answerTex.toLowerCase().replace(/\s+/g,'').replace(/\*/g,'').replace(/\\[a-z]*/g,'').replace(/\{|\}/g,'');
+  if(normUser === normAns) return {result:'correct'};
+
+  return {result:'wrong'};
+}
+
+function checkExponentAnswer(problem, u){
+  const norm = userInputToNorm(u);
+  const ans = problem.answerNorm.toLowerCase().replace(/\s+/g,'');
+
+  // Direct match
+  if(norm === ans) return {result:'correct'};
+
+  // x^(a) === x^a for integers
+  const normSimple = norm.replace(/\((\d+)\)/g,'$1');
+  if(normSimple === ans.replace(/\((\d+)\)/g,'$1')) return {result:'correct'};
+
+  // 1/x^a === x^(-a)
+  const neg = ans.match(/x\^\((-\d+)\)/);
+  if(neg){
+    const posExp = Math.abs(parseInt(neg[1]));
+    const recip = `1/x^${posExp}`;
+    if(norm === recip || norm === `1/x^(${posExp})`) return {result:'correct'};
+  }
+
+  // Fractional: x^(3/2) and x^1.5
+  const frac = ans.match(/x\^\((\d+)\/(\d+)\)/);
+  if(frac){
+    const decimal = (parseInt(frac[1])/parseInt(frac[2])).toFixed(4);
+    if(norm === `x^${parseFloat(decimal)}` || norm === `x^(${parseFloat(decimal)})`) return {result:'correct'};
+  }
+
+  // Numeric answers (like 1/x^3 problems)
+  if(ans.startsWith('1/') && norm === ans) return {result:'correct'};
+
+  return {result:'wrong'};
+}
+
+function checkFractionAnswer(problem, u){
+  const norm = userInputToNorm(u);
+  // Apply same normalization to answerNorm so x^2 and x^(2) compare equal
+  const ans = userInputToNorm(String(problem.answerNorm));
+
+  if(norm === ans) return {result:'correct'};
+
+  // Try numeric fraction comparison: sn/sd
+  const numFrac = ans.match(/^(\d+)\/(\d+)$/);
+  const userFrac = norm.match(/^(\d+)\/(\d+)$/);
+  if(numFrac && userFrac){
+    const [,an,ad]= numFrac, [,un,ud]=userFrac;
+    if(parseInt(an)*parseInt(ud) === parseInt(un)*parseInt(ad)) return {result:'correct'};
+  }
+
+  // Integer answer
+  if(!isNaN(Number(norm)) && !isNaN(Number(ans))) {
+    if(Math.abs(Number(norm)-Number(ans))<0.001) return {result:'correct'};
+  }
+
+  return {result:'wrong'};
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROBLEM PICKER
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getEffectiveDiff(module){
+  if(state.difficulty !== 'auto') return parseInt(state.difficulty);
+  return state.autoDiff[module] || 1;
+}
+
+function pickModule(){
+  if(state.module === 'all') return pick(['factoring','exponents','fractions']);
+  return state.module;
+}
+
+function generateProblem(){
+  const mod = pickModule();
+  const diff = getEffectiveDiff(mod==='all'?pickModule():mod);
+  const actualMod = mod === 'all' ? pickModule() : mod;
+
+  let pool;
+  if(actualMod==='factoring') pool = factoring[`diff${diff}`] || factoring.diff1;
+  else if(actualMod==='exponents') pool = exponents[`diff${diff}`] || exponents.diff1;
+  else pool = fractions[`diff${diff}`] || fractions.diff1;
+
+  // Dedup: try up to 8 times to avoid repeating a problem seen in last 30
+  let problem, attempts = 0;
+  do {
+    const generator = pick(pool);
+    problem = generator();
+    attempts++;
+  } while(
+    attempts < 8 &&
+    state.recentProblems.includes(problem.problemTex)
+  );
+
+  // Track in dedup window (max 30)
+  state.recentProblems.push(problem.problemTex);
+  if(state.recentProblems.length > CONFIG.adaptive.dedupWindow) state.recentProblems.shift();
+
+  problem.module = actualMod;
+  problem.difficulty = diff;
+  return problem;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADAPTIVE DIFFICULTY
+// ─────────────────────────────────────────────────────────────────────────────
+
+function updateAdaptiveDiff(mod, diff, correct){
+  const rec = store[mod][diff];
+  rec.last10.push(correct?1:0);
+  if(rec.last10.length > 10) rec.last10.shift();
+
+  const bump  = CONFIG.adaptive.bumpUpStreak;  // default 5
+  const drop  = CONFIG.adaptive.dropDownWrong; // default 3
+  const last5 = rec.last10.slice(-5);
+  const sumLast5 = last5.reduce((s,v)=>s+v,0);
+
+  if(last5.length===bump && sumLast5===bump && diff < 3){
+    state.autoDiff[mod] = Math.min(3, diff+1);
+  } else if(last5.length>=drop && (last5.length-sumLast5)>=drop && diff > 1){
+    state.autoDiff[mod] = Math.max(1, diff-1);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UI RENDERING
+// ─────────────────────────────────────────────────────────────────────────────
+
+const $ = id => document.getElementById(id);
+let katexReady = false;
+
+function ensureKatex(cb){
+  if(typeof katex !== 'undefined'){ cb(); return; }
+  const check = setInterval(()=>{ if(typeof katex!=='undefined'){ clearInterval(check); cb(); } },50);
+}
+
+function renderProblem(problem){
+  ensureKatex(()=>{
+    const el = $('problem-display');
+    el.innerHTML='';
+    renderKaTeX(`\\displaystyle ${problem.problemTex}`, el, true);
+  });
+}
+
+function renderSteps(problem, revealCount){
+  const list = $('steps-list');
+  list.innerHTML='';
+  const steps = problem.steps || [];
+  for(let i=0;i<steps.length;i++){
+    const s=steps[i];
+    if(!s) continue;
+    const div=document.createElement('div');
+    div.className='step-item'+(i<revealCount?' revealed':'');
+    if(i<revealCount){
+      const label=document.createElement('div');
+      label.className='step-label';
+      label.textContent=`Step ${i+1}: ${s.label}`;
+      div.appendChild(label);
+      const math=document.createElement('div');
+      math.className='step-math';
+      ensureKatex(()=>renderKaTeX(s.math,math));
+      div.appendChild(math);
+      if(s.note){
+        const note=document.createElement('div');
+        note.className='step-note';
+        note.textContent=s.note;
+        div.appendChild(note);
+      }
+    } else {
+      div.innerHTML=`<span style="color:var(--muted);font-size:12px;">Step ${i+1} hidden</span>`;
+    }
+    list.appendChild(div);
+  }
+  const btn=$('reveal-step-btn');
+  const stepCount=(problem.steps||[]).filter(Boolean).length;
+  if(revealCount>=stepCount){
+    btn.textContent='All steps shown';
+    btn.disabled=true;
+  } else {
+    btn.textContent=`Reveal step ${revealCount+1} of ${stepCount}`;
+    btn.disabled=false;
+  }
+}
+
+function loadNewProblem(){
+  let problem;
+  if(state.mode==='exam'){
+    if(state.examIdx >= state.examProblems.length){
+      showExamSummary(); return;
+    }
+    problem = state.examProblems[state.examIdx];
+  } else {
+    problem = generateProblem();
+  }
+  state.currentProblem = problem;
+  state.stepsRevealed = 0;
+  state.answered = false;
+
+  const input = $('answer-input');
+  input.value='';
+  input.className='';
+  input.disabled=false;
+  $('feedback').textContent='';
+  $('feedback').className='';
+  $('live-preview').innerHTML='';
+  $('parse-error').textContent='';
+  $('check-btn').disabled=false;
+
+  renderProblem(problem);
+  renderSteps(problem, 0);
+  input.focus();
+
+  // problem timer
+  clearInterval(state.problemTimerInterval);
+  state.problemTimer=0;
+  state.problemTimerInterval=setInterval(()=>state.problemTimer++,1000);
+}
+
+function flashMain(type){
+  const el=$('main');
+  el.classList.remove('flash-correct','flash-wrong');
+  void el.offsetWidth; // reflow
+  el.classList.add(type==='correct'?'flash-correct':'flash-wrong');
+}
+
+function submitAnswer(){
+  if(state.answered) return;
+  const input=$('answer-input');
+  const u=input.value.trim();
+  if(!u) return;
+
+  const result=checkAnswer(state.currentProblem, u);
+  state.answered=true;
+  clearInterval(state.problemTimerInterval);
+
+  const mod=state.currentProblem.module;
+  const diff=state.currentProblem.difficulty;
+  const rec=store[mod][diff];
+
+  const fb=$('feedback');
+  if(result.result==='correct'){
+    input.className='correct';
+    fb.textContent='✓ Correct!';
+    fb.className='correct';
+    flashMain('correct');
+    state.sessionCorrect++;
+    state.sessionStreak++;
+    if(state.sessionStreak>state.sessionBestStreak) state.sessionBestStreak=state.sessionStreak;
+    rec.attempts++; rec.correct++; rec.streak++;
+    if(rec.streak>rec.best_streak) rec.best_streak=rec.streak;
+    updateAdaptiveDiff(mod,diff,true);
+    awardBadge(mod,diff,rec);
+    // Auto-advance after short delay
+    setTimeout(()=>{
+      $('check-btn').disabled=true;
+      loadNewProblem();
+    }, 900);
+  } else if(result.result==='partial'){
+    input.className='wrong';
+    fb.textContent=result.msg||'Partially correct — keep going';
+    fb.className='info';
+    state.answered=false; // let them try again
+    input.disabled=false;
+    $('check-btn').disabled=false;
+  } else {
+    input.className='wrong';
+    fb.className='wrong';
+    // Show canonical answer
+    let canonTex='';
+    ensureKatex(()=>{
+      const span=document.createElement('span');
+      try { renderKaTeX(`\\boxed{${state.currentProblem.answerTex}}`,span); } catch(e){ span.textContent='—'; }
+      fb.textContent='✗ Incorrect. Answer: ';
+      fb.appendChild(span);
+    });
+    flashMain('wrong');
+    state.sessionStreak=0;
+    rec.attempts++; rec.streak=0;
+    updateAdaptiveDiff(mod,diff,false);
+    // Show steps
+    renderSteps(state.currentProblem,1);
+    state.stepsRevealed=1;
+    $('check-btn').disabled=true;
+  }
+
+  if(state.mode==='exam') state.examAnswers.push({correct:result.result==='correct'});
+  state.sessionTotal++;
+  updateStats();
+  saveStore();
+}
+
+function revealNextStep(){
+  if(!state.currentProblem) return;
+  const steps=(state.currentProblem.steps||[]).filter(Boolean);
+  if(state.stepsRevealed<steps.length){
+    state.stepsRevealed++;
+    renderSteps(state.currentProblem,state.stepsRevealed);
+  }
+}
+
+function updateStats(){
+  $('stat-correct').textContent=state.sessionCorrect;
+  $('stat-total').textContent=state.sessionTotal;
+  $('stat-streak').textContent=state.sessionStreak;
+  $('stat-best').textContent=state.sessionBestStreak;
+  const pct=state.sessionTotal>0?Math.round(state.sessionCorrect/state.sessionTotal*100):0;
+  $('progress-bar-fill').style.width=pct+'%';
+  checkReadiness();
+}
+
+function checkReadiness(){
+  const mods=['factoring','exponents','fractions'];
+  const ready=mods.every(m=>{
+    const d2=store[m][2];
+    const d3=store[m][3];
+    const acc2=d2.attempts>=5?d2.correct/d2.attempts:0;
+    const acc3=d3.attempts>=5?d3.correct/d3.attempts:0;
+    return acc2>=0.8||acc3>=0.8;
+  });
+  const el=$('readiness');
+  if(ready){ el.textContent='✓ exam ready'; el.className='ready'; }
+  else { el.textContent='exam ready?'; el.className='not-ready'; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TIMER
+// ─────────────────────────────────────────────────────────────────────────────
+
+function startTimer(seconds){
+  clearInterval(state.timerInterval);
+  state.timerSeconds=seconds||0;
+  const countdown=seconds>0;
+  const el=$('timer');
+  state.timerInterval=setInterval(()=>{
+    if(countdown){
+      state.timerSeconds--;
+      if(state.timerSeconds<=0){ clearInterval(state.timerInterval); endSprint(); return; }
+      const m=Math.floor(state.timerSeconds/60), s=state.timerSeconds%60;
+      el.textContent=`${m}:${s.toString().padStart(2,'0')}`;
+      el.className=state.timerSeconds<300?'warning':'';
+      if(state.timerSeconds<60) el.className='danger';
+    } else {
+      state.timerSeconds++;
+      const m=Math.floor(state.timerSeconds/60), s=state.timerSeconds%60;
+      el.textContent=`${m}:${s.toString().padStart(2,'0')}`;
+      el.className='';
+    }
+  },1000);
+}
+
+function endSprint(){
+  $('timer').textContent='00:00';
+  showSessionSummary();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SESSION MODES
+// ─────────────────────────────────────────────────────────────────────────────
+
+function startSession(){
+  state.sessionCorrect=0; state.sessionTotal=0;
+  state.sessionStreak=0; state.sessionBestStreak=0;
+  updateStats();
+  clearInterval(state.timerInterval);
+  $('timer').textContent='—';
+
+  if(state.mode==='sprint'){
+    startTimer(25*60);
+    loadNewProblem();
+  } else if(state.mode==='exam'){
+    // generate 20 mixed problems
+    state.examProblems=[];
+    state.examIdx=0;
+    state.examAnswers=[];
+    const mods=['factoring','exponents','fractions'];
+    for(let i=0;i<20;i++){
+      const m=mods[i%3];
+      const d=Math.ceil((i+1)/7); // roughly 1,1,2,2,3,3...
+      const pool_key=`diff${Math.min(d,3)}`;
+      let pool;
+      if(m==='factoring') pool=factoring[pool_key]||factoring.diff1;
+      else if(m==='exponents') pool=exponents[pool_key]||exponents.diff1;
+      else pool=fractions[pool_key]||fractions.diff1;
+      const p=pick(pool)();
+      p.module=m; p.difficulty=Math.min(d,3);
+      state.examProblems.push(p);
+    }
+    startTimer(30*60);
+    loadNewProblem();
+  } else {
+    startTimer(0);
+    loadNewProblem();
+  }
+}
+
+function showSessionSummary(){
+  clearInterval(state.timerInterval);
+  const pct=state.sessionTotal>0?Math.round(state.sessionCorrect/state.sessionTotal*100):0;
+  $('summary-title').textContent=state.mode==='exam'?'Exam Complete':'Sprint Complete';
+  $('summary-acc').textContent=pct+'%';
+  $('summary-acc').style.color=pct>=80?'var(--green)':pct>=60?'var(--yellow)':'var(--red)';
+  const rows=$('summary-rows');
+  rows.innerHTML=`
+    <div class="summary-row"><span>Problems attempted</span><strong>${state.sessionTotal}</strong></div>
+    <div class="summary-row"><span>Correct</span><strong>${state.sessionCorrect}</strong></div>
+    <div class="summary-row"><span>Best streak</span><strong>${state.sessionBestStreak}</strong></div>
+  `;
+  // Save session
+  const now=new Date();
+  const dateStr=now.toISOString().split('T')[0];
+  store.sessions.push({date:dateStr,problems:state.sessionTotal,accuracy:state.sessionTotal>0?state.sessionCorrect/state.sessionTotal:0});
+  if(store.sessions.length>30) store.sessions=store.sessions.slice(-30);
+  saveStore();
+  $('session-summary-overlay').classList.add('visible');
+}
+
+function showExamSummary(){ showSessionSummary(); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BADGES
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ALL_BADGES=[
+  {id:'f1_master',label:'Factoring I Master',req:{mod:'factoring',diff:1}},
+  {id:'f2_master',label:'Factoring II Master',req:{mod:'factoring',diff:2}},
+  {id:'f3_master',label:'Factoring III Master',req:{mod:'factoring',diff:3}},
+  {id:'e1_master',label:'Exponents I Master',req:{mod:'exponents',diff:1}},
+  {id:'e2_master',label:'Exponents II Master',req:{mod:'exponents',diff:2}},
+  {id:'e3_master',label:'Exponents III Master',req:{mod:'exponents',diff:3}},
+  {id:'fr1_master',label:'Fractions I Master',req:{mod:'fractions',diff:1}},
+  {id:'fr2_master',label:'Fractions II Master',req:{mod:'fractions',diff:2}},
+  {id:'fr3_master',label:'Fractions III Master',req:{mod:'fractions',diff:3}},
+];
+
+function awardBadge(mod,diff,rec){
+  // 10/10 in last 10
+  if(rec.last10.length>=10 && rec.last10.slice(-10).every(v=>v===1)){
+    const badge=ALL_BADGES.find(b=>b.req.mod===mod&&b.req.diff===diff);
+    if(badge && !store.badges[badge.id]){
+      store.badges[badge.id]=new Date().toISOString();
+      saveStore();
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+function renderDashboard(){
+  // Module grid
+  const grid=$('module-grid');
+  grid.innerHTML='';
+  const mods=[{key:'factoring',label:'Factoring'},{key:'exponents',label:'Exponents'},{key:'fractions',label:'Fractions'}];
+  mods.forEach(({key,label})=>{
+    const card=document.createElement('div');
+    card.className='module-card';
+    let html=`<h4>${label}</h4>`;
+    [1,2,3].forEach(d=>{
+      const r=store[key][d];
+      const acc=r.attempts>0?Math.round(r.correct/r.attempts*100):null;
+      const accStr=acc!==null?`${acc}%`:'—';
+      const cls=acc===null?'':acc>=80?'high':acc>=60?'mid':'low';
+      html+=`<div class="diff-row"><span>Diff ${d}</span><span class="acc ${cls}">${accStr} <small style="color:var(--muted)">(${r.attempts})</small></span></div>`;
+    });
+    card.innerHTML=html;
+    grid.appendChild(card);
+  });
+
+  // Spark chart
+  const spark=$('spark-chart');
+  spark.innerHTML='';
+  const sessions=store.sessions.slice(-10);
+  if(sessions.length===0){
+    spark.innerHTML='<span style="color:var(--muted);font-size:12px;">No sessions yet</span>';
+  } else {
+    sessions.forEach(s=>{
+      const bar=document.createElement('div');
+      bar.className='spark-bar';
+      bar.style.height=Math.round(s.accuracy*100)+'%';
+      bar.title=`${s.date}: ${Math.round(s.accuracy*100)}%`;
+      spark.appendChild(bar);
+    });
+  }
+
+  // Badges
+  const bg=$('badge-grid');
+  bg.innerHTML='';
+  ALL_BADGES.forEach(b=>{
+    const div=document.createElement('div');
+    div.className='badge'+(store.badges[b.id]?' earned':'');
+    div.textContent=b.label;
+    bg.appendChild(div);
+  });
+
+  // Totals
+  let totalAttempts=0,totalCorrect=0;
+  ['factoring','exponents','fractions'].forEach(m=>{
+    [1,2,3].forEach(d=>{ totalAttempts+=store[m][d].attempts; totalCorrect+=store[m][d].correct; });
+  });
+  $('dash-totals').innerHTML=`
+    Total problems: <strong>${totalAttempts}</strong><br>
+    Total correct: <strong>${totalCorrect}</strong><br>
+    All-time accuracy: <strong>${totalAttempts>0?Math.round(totalCorrect/totalAttempts*100)+'%':'—'}</strong>
+  `;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KEYBOARD SHORTCUTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e=>{
+  const inInput=document.activeElement===$('answer-input');
+  if(e.key==='Enter' && inInput){ e.preventDefault(); if(!state.answered) submitAnswer(); else loadNewProblem(); return; }
+  if(e.key==='Tab' && !inInput){ e.preventDefault(); revealNextStep(); return; }
+  if(e.key===' ' && !inInput){ e.preventDefault(); loadNewProblem(); return; }
+  if((e.key==='1'||e.key==='2'||e.key==='3') && !inInput){
+    document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+    const btn=document.querySelector(`.diff-btn[data-diff="${e.key}"]`);
+    if(btn){ btn.classList.add('active'); state.difficulty=parseInt(e.key); }
+    return;
+  }
+  if(e.ctrlKey && e.key==='r'){ e.preventDefault(); loadNewProblem(); return; }
+  if(e.key==='Tab' && inInput){ e.preventDefault(); revealNextStep(); return; }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LIVE PREVIEW
+// ─────────────────────────────────────────────────────────────────────────────
+
+$('answer-input').addEventListener('input', e=>{
+  const val=e.target.value;
+  if(!val.trim()){ $('live-preview').innerHTML=''; $('parse-error').textContent=''; return; }
+  const tex=userInputToTex(val);
+  const preview=$('live-preview');
+  try {
+    preview.innerHTML='';
+    ensureKatex(()=>renderKaTeX(tex, preview));
+    $('parse-error').textContent='';
+  } catch(err){
+    preview.innerHTML='';
+    $('parse-error').textContent='Can\'t parse — check your syntax';
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EVENT WIRING
+// ─────────────────────────────────────────────────────────────────────────────
+
+$('check-btn').addEventListener('click', submitAnswer);
+$('reveal-step-btn').addEventListener('click', revealNextStep);
+$('skip-btn').addEventListener('click', ()=>loadNewProblem());
+$('summary-continue-btn').addEventListener('click',()=>{
+  $('session-summary-overlay').classList.remove('visible');
+  state.mode='endless';
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode==='endless'));
+  startSession();
+});
+$('dash-btn').addEventListener('click',()=>{
+  renderDashboard();
+  $('dashboard-overlay').classList.add('visible');
+});
+$('dash-close-btn').addEventListener('click',()=>$('dashboard-overlay').classList.remove('visible'));
+
+// Module tabs
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    state.module=tab.dataset.module;
+    loadNewProblem();
+  });
+});
+
+// Difficulty buttons
+document.querySelectorAll('.diff-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.difficulty=btn.dataset.diff==='auto'?'auto':parseInt(btn.dataset.diff);
+    loadNewProblem();
+  });
+});
+
+// Mode buttons
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  if(!btn.dataset.mode) return;
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode=btn.dataset.mode;
+    startSession();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+
+ensureKatex(()=>{
+  startSession();
+});
+
+// Fallback: if KaTeX takes too long, try anyway
+setTimeout(()=>{
+  if(!state.currentProblem) startSession();
+},3000);
+</script>
+</body>
+</html>
