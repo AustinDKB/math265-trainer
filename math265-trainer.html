@@ -286,50 +286,50 @@ function simplifyFrac(n,d){ const g=gcd(Math.abs(n),Math.abs(d)); return [n/g,d/
 // ─────────────────────────────────────────────────────────────────────────────
 const CONFIG = {
   factoring: {
-    diffSquares_a:        [2, 15],   // x² − a²: root range
-    simpleTrinomial_pq:   [-12, 12], // x²+bx+c roots p,q
-    gcf_k:                [2, 7],    // GCF coefficient
-    gcf_pq:               [-8, 8],   // GCF inner roots
-    leadCoeff_a:          [2,3,5,6], // leading coeff choices (array)
-    leadCoeff_pq:         [-8, 8],   // (ax+p)(x+q) inner values
-    cubes_a:              [2, 6],    // x³±a³ root
-    quartic_a:            [2, 4],    // x⁴−a⁴ root
-    grouping_ab:          [-8, 8],   // grouping a,b
-    quadDisguise_pq:      [-8, 8],   // u-sub roots
-    allXterms_k:          [2, 6],    // GCF·x factor for all-x-terms type
-    allXterms_pq:         [-8, 8],   // roots of inner trinomial
-    fracNegGcf_k:         [2, 8],    // diff4: outer integer coefficient
-    trigTrinomial_pq:     [-6, 6],   // diff5: trig trinomial roots
-    trigLeadCoeff_a:      [2, 3],    // diff5: leading coefficient for trig ax² type
+    diffSquares_a:        [2, 200],   // x² − a²: root range
+    simpleTrinomial_pq:   [-16, 16], // x²+bx+c roots p,q
+    gcf_k:                [2, 13],    // GCF coefficient
+    gcf_pq:               [-16, 16],   // GCF inner roots
+    leadCoeff_a:          [2,3,5,6,7,8,9], // leading coeff choices (array)
+    leadCoeff_pq:         [-12, 12],   // (ax+p)(x+q) inner values
+    cubes_a:              [2, 8],    // x³±a³ root
+    quartic_a:            [2, 12],    // x⁴−a⁴ root
+    grouping_ab:          [-16, 16],   // grouping a,b
+    quadDisguise_pq:      [-16, 16],   // u-sub roots
+    allXterms_k:          [2, 19],    // GCF·x factor for all-x-terms type
+    allXterms_pq:         [-16, 16],   // roots of inner trinomial
+    fracNegGcf_k:         [2, 12],    // diff4: outer integer coefficient
+    trigTrinomial_pq:     [-9, 9],   // diff5: trig trinomial roots
+    trigLeadCoeff_a:      [2, 5],    // diff5: leading coefficient for trig ax² type
   },
   exponents: {
-    sameBase_ab:          [1, 8],    // x^a · x^b
-    divideBase_b:         [1, 8],    // denominator exp
-    divideBase_aExtra:    [1, 4],    // numerator = b + this
+    sameBase_ab:          [1, 12],    // x^a · x^b
+    divideBase_b:         [1, 12],    // denominator exp
+    divideBase_aExtra:    [1, 8],    // numerator = b + this
     powerPower_ab:        [2, 5],    // (x^a)^b
     negExp_a:             [1, 5],    // x^(-a)
     radicalToExp_m:       [1, 5],    // mth power under radical
     radicalToExp_n:       [2,3,4],   // radical index (array)
-    fracExpArith_num:     [1, 3],    // fractional exp numerators
-    fracExpArith_den:     [2,3,4],   // fractional exp denominators (array)
-    coeffRewrite_k:       [2, 10],   // k/(x^a√x) coefficient
-    coeffRewrite_a:       [1, 3],    // x^a in denominator
+    fracExpArith_num:     [1, 3, 5],    // fractional exp numerators
+    fracExpArith_den:     [2,3,4,5,6],   // fractional exp denominators (array)
+    coeffRewrite_k:       [2, 15],   // k/(x^a√x) coefficient
+    coeffRewrite_a:       [1, 5],    // x^a in denominator
     higherRadical_n:      [3,4,5],   // higher radical index (array)
-    higherRadical_m:      [2, 7],    // power under higher radical
+    higherRadical_m:      [2, 13],    // power under higher radical
   },
   fractions: {
-    addFrac_num:          [1, 5],    // a/b + c/d numerators
-    addFrac_den:          [2, 9],    // denominators
-    divFrac_all:          [1, 9],    // (a/b)÷(c/d) all values
-    cancelFrac_a:         [1, 8],    // (x²−a²)/(x+a) root
-    threeTermLCD_a:       [1, 5],    // 1/(x±a) + … root
-    quotientRule_n:       [2, 4],    // derivative degree
-    quotientRule_a:       [1, 5],    // (x+a) denominator
+    addFrac_num:          [1, 25],    // a/b + c/d numerators
+    addFrac_den:          [2, 25],    // denominators
+    divFrac_all:          [1, 15],    // (a/b)÷(c/d) all values
+    cancelFrac_a:         [1, 12],    // (x²−a²)/(x+a) root
+    threeTermLCD_a:       [1, 12],    // 1/(x±a) + … root
+    quotientRule_n:       [2, 8],    // derivative degree
+    quotientRule_a:       [1, 8],    // (x+a) denominator
   },
   adaptive: {
     bumpUpStreak:   5,   // correct-in-a-row to increase difficulty
     dropDownWrong:  3,   // wrongs-in-last-5 to decrease difficulty
-    dedupWindow:    30,  // how many recent problems to avoid repeating
+    dedupWindow:    100,  // how many recent problems to avoid repeating
   },
 };
 
@@ -349,7 +349,17 @@ const STORE_KEY = 'math265_v3';
 function loadStore(){
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if(raw) return JSON.parse(raw);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      const def = defaultStore();
+      ['factoring','exponents','fractions'].forEach(m=>{
+        if(!parsed[m]) parsed[m]=def[m];
+        else [1,2,3,4,5].forEach(d=>{ if(!parsed[m][d]) parsed[m][d]=def[m][d]; });
+      });
+      if(!parsed.sessions) parsed.sessions=[];
+      if(!parsed.badges) parsed.badges={};
+      return parsed;
+    }
   } catch(e){}
   return defaultStore();
 }
@@ -552,14 +562,14 @@ factoring.diff3 = [
     const term4=a*b>=0?`+${a*b}`:`${a*b}`;
     return {
       problemTex:`x^3${term2}${term3}${term4}`,
-      answerTex:`(x^2${term3})(x${f1a})`,
+      answerTex:`(x^2${f1b})(x${f1a})`,
       answerNorm: null, // use string check
       originalExpanded: `x^3${term2}${term3}${term4}`,
       isGrouping: true, a, b,
       steps:[
         {label:'Group first two and last two',math:`(x^3${term2})+(${b}x${term4})`,note:''},
         {label:'Factor out from each group',math:`x^2(x${f1a})+${b}(x${f1a})`,note:''},
-        {label:'Factor common binomial',math:`(x^2${term3})(x${f1a})`,note:''},
+        {label:'Factor common binomial',math:`(x^2${f1b})(x${f1a})`,note:''},
       ]
     };
   },
@@ -930,7 +940,7 @@ exponents.diff3 = [
     return {
       problemTex:`\\dfrac{${k}}{x^{${a}}\\sqrt{x}}`,
       answerTex:`${k}x^{-${expStr}}`,
-      answerNorm:`${k}*x^(-${num}/2)`,
+      answerNorm:`${k}x^(-${num}/2)`,
       steps:[
         {label:'Rewrite √x',math:`\\frac{${k}}{x^{${a}} \\cdot x^{1/2}}`,note:''},
         {label:'Combine base',math:`\\frac{${k}}{x^{${a}+1/2}}=\\frac{${k}}{x^{${expStr}}}`,note:''},
