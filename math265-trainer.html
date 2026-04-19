@@ -196,6 +196,8 @@
     <button class="diff-btn" data-diff="1">1</button>
     <button class="diff-btn" data-diff="2">2</button>
     <button class="diff-btn" data-diff="3">3</button>
+    <button class="diff-btn" data-diff="4">4</button>
+    <button class="diff-btn" data-diff="5">5</button>
     <button class="diff-btn active" data-diff="auto">Auto</button>
     <div id="mode-btns">
       <button class="mode-btn active" data-mode="endless">Endless</button>
@@ -296,6 +298,9 @@ const CONFIG = {
     quadDisguise_pq:      [-8, 8],   // u-sub roots
     allXterms_k:          [2, 6],    // GCF·x factor for all-x-terms type
     allXterms_pq:         [-8, 8],   // roots of inner trinomial
+    fracNegGcf_k:         [2, 8],    // diff4: outer integer coefficient
+    trigTrinomial_pq:     [-6, 6],   // diff5: trig trinomial roots
+    trigLeadCoeff_a:      [2, 3],    // diff5: leading coefficient for trig ax² type
   },
   exponents: {
     sameBase_ab:          [1, 8],    // x^a · x^b
@@ -349,7 +354,7 @@ function loadStore(){
   return defaultStore();
 }
 function defaultStore(){
-  const mk = ()=>({1:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},2:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},3:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]}});
+  const mk = ()=>({1:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},2:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},3:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},4:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},5:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]}});
   return { factoring: mk(), exponents: mk(), fractions: mk(), sessions:[], badges:{} };
 }
 function saveStore(){ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
@@ -608,6 +613,188 @@ factoring.diff1.push(()=>{
       {label:'Find roots of inner trinomial',math:`p+q=${b},\\; pq=${c}`,note:`p=${p}, q=${q}`},
       {label:'Write all factors',math:`${k}x(${f1})(${f2})`,note:'Three factors total'},
     ]
+  };
+});
+
+/* ── FACTORING DIFF 4 — Fractional/Negative Exponent GCF ── */
+factoring.diff4 = [];
+
+// 4A: x^(5/2) - x^(1/2) → x^(1/2)(x+1)(x-1)
+factoring.diff4.push(()=>({
+  problemTex: `x^{5/2} - x^{1/2}`,
+  answerTex:  `x^{1/2}(x+1)(x-1)`,
+  validForms: ['x^(1/2)(x+1)(x-1)','x^(1/2)(x-1)(x+1)','(x+1)(x-1)x^(1/2)'],
+  steps:[
+    {label:'Factor out lowest power',math:`x^{1/2}(x^2-1)`,note:'GCF = x^{1/2}'},
+    {label:'Difference of squares',math:`x^{1/2}(x+1)(x-1)`,note:'x^2-1 = (x+1)(x-1)'},
+  ],
+  isFracExpGcf: true,
+}));
+
+// 4B: x^(-1) + x^(-3) → x^(-3)(x^2+1)
+factoring.diff4.push(()=>({
+  problemTex: `x^{-1} + x^{-3}`,
+  answerTex:  `x^{-3}(x^2+1)`,
+  validForms: ['x^(-3)(x^2+1)','(x^2+1)x^(-3)'],
+  steps:[
+    {label:'Identify lowest exponent',math:`-3`,note:'factor out x^{-3}'},
+    {label:'Divide each term',math:`x^{-1-(-3)}=x^2,\\quad x^{-3-(-3)}=1`,note:''},
+    {label:'Result',math:`x^{-3}(x^2+1)`,note:'x^2+1 is irreducible over reals'},
+  ],
+  isFracExpGcf: true,
+}));
+
+// 4C: kx^(3/2) - (k*r)x^(1/2) → kx^(1/2)(x - r)
+factoring.diff4.push(()=>{
+  const k=R(2,8), r=R(2,6);
+  return {
+    problemTex: `${k}x^{3/2} - ${k*r}x^{1/2}`,
+    answerTex:  `${k}x^{1/2}(x-${r})`,
+    validForms: [`${k}x^(1/2)(x-${r})`,`x^(1/2)(${k}x-${k*r})`],
+    steps:[
+      {label:`GCF = ${k}x^{1/2}`,math:`${k}x^{1/2}\\left(x - ${r}\\right)`,note:'lowest power is 1/2'},
+      {label:'Simplify inner',math:`x^{3/2-1/2}=x^1=x`,note:''},
+      {label:'Result',math:`${k}x^{1/2}(x-${r})`,note:''},
+    ],
+    isFracExpGcf: true,
+  };
+});
+
+// 4D: kx^(-2) - (k*m)x^(-1) → kx^(-2)(1 - mx)
+factoring.diff4.push(()=>{
+  const k=R(2,6), m=R(2,5);
+  return {
+    problemTex: `${k}x^{-2} - ${k*m}x^{-1}`,
+    answerTex:  `${k}x^{-2}(1-${m}x)`,
+    validForms: [`${k}x^(-2)(1-${m}x)`,`(1-${m}x)${k}x^(-2)`],
+    steps:[
+      {label:'Lowest exponent = -2',math:`\\text{factor out }${k}x^{-2}`,note:''},
+      {label:'First term',math:`${k}x^{-2}\\div ${k}x^{-2}=1`,note:''},
+      {label:'Second term',math:`${k*m}x^{-1}\\div ${k}x^{-2}=${m}x`,note:'x^{-1-(-2)}=x^1=x'},
+      {label:'Result',math:`${k}x^{-2}(1-${m}x)`,note:''},
+    ],
+    isFracExpGcf: true,
+  };
+});
+
+/* ── FACTORING DIFF 5 — Trig Factoring + Rational Roots ── */
+factoring.diff5 = [];
+
+// 5A: sin²x + b·sinx + c → (sinx+p)(sinx+q)
+factoring.diff5.push(()=>{
+  let p,q,att=0;
+  do { p=R(-6,6); q=R(-6,6); att++; } while((p===0||q===0||p===q)&&att<50);
+  const b=p+q, c=p*q;
+  const bStr=b>=0?`+${b}`:`${b}`;
+  const cStr=c>=0?`+${c}`:`${c}`;
+  const fp=p>=0?`+${p}`:`${p}`;
+  const fq=q>=0?`+${q}`:`${q}`;
+  return {
+    problemTex:`\\sin^2 x${bStr}\\sin x${cStr}`,
+    answerTex:`(\\sin x${fp})(\\sin x${fq})`,
+    originalExpandedPoly: expandPoly(`(x${fp})*(x${fq})`),
+    steps:[
+      {label:'Let u = sin x',math:`u^2${bStr}u${cStr}`,note:'substitute'},
+      {label:`Find p, q: p+q=${b}, pq=${c}`,math:`p=${p},\\quad q=${q}`,note:''},
+      {label:'Factor in u',math:`(u${fp})(u${fq})`,note:''},
+      {label:'Substitute back',math:`(\\sin x${fp})(\\sin x${fq})`,note:''},
+    ],
+    isTrigFactoring:true, trigFunc:'sin',
+  };
+});
+
+// 5B: a·cos²x + B·cosx + C → (a·cosx+p)(cosx+q)
+factoring.diff5.push(()=>{
+  const a=pick([2,3]);
+  let p,q,att=0;
+  do { p=R(-5,5); q=R(-5,5); att++; } while((p===0||q===0)&&att<50);
+  const B=a*q+p, C=p*q;
+  const Bstr=B>=0?`+${B}`:`${B}`;
+  const Cstr=C>=0?`+${C}`:`${C}`;
+  const fp=p>=0?`+${p}`:`${p}`;
+  const fq=q>=0?`+${q}`:`${q}`;
+  return {
+    problemTex:`${a}\\cos^2 x${Bstr}\\cos x${Cstr}`,
+    answerTex:`(${a}\\cos x${fp})(\\cos x${fq})`,
+    originalExpandedPoly: expandPoly(`(${a}*x${fp})*(x${fq})`),
+    steps:[
+      {label:'Let u = cos x',math:`${a}u^2${Bstr}u${Cstr}`,note:''},
+      {label:`AC = ${a}·${C}=${a*C}, find factors summing to ${B}`,math:`\\text{trial and error or split middle term}`,note:''},
+      {label:'Factor in u',math:`(${a}u${fp})(u${fq})`,note:''},
+      {label:'Substitute back',math:`(${a}\\cos x${fp})(\\cos x${fq})`,note:''},
+    ],
+    isTrigFactoring:true, trigFunc:'cos',
+  };
+});
+
+// 5C: tan²x - k² → (tanx+k)(tanx-k)
+factoring.diff5.push(()=>{
+  const k=R(2,9);
+  return {
+    problemTex:`\\tan^2 x - ${k*k}`,
+    answerTex:`(\\tan x+${k})(\\tan x-${k})`,
+    originalExpandedPoly: expandPoly(`(x+${k})*(x-${k})`),
+    steps:[
+      {label:'Recognize diff of squares',math:`(\\tan x)^2 - ${k}^2`,note:''},
+      {label:'Factor',math:`(\\tan x+${k})(\\tan x-${k})`,note:''},
+    ],
+    isTrigFactoring:true, trigFunc:'tan',
+  };
+});
+
+// 5D: sinx·cos²x - sinx → sinx(cosx+1)(cosx-1)
+factoring.diff5.push(()=>({
+  problemTex:`\\sin x\\cos^2 x - \\sin x`,
+  answerTex:`\\sin x(\\cos x+1)(\\cos x-1)`,
+  validForms:['sinx(cosx+1)(cosx-1)','sinx(cosx-1)(cosx+1)'],
+  steps:[
+    {label:'Factor GCF = sin x',math:`\\sin x(\\cos^2 x - 1)`,note:''},
+    {label:'Diff of squares',math:`\\sin x(\\cos x+1)(\\cos x-1)`,note:'cos²x - 1 = (cosx+1)(cosx-1)'},
+  ],
+  isTrigFactoring:true, trigFunc:'mixed',
+}));
+
+// 5E: Cubic with 3 distinct integer roots
+factoring.diff5.push(()=>{
+  const pool=[-4,-3,-2,-1,1,2,3,4].sort(()=>Math.random()-0.5);
+  const [r1,r2,r3]=pool.slice(0,3);
+  const B=-(r1+r2+r3), C=r1*r2+r1*r3+r2*r3, D=-(r1*r2*r3);
+  const fac=r=>(r>=0?`x-${r}`:`x+${Math.abs(r)}`);
+  const dq2=B+r1, dq1=C+r1*(B+r1);
+  const dq2s=dq2>=0?`+${dq2}`:`${dq2}`;
+  const dq1s=dq1>=0?`+${dq1}`:`${dq1}`;
+  return {
+    problemTex: polyToTex([1,B,C,D]),
+    answerTex:  `(${fac(r1)})(${fac(r2)})(${fac(r3)})`,
+    originalExpanded: expandPoly(`(${fac(r1)})*(${fac(r2)})*(${fac(r3)})`),
+    steps:[
+      {label:'Rational Root candidates',math:`\\pm\\text{factors of }${Math.abs(D)}`,note:'test each'},
+      {label:`Test x = ${r1} (synthetic division)`,math:`\\text{remainder} = 0 \\Rightarrow (${fac(r1)}) \\text{ is a factor}`,note:''},
+      {label:'Depressed quadratic',math:`x^2${dq2s}x${dq1s}`,note:'divide out the root'},
+      {label:'Factor quadratic',math:`(${fac(r2)})(${fac(r3)})`,note:''},
+      {label:'Final answer',math:`(${fac(r1)})(${fac(r2)})(${fac(r3)})`,note:''},
+    ],
+  };
+});
+
+// 5F: Repeated root (x+a)²(x-b) expanded
+factoring.diff5.push(()=>{
+  const a=R(1,4);
+  let b; do { b=R(1,4); } while(b===a);
+  const B=2*a-b, C=a*a-2*a*b, D=-(a*a*b);
+  const dq1=2*a, dq0=a*a;
+  const dq1s=dq1>=0?`+${dq1}`:`${dq1}`;
+  const dq0s=dq0>=0?`+${dq0}`:`${dq0}`;
+  return {
+    problemTex: polyToTex([1,B,C,D]),
+    answerTex:  `(x+${a})^2(x-${b})`,
+    originalExpanded: expandPoly(`(x+${a})*(x+${a})*(x-${b})`),
+    steps:[
+      {label:`Test x = ${-a} (synthetic division)`,math:`\\text{remainder} = 0`,note:'root of multiplicity 2'},
+      {label:'Depressed quadratic',math:`x^2${dq1s}x${dq0s}`,note:''},
+      {label:'Perfect square',math:`(x+${a})^2`,note:''},
+      {label:'Final answer',math:`(x+${a})^2(x-${b})`,note:''},
+    ],
   };
 });
 
@@ -1089,6 +1276,14 @@ function userInputToTex(input){
   let s = input.trim();
   if(!s) return '';
 
+  // Trig notation (must run before exponent rewrites)
+  s = s.replace(/\bsin\^2\s*x\b/g,'\\sin^2 x');
+  s = s.replace(/\bcos\^2\s*x\b/g,'\\cos^2 x');
+  s = s.replace(/\btan\^2\s*x\b/g,'\\tan^2 x');
+  s = s.replace(/\bsin\s*x\b/g,'\\sin x');
+  s = s.replace(/\bcos\s*x\b/g,'\\cos x');
+  s = s.replace(/\btan\s*x\b/g,'\\tan x');
+
   // x^(3/2) -> x^{3/2}
   s = s.replace(/x\^\((-?\d+)\/(\d+)\)/g, (m,n,d)=>`x^{${n}/${d}}`);
   s = s.replace(/x\^(-?\d+)\/(\d+)/g, (m,n,d)=>`x^{${n}/${d}}`);
@@ -1129,6 +1324,8 @@ function checkAnswer(problem, userInput){
 
   // For polynomial factoring problems: expand user input and compare to problem expansion
   if(problem.module === 'factoring'){
+    if(problem.isFracExpGcf)    return checkExpFactoringAnswer(problem, u);
+    if(problem.isTrigFactoring) return checkTrigFactoringAnswer(problem, u);
     return checkFactoringAnswer(problem, u);
   }
   if(problem.module === 'exponents'){
@@ -1238,6 +1435,57 @@ function checkFractionAnswer(problem, u){
   return {result:'wrong'};
 }
 
+function normalizeExpFracForm(s){
+  return s.trim().toLowerCase()
+    .replace(/\s+/g,'')
+    .replace(/x\^\{([^}]+)\}/g,'x^($1)')
+    .replace(/x\^(-?\d+\/\d+)(?!\))/g,'x^($1)')
+    .replace(/x\^(-\d+)(?!\))/g,'x^($1)')
+    .replace(/\*/g,'');
+}
+
+function checkExpFactoringAnswer(problem, u){
+  const norm = normalizeExpFracForm(u);
+  for(const f of (problem.validForms||[])){
+    if(norm === normalizeExpFracForm(f)) return {result:'correct'};
+  }
+  const strip = s=>s.replace(/\\[a-z]+/g,'').replace(/[{}]/g,'').replace(/\s/g,'').toLowerCase();
+  if(strip(norm)===strip(problem.answerTex)) return {result:'correct'};
+  return {result:'wrong'};
+}
+
+function stripTrigToX(s){
+  return s
+    .replace(/\\sin\^2\s*x/g,'x^2').replace(/\\cos\^2\s*x/g,'x^2').replace(/\\tan\^2\s*x/g,'x^2')
+    .replace(/\(sinx\)\^2/g,'x^2').replace(/\(cosx\)\^2/g,'x^2').replace(/\(tanx\)\^2/g,'x^2')
+    .replace(/sin\^2\s*x/g,'x^2').replace(/cos\^2\s*x/g,'x^2').replace(/tan\^2\s*x/g,'x^2')
+    .replace(/\\sin\s*x/g,'x').replace(/\\cos\s*x/g,'x').replace(/\\tan\s*x/g,'x')
+    .replace(/\bsinx\b/g,'x').replace(/\bcosx\b/g,'x').replace(/\btanx\b/g,'x')
+    .replace(/\bsin\s+x\b/g,'x').replace(/\bcos\s+x\b/g,'x').replace(/\btan\s+x\b/g,'x');
+}
+
+function checkTrigFactoringAnswer(problem, u){
+  if(problem.trigFunc==='mixed'){
+    const norms=s=>s.toLowerCase().replace(/\s+/g,'')
+      .replace(/\\sin\s*x/g,'sinx').replace(/\\cos\s*x/g,'cosx').replace(/\\tan\s*x/g,'tanx')
+      .replace(/\\/g,'').replace(/[{}]/g,'').replace(/\*/g,'');
+    const nu=norms(u);
+    for(const f of (problem.validForms||[])){
+      if(nu===norms(f)) return {result:'correct'};
+    }
+    return {result:'wrong'};
+  }
+  const substituted = stripTrigToX(u);
+  const synthetic = {
+    module:'factoring',
+    originalExpanded: problem.originalExpandedPoly,
+    isGrouping: false,
+    isQuadDisguise: false,
+    answerTex: '',
+  };
+  return checkFactoringAnswer(synthetic, substituted);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // PROBLEM PICKER
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1296,8 +1544,8 @@ function updateAdaptiveDiff(mod, diff, correct){
   const last5 = rec.last10.slice(-5);
   const sumLast5 = last5.reduce((s,v)=>s+v,0);
 
-  if(last5.length===bump && sumLast5===bump && diff < 3){
-    state.autoDiff[mod] = Math.min(3, diff+1);
+  if(last5.length===bump && sumLast5===bump && diff < 5){
+    state.autoDiff[mod] = Math.min(5, diff+1);
   } else if(last5.length>=drop && (last5.length-sumLast5)>=drop && diff > 1){
     state.autoDiff[mod] = Math.max(1, diff-1);
   }
@@ -1416,6 +1664,7 @@ function submitAnswer(){
 
   const mod=state.currentProblem.module;
   const diff=state.currentProblem.difficulty;
+  if(!store[mod][diff]) store[mod][diff]={attempts:0,correct:0,streak:0,best_streak:0,last10:[]};
   const rec=store[mod][diff];
 
   const fb=$('feedback');
@@ -1557,13 +1806,13 @@ function startSession(){
     for(let i=0;i<20;i++){
       const m=mods[i%3];
       const d=Math.ceil((i+1)/7); // roughly 1,1,2,2,3,3...
-      const pool_key=`diff${Math.min(d,3)}`;
+      const pool_key=`diff${Math.min(d,5)}`;
       let pool;
       if(m==='factoring') pool=factoring[pool_key]||factoring.diff1;
       else if(m==='exponents') pool=exponents[pool_key]||exponents.diff1;
       else pool=fractions[pool_key]||fractions.diff1;
       const p=pick(pool)();
-      p.module=m; p.difficulty=Math.min(d,3);
+      p.module=m; p.difficulty=Math.min(d,5);
       state.examProblems.push(p);
     }
     startTimer(30*60);
@@ -1611,6 +1860,8 @@ const ALL_BADGES=[
   {id:'fr1_master',label:'Fractions I Master',req:{mod:'fractions',diff:1}},
   {id:'fr2_master',label:'Fractions II Master',req:{mod:'fractions',diff:2}},
   {id:'fr3_master',label:'Fractions III Master',req:{mod:'fractions',diff:3}},
+  {id:'f4_master',label:'Factoring IV Master',req:{mod:'factoring',diff:4}},
+  {id:'f5_master',label:'Factoring V Master',req:{mod:'factoring',diff:5}},
 ];
 
 function awardBadge(mod,diff,rec){
@@ -1637,7 +1888,7 @@ function renderDashboard(){
     const card=document.createElement('div');
     card.className='module-card';
     let html=`<h4>${label}</h4>`;
-    [1,2,3].forEach(d=>{
+    [1,2,3,4,5].forEach(d=>{
       const r=store[key][d];
       const acc=r.attempts>0?Math.round(r.correct/r.attempts*100):null;
       const accStr=acc!==null?`${acc}%`:'—';
@@ -1677,7 +1928,7 @@ function renderDashboard(){
   // Totals
   let totalAttempts=0,totalCorrect=0;
   ['factoring','exponents','fractions'].forEach(m=>{
-    [1,2,3].forEach(d=>{ totalAttempts+=store[m][d].attempts; totalCorrect+=store[m][d].correct; });
+    [1,2,3,4,5].forEach(d=>{ if(store[m][d]){ totalAttempts+=store[m][d].attempts; totalCorrect+=store[m][d].correct; } });
   });
   $('dash-totals').innerHTML=`
     Total problems: <strong>${totalAttempts}</strong><br>
@@ -1695,7 +1946,7 @@ document.addEventListener('keydown', e=>{
   if(e.key==='Enter' && inInput){ e.preventDefault(); if(!state.answered) submitAnswer(); else loadNewProblem(); return; }
   if(e.key==='Tab' && !inInput){ e.preventDefault(); revealNextStep(); return; }
   if(e.key===' ' && !inInput){ e.preventDefault(); loadNewProblem(); return; }
-  if((e.key==='1'||e.key==='2'||e.key==='3') && !inInput){
+  if((e.key==='1'||e.key==='2'||e.key==='3'||e.key==='4'||e.key==='5') && !inInput){
     document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
     const btn=document.querySelector(`.diff-btn[data-diff="${e.key}"]`);
     if(btn){ btn.classList.add('active'); state.difficulty=parseInt(e.key); }
