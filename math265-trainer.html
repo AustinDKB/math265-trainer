@@ -258,6 +258,15 @@
       <h3>Totals</h3>
       <div id="dash-totals" style="font-size:13px;line-height:2;"></div>
     </div>
+    <div class="dash-section">
+      <h3>30-Day Accuracy Trend</h3>
+      <canvas id="trend-chart" width="500" height="120" style="width:100%;max-width:500px;display:block;"></canvas>
+      <div id="trend-empty" style="color:var(--muted);font-size:12px;display:none;"></div>
+    </div>
+    <div class="dash-section">
+      <h3>Weak Spots <small style="color:var(--muted);font-size:11px;">(≥3 attempts, lowest accuracy)</small></h3>
+      <div id="weak-spots-list"></div>
+    </div>
   </div>
 </div>
 
@@ -1891,7 +1900,7 @@ async function submitAnswer(){
   const _resp = await fetch(`${API_BASE}/api/check`, {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({problem: state.currentProblem, input: u})
+    body: JSON.stringify({problem: state.currentProblem, input: u, timeSec: state.problemTimer})
   });
   const result = await _resp.json();
   state.answered=true;
@@ -2108,7 +2117,7 @@ function awardBadge(mod,diff,rec){
 // DASHBOARD
 // ─────────────────────────────────────────────────────────────────────────────
 
-function renderDashboard(){
+async function renderDashboard(){
   // Module grid
   const grid=$('module-grid');
   grid.innerHTML='';
@@ -2164,6 +2173,80 @@ function renderDashboard(){
     Total correct: <strong>${totalCorrect}</strong><br>
     All-time accuracy: <strong>${totalAttempts>0?Math.round(totalCorrect/totalAttempts*100)+'%':'—'}</strong>
   `;
+
+  // API sections
+  try {
+    const [trendData, weakData] = await Promise.all([
+      fetch(`${API_BASE}/api/stats/trend?days=30`).then(r=>r.json()),
+      fetch(`${API_BASE}/api/stats/weak?min_attempts=3&limit=10`).then(r=>r.json()),
+    ]);
+    renderTrendChart(trendData);
+    renderWeakSpots(weakData);
+  } catch(e){
+    $('trend-chart').style.display='none';
+    $('trend-empty').style.display='block';
+    $('trend-empty').textContent='API offline — start backend to see trend data';
+    $('weak-spots-list').innerHTML='<span style="color:var(--muted);font-size:12px;">API offline</span>';
+  }
+}
+
+function renderTrendChart(data){
+  const canvas=$('trend-chart'), empty=$('trend-empty');
+  if(!data||data.length===0){
+    canvas.style.display='none'; empty.style.display='block';
+    empty.textContent='No trend data yet — answer some problems first';
+    return;
+  }
+  canvas.style.display='block'; empty.style.display='none';
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const points=data.map(d=>d.attempts>0?d.correct/d.attempts:null);
+  const labels=data.map(d=>d.day.slice(5));
+  ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,H);
+  ctx.lineWidth=1;
+  [0.25,0.5,0.75,1.0].forEach(y=>{
+    const py=H-20-(H-30)*y;
+    ctx.strokeStyle='#2a2d3a'; ctx.beginPath(); ctx.moveTo(30,py); ctx.lineTo(W-10,py); ctx.stroke();
+    ctx.fillStyle='#555'; ctx.font='9px monospace'; ctx.fillText(Math.round(y*100)+'%',2,py+3);
+  });
+  const n=points.length, stepX=(W-40)/Math.max(n-1,1);
+  ctx.strokeStyle='#4d9fff'; ctx.lineWidth=2; ctx.beginPath();
+  let started=false;
+  points.forEach((p,i)=>{
+    if(p===null){started=false;return;}
+    const x=30+i*stepX, y=H-20-(H-30)*p;
+    if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  points.forEach((p,i)=>{
+    if(p===null)return;
+    const x=30+i*stepX, y=H-20-(H-30)*p;
+    ctx.fillStyle=p>=0.8?'#4caf50':p>=0.6?'#ffc107':'#f44336';
+    ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
+  });
+  ctx.fillStyle='#666'; ctx.font='9px monospace';
+  if(labels.length>0) ctx.fillText(labels[0],30,H-5);
+  if(labels.length>1) ctx.fillText(labels[labels.length-1],W-34,H-5);
+}
+
+function renderWeakSpots(data){
+  const el=$('weak-spots-list');
+  if(!data||data.length===0){
+    el.innerHTML='<span style="color:var(--muted);font-size:12px;">No weak spots yet — need ≥3 attempts per problem</span>';
+    return;
+  }
+  el.innerHTML=data.map(w=>{
+    const acc=Math.round(w.accuracy*100);
+    const cls=acc>=80?'high':acc>=60?'mid':'low';
+    const mod=w.module.charAt(0).toUpperCase()+w.module.slice(1);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <span class="acc ${cls}" style="min-width:36px">${acc}%</span>
+      <span style="color:var(--muted);min-width:80px">${mod} D${w.difficulty}</span>
+      <span style="color:var(--text);font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${w.problem_tex}">${w.problem_tex}</span>
+      <span style="color:var(--muted)">${w.attempts} tries</span>
+    </div>`;
+  }).join('');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
