@@ -190,6 +190,7 @@ def expand_expression(expr):
     # Add * between )(  and between digit and (
     s = re.sub(r'\)\s*\(', ')*(', s)
     s = re.sub(r'(\d)\s*\(', r'\1*(', s)
+    s = re.sub(r'(\d)(x)', r'\1*\2', s)   # 18x → 18*x
     parser = _Parser(s)
     result = parser.parse_expr()
     return normalize_poly(result)
