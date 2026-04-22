@@ -280,6 +280,9 @@ const pick = arr => arr[R(0,arr.length-1)];
 const gcd = (a,b) => b===0?Math.abs(a):gcd(b,a%b);
 const lcm = (a,b) => Math.abs(a*b)/gcd(a,b);
 function simplifyFrac(n,d){ const g=gcd(Math.abs(n),Math.abs(d)); return [n/g,d/g]; }
+const fracToTex = (sn,sd) => sd===1?`${sn}`:`\frac{${sn}}{${sd}}`;
+const expFracToNorm = (sn,sd) => sd===1?`x^${sn}`:`x^(${sn}/${sd})`;
+const signStr = n => n>=0?`+${n}`:`${n}`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIG — edit parameter ranges here
@@ -325,6 +328,10 @@ const CONFIG = {
     threeTermLCD_a:       [1, 12],    // 1/(x±a) + … root
     quotientRule_n:       [2, 8],    // derivative degree
     quotientRule_a:       [1, 8],    // (x+a) denominator
+    polyCancel_pq:         [-6, 6],   // diff4: polynomial cancel roots
+    rationalAdd_ab:        [1, 5],    // diff4: 1/(x+a)+1/(x+b) range
+    threeTermSub_a:        [2, 6],    // diff5: three-term rational
+    factorBoth_a:          [2, 8],    // diff5: (x²-a²)/(x²+2ax+a²)
   },
   adaptive: {
     bumpUpStreak:   5,   // correct-in-a-row to increase difficulty
@@ -967,6 +974,139 @@ exponents.diff3 = [
   },
 ];
 
+exponents.diff4 = [];
+
+exponents.diff4.push(()=>{
+  let n,m,p,numRaw,attempts=0;
+  do {
+    n=pick(CONFIG.exponents.higherRadical_n);
+    const [hrMin,hrMax]=CONFIG.exponents.higherRadical_m;
+    m=R(hrMin,hrMax); p=R(1,3);
+    numRaw=m-p*n; attempts++;
+  } while(numRaw<=0 && attempts<50);
+  const [sn,sd]=simplifyFrac(numRaw,n);
+  const fracTex=fracToTex(sn,sd);
+  return {
+    problemTex:`\dfrac{\sqrt[${n}]{x^{${m}}}}{x^{${p}}}`,
+    answerTex:`x^{${fracTex}}`,
+    answerNorm:expFracToNorm(sn,sd),
+    steps:[
+      {label:'Rewrite radical',math:`\dfrac{x^{${m}/${n}}}{x^{${p}}}`,note:`\sqrt[${n}]{x^m}=x^{m/${n}}`},
+      {label:'Quotient rule',math:`x^{${m}/${n}-${p}}=x^{\frac{${m}-${p*n}}{${n}}}`,note:'subtract exponents'},
+      {label:'Simplify',math:`x^{${fracTex}}`,note:''},
+    ]
+  };
+});
+
+exponents.diff4.push(()=>{
+  let a1,b1,a2,b2,e,totalNum,attempts=0;
+  do {
+    a1=R(1,3); b1=pick([2,3,4]);
+    a2=R(1,3); b2=pick([2,3,4]);
+    e=R(1,2);
+    const L=lcm(b1,b2);
+    const sumNum=a1*(L/b1)+a2*(L/b2);
+    totalNum=sumNum-e*L; attempts++;
+  } while(totalNum<=0 && attempts<50);
+  const b1f=b1,b2f=b2,a1f=a1,a2f=a2,ef=e;
+  const L=lcm(b1f,b2f);
+  const sumNum=a1f*(L/b1f)+a2f*(L/b2f);
+  const [sn,sd]=simplifyFrac(totalNum,L);
+  const [isn,isd]=simplifyFrac(sumNum,L);
+  const intermTex=fracToTex(isn,isd);
+  return {
+    problemTex:`\dfrac{x^{${a1f}/${b1f}}\cdot x^{${a2f}/${b2f}}}{x^{${ef}}}`,
+    answerTex:`x^{${fracToTex(sn,sd)}}`,
+    answerNorm:expFracToNorm(sn,sd),
+    steps:[
+      {label:'Product rule: add top exponents',math:`x^{\frac{${a1f}}{${b1f}}+\frac{${a2f}}{${b2f}}}=x^{${intermTex}}`,note:`LCD=${L}`},
+      {label:'Quotient rule: subtract bottom',math:`x^{${intermTex}-${ef}}=x^{\frac{${totalNum}}{${L}}}`,note:''},
+      {label:'Simplify',math:`x^{${fracToTex(sn,sd)}}`,note:''},
+    ]
+  };
+});
+
+exponents.diff4.push(()=>{
+  const k=R(2,8);
+  const [p,q]=pick([[1,2],[2,3],[3,4],[1,3]]);
+  const n=pick([3,4]);
+  const totalNum=p*n+q, totalDen=q*n;
+  const [sn,sd]=simplifyFrac(totalNum,totalDen);
+  const fracTex=fracToTex(sn,sd);
+  return {
+    problemTex:`\dfrac{${k}}{x^{${p}/${q}}\cdot\sqrt[${n}]{x}}`,
+    answerTex:`${k}x^{-${fracTex}}`,
+    answerNorm:`${k}x^(-${sn}/${sd})`,
+    steps:[
+      {label:'Rewrite radical',math:`\dfrac{${k}}{x^{${p}/${q}}\cdot x^{1/${n}}}`,note:''},
+      {label:'Product rule in denominator',math:`\dfrac{${k}}{x^{${p}/${q}+1/${n}}}=\dfrac{${k}}{x^{${fracTex}}}`,note:`LCD=${q*n}`},
+      {label:'Negative exponent',math:`${k}x^{-${fracTex}}`,note:'1/x^a=x^{-a}'},
+    ]
+  };
+});
+
+exponents.diff5 = [];
+
+exponents.diff5.push(()=>{
+  const a=R(4,8), b=R(1,3);
+  const [p,q]=pick([[1,2],[2,3],[3,2],[1,3]]);
+  const inner=a-b;
+  const [sn,sd]=simplifyFrac(inner*p,q);
+  const fracTex=fracToTex(sn,sd);
+  return {
+    problemTex:`\left(\dfrac{x^{${a}}}{x^{${b}}}\right)^{${p}/${q}}`,
+    answerTex:`x^{${fracTex}}`,
+    answerNorm:expFracToNorm(sn,sd),
+    steps:[
+      {label:'Quotient rule inside',math:`\left(x^{${a}-${b}}\right)^{${p}/${q}}=\left(x^{${inner}}\right)^{${p}/${q}}`,note:''},
+      {label:'Power rule',math:`x^{${inner}\cdot\frac{${p}}{${q}}}=x^{\frac{${inner*p}}{${q}}}`,note:'multiply exponents'},
+      {label:'Simplify',math:`x^{${fracTex}}`,note:''},
+    ]
+  };
+});
+
+exponents.diff5.push(()=>{
+  const a1=R(1,3),b1=pick([2,3]);
+  const a2=R(1,3),b2=pick([2,3]);
+  const n=R(2,3);
+  const L=lcm(b1,b2);
+  const sumNum=a1*(L/b1)+a2*(L/b2);
+  const [sn,sd]=simplifyFrac(sumNum*n,L);
+  const [isn,isd]=simplifyFrac(sumNum,L);
+  const intermTex=fracToTex(isn,isd);
+  return {
+    problemTex:`\left(x^{${a1}/${b1}}\cdot x^{${a2}/${b2}}\right)^{${n}}`,
+    answerTex:`x^{${fracToTex(sn,sd)}}`,
+    answerNorm:expFracToNorm(sn,sd),
+    steps:[
+      {label:'Product rule inside',math:`\left(x^{${intermTex}}\right)^{${n}}`,note:`LCD=${L}`},
+      {label:'Power rule',math:`x^{${intermTex}\cdot ${n}}=x^{\frac{${sumNum*n}}{${L}}}`,note:''},
+      {label:'Simplify',math:`x^{${fracToTex(sn,sd)}}`,note:''},
+    ]
+  };
+});
+
+exponents.diff5.push(()=>{
+  const [a,b]=pick([[1,2],[1,3],[2,3]]);
+  const n=pick([3,4]);
+  const m=R(1,2);
+  const innerNum=a*n+b, innerDen=b*n;
+  const totalNum=-(innerNum*m);
+  const [sn,sd]=simplifyFrac(totalNum,innerDen);
+  const fracTex=fracToTex(Math.abs(sn),sd);
+  return {
+    problemTex:`\left(x^{${a}/${b}}\cdot\sqrt[${n}]{x}\right)^{-${m}}`,
+    answerTex:`x^{-${fracTex}}`,
+    answerNorm:`x^(${sn}/${sd})`,
+    steps:[
+      {label:'Rewrite radical',math:`\left(x^{${a}/${b}}\cdot x^{1/${n}}\right)^{-${m}}`,note:''},
+      {label:'Product rule inside',math:`\left(x^{\frac{${innerNum}}{${innerDen}}}\right)^{-${m}}`,note:`LCD=${b*n}`},
+      {label:'Power rule',math:`x^{-${m}\cdot\frac{${innerNum}}{${innerDen}}}=x^{-\frac{${innerNum*m}}{${innerDen}}}`,note:''},
+      {label:'Simplify',math:`x^{-${fracTex}}`,note:''},
+    ]
+  };
+});
+
 /* ── FRACTIONS ── */
 const fractions = {};
 
@@ -1096,6 +1236,102 @@ fractions.diff3 = [
     };
   },
 ];
+
+fractions.diff4 = [];
+
+fractions.diff4.push(()=>{
+  const [pqMin,pqMax]=CONFIG.fractions.polyCancel_pq;
+  let p,q,attempts=0;
+  do { p=R(pqMin,pqMax); q=R(pqMin,pqMax); attempts++; } while((p===0||q===0)&&attempts<50);
+  const B=p+q, C=p*q;
+  const pStr=signStr(p), qStr=signStr(q);
+  const Bstr=signStr(B), Cstr=signStr(C);
+  return {
+    problemTex:`\dfrac{x^2${Bstr}x${Cstr}}{x${pStr}}`,
+    answerTex:`x${qStr}`,
+    answerNorm:`x${qStr}`,
+    steps:[
+      {label:'Factor numerator',math:`\dfrac{(x${pStr})(x${qStr})}{x${pStr}}`,note:''},
+      {label:'Cancel common factor',math:`x${qStr}`,note:''},
+    ]
+  };
+});
+
+fractions.diff4.push(()=>{
+  const [rMin,rMax]=CONFIG.fractions.rationalAdd_ab;
+  let a,b,attempts=0;
+  do { a=R(rMin,rMax); b=R(rMin,rMax); attempts++; } while((a===b)&&attempts<50);
+  const S=a+b, P=a*b;
+  const Sstr=signStr(S), Pstr=signStr(P);
+  return {
+    problemTex:`\dfrac{1}{x+${a}}+\dfrac{1}{x+${b}}`,
+    answerTex:`\dfrac{2x${Sstr}}{x^2${Sstr}x${Pstr}}`,
+    answerNorm:`(2x${Sstr})/(x^2${Sstr}x${Pstr})`,
+    steps:[
+      {label:'LCD',math:`(x+${a})(x+${b})=x^2${Sstr}x${Pstr}`,note:''},
+      {label:'Rewrite with LCD',math:`\dfrac{x+${b}+(x+${a})}{x^2${Sstr}x${Pstr}}`,note:''},
+      {label:'Combine numerator',math:`\dfrac{2x${Sstr}}{x^2${Sstr}x${Pstr}}`,note:''},
+    ]
+  };
+});
+
+fractions.diff4.push(()=>({
+  problemTex:`\dfrac{(x+h)^2 - x^2}{h}`,
+  answerTex:`2x+h`,
+  answerNorm:`2x+h`,
+  steps:[
+    {label:'Expand numerator',math:`\dfrac{x^2+2xh+h^2-x^2}{h}`,note:''},
+    {label:'Cancel x²',math:`\dfrac{2xh+h^2}{h}`,note:''},
+    {label:'Factor and cancel h',math:`\dfrac{h(2x+h)}{h}=2x+h`,note:''},
+  ]
+}));
+
+fractions.diff5 = [];
+
+fractions.diff5.push(()=>({
+  problemTex:`\dfrac{(x+h)^3 - x^3}{h}`,
+  answerTex:`3x^2+3xh+h^2`,
+  answerNorm:`3x^2+3xh+h^2`,
+  steps:[
+    {label:'Expand (x+h)³',math:`\dfrac{x^3+3x^2h+3xh^2+h^3-x^3}{h}`,note:'binomial expansion'},
+    {label:'Cancel x³',math:`\dfrac{3x^2h+3xh^2+h^3}{h}`,note:''},
+    {label:'Factor and cancel h',math:`\dfrac{h(3x^2+3xh+h^2)}{h}=3x^2+3xh+h^2`,note:''},
+  ]
+}));
+
+fractions.diff5.push(()=>{
+  const [tsMin,tsMax]=CONFIG.fractions.threeTermSub_a;
+  const a=R(tsMin,tsMax);
+  const a2=a*a;
+  return {
+    problemTex:`\dfrac{1}{x+${a}}-\dfrac{${2*a}}{x^2-${a2}}+\dfrac{1}{x-${a}}`,
+    answerTex:`\dfrac{2}{x+${a}}`,
+    answerNorm:`2/(x+${a})`,
+    steps:[
+      {label:'Factor denominator',math:`x^2-${a2}=(x+${a})(x-${a})`,note:''},
+      {label:'Common LCD',math:`\dfrac{x-${a}-${2*a}+x+${a}}{x^2-${a2}}`,note:'combine over LCD'},
+      {label:'Simplify numerator',math:`\dfrac{2x-${2*a}}{x^2-${a2}}=\dfrac{2(x-${a})}{(x+${a})(x-${a})}`,note:''},
+      {label:'Cancel (x−'+a+')',math:`\dfrac{2}{x+${a}}`,note:''},
+    ]
+  };
+});
+
+fractions.diff5.push(()=>{
+  const [fbMin,fbMax]=CONFIG.fractions.factorBoth_a;
+  const a=R(fbMin,fbMax);
+  const a2=a*a, twoA=2*a;
+  return {
+    problemTex:`\dfrac{x^2-${a2}}{x^2+${twoA}x+${a2}}`,
+    answerTex:`\dfrac{x-${a}}{x+${a}}`,
+    answerNorm:`(x-${a})/(x+${a})`,
+    steps:[
+      {label:'Factor numerator',math:`\dfrac{(x-${a})(x+${a})}{x^2+${twoA}x+${a2}}`,note:'difference of squares'},
+      {label:'Factor denominator',math:`\dfrac{(x-${a})(x+${a})}{(x+${a})^2}`,note:'perfect square trinomial'},
+      {label:'Cancel (x+'+a+')',math:`\dfrac{x-${a}}{x+${a}}`,note:''},
+    ]
+  };
+});
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POLYNOMIAL HELPERS (for answer validation)
@@ -1496,6 +1732,8 @@ function checkTrigFactoringAnswer(problem, u){
   return checkFactoringAnswer(synthetic, substituted);
 }
 
+const API_BASE = 'http://localhost:5000';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // PROBLEM PICKER
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1510,33 +1748,14 @@ function pickModule(){
   return state.module;
 }
 
-function generateProblem(){
+async function generateProblem(){
   const mod = pickModule();
   const diff = getEffectiveDiff(mod==='all'?pickModule():mod);
   const actualMod = mod === 'all' ? pickModule() : mod;
-
-  let pool;
-  if(actualMod==='factoring') pool = factoring[`diff${diff}`] || factoring.diff1;
-  else if(actualMod==='exponents') pool = exponents[`diff${diff}`] || exponents.diff1;
-  else pool = fractions[`diff${diff}`] || fractions.diff1;
-
-  // Dedup: try up to 8 times to avoid repeating a problem seen in last 30
-  let problem, attempts = 0;
-  do {
-    const generator = pick(pool);
-    problem = generator();
-    attempts++;
-  } while(
-    attempts < 8 &&
-    state.recentProblems.includes(problem.problemTex)
-  );
-
-  // Track in dedup window (max 30)
+  const resp = await fetch(`${API_BASE}/api/problem?module=${actualMod}&difficulty=${diff}`);
+  const problem = await resp.json();
   state.recentProblems.push(problem.problemTex);
   if(state.recentProblems.length > CONFIG.adaptive.dedupWindow) state.recentProblems.shift();
-
-  problem.module = actualMod;
-  problem.difficulty = diff;
   return problem;
 }
 
@@ -1621,7 +1840,7 @@ function renderSteps(problem, revealCount){
   }
 }
 
-function loadNewProblem(){
+async function loadNewProblem(){
   let problem;
   if(state.mode==='exam'){
     if(state.examIdx >= state.examProblems.length){
@@ -1629,7 +1848,7 @@ function loadNewProblem(){
     }
     problem = state.examProblems[state.examIdx];
   } else {
-    problem = generateProblem();
+    problem = await generateProblem();
   }
   state.currentProblem = problem;
   state.stepsRevealed = 0;
@@ -1662,13 +1881,19 @@ function flashMain(type){
   el.classList.add(type==='correct'?'flash-correct':'flash-wrong');
 }
 
-function submitAnswer(){
+async function submitAnswer(){
   if(state.answered) return;
   const input=$('answer-input');
   const u=input.value.trim();
   if(!u) return;
 
-  const result=checkAnswer(state.currentProblem, u);
+  $('check-btn').disabled=true;
+  const _resp = await fetch(`${API_BASE}/api/check`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({problem: state.currentProblem, input: u})
+  });
+  const result = await _resp.json();
   state.answered=true;
   clearInterval(state.problemTimerInterval);
 
@@ -1797,7 +2022,7 @@ function endSprint(){
 // SESSION MODES
 // ─────────────────────────────────────────────────────────────────────────────
 
-function startSession(){
+async function startSession(){
   state.sessionCorrect=0; state.sessionTotal=0;
   state.sessionStreak=0; state.sessionBestStreak=0;
   updateStats();
@@ -1808,23 +2033,17 @@ function startSession(){
     startTimer(25*60);
     loadNewProblem();
   } else if(state.mode==='exam'){
-    // generate 20 mixed problems
     state.examProblems=[];
     state.examIdx=0;
     state.examAnswers=[];
     const mods=['factoring','exponents','fractions'];
+    const examFetches=[];
     for(let i=0;i<20;i++){
       const m=mods[i%3];
-      const d=Math.ceil((i+1)/7); // roughly 1,1,2,2,3,3...
-      const pool_key=`diff${Math.min(d,5)}`;
-      let pool;
-      if(m==='factoring') pool=factoring[pool_key]||factoring.diff1;
-      else if(m==='exponents') pool=exponents[pool_key]||exponents.diff1;
-      else pool=fractions[pool_key]||fractions.diff1;
-      const p=pick(pool)();
-      p.module=m; p.difficulty=Math.min(d,5);
-      state.examProblems.push(p);
+      const d=Math.min(Math.ceil((i+1)/7),5);
+      examFetches.push(fetch(`${API_BASE}/api/problem?module=${m}&difficulty=${d}`).then(r=>r.json()));
     }
+    state.examProblems = await Promise.all(examFetches);
     startTimer(30*60);
     loadNewProblem();
   } else {
