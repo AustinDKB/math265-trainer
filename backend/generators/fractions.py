@@ -40,7 +40,7 @@ def _add_fractions():
     return {
         "problemTex": f"\\dfrac{{{a}}}{{{b}}}+\\dfrac{{{c}}}{{{d}}}",
         "answerTex": answer_tex,
-        "answerNorm": f"{sn}/{sd}",
+        "answerNorm": str(sn) if sd == 1 else f"{sn}/{sd}",
         "steps": steps,
     }
 
@@ -55,7 +55,7 @@ def _divide_fractions():
     return {
         "problemTex": f"\\dfrac{{{a}/{b}}}{{{c}/{d}}}",
         "answerTex": answer_tex,
-        "answerNorm": f"{sn}/{sd}",
+        "answerNorm": str(sn) if sd == 1 else f"{sn}/{sd}",
         "steps": [
             {"label": "Flip and multiply",
              "math": f"\\frac{{{a}}}{{{b}}}\\cdot\\frac{{{d}}}{{{c}}}", "note": "Keep-Change-Flip"},

@@ -54,7 +54,8 @@
 
   /* ── MAIN PROBLEM AREA ── */
   #main { flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; padding: 8px 0; }
-  #problem-display { text-align: center; padding: 24px 16px 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+  #problem-type { text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 6px 0 0; min-height: 18px; }
+  #problem-display { text-align: center; padding: 12px 16px 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
   #problem-display .katex-display { margin: 0; }
   #problem-display .katex { font-size: 2.2rem; }
 
@@ -106,10 +107,10 @@
   #steps-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
   .step-item { padding: 8px 12px; background: var(--bg2); border-radius: var(--radius); border-left: 3px solid var(--border); animation: fadeIn 0.2s ease; }
   .step-item.revealed { border-left-color: var(--yellow); }
-  .step-label { font-size: 11px; color: var(--yellow); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .step-label { font-size: 16.5px; color: var(--yellow); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
   .step-math { }
-  .step-math .katex { font-size: 1rem; }
-  .step-note { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .step-math .katex { font-size: 1.5rem; }
+  .step-note { font-size: 16.5px; color: var(--muted); margin-top: 3px; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 
   /* ── STATS BAR ── */
@@ -165,6 +166,21 @@
   .flash-correct { animation: flashGreen 0.6s ease; }
   .flash-wrong { animation: flashRed 0.6s ease; }
 
+  /* unlock bar */
+  #unlock-bar { display:none; padding: 4px 12px 6px; font-size: 11px; color: var(--muted); text-align: center; }
+  #unlock-bar.visible { display:block; }
+  #unlock-bar .unlock-modules { display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin-bottom:4px; }
+  #unlock-bar .umod { padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; letter-spacing:0.05em; }
+  #unlock-bar .umod.active { background:rgba(74,222,128,0.15); color:#4ade80; }
+  #unlock-bar .umod.locked { background:rgba(255,255,255,0.06); color:var(--muted); }
+  #unlock-bar .umod.new { background:rgba(251,191,36,0.2); color:#fbbf24; }
+  #unlock-bar .unlock-next { font-size:10px; }
+  #unlock-bar progress { width:120px; height:4px; vertical-align:middle; margin:0 4px; accent-color:#4ade80; }
+
+  /* unlock toast */
+  #unlock-toast { position:fixed; top:60px; left:50%; transform:translateX(-50%) translateY(-20px); background:#1e293b; border:1px solid #4ade80; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; color:#4ade80; opacity:0; transition:opacity 0.3s, transform 0.3s; pointer-events:none; z-index:999; white-space:nowrap; }
+  #unlock-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
   /* mobile */
   @media (max-width: 600px) {
     #problem-display .katex { font-size: 1.6rem; }
@@ -188,6 +204,13 @@
     <button class="tab active" data-module="factoring">Factoring</button>
     <button class="tab" data-module="exponents">Exponents</button>
     <button class="tab" data-module="fractions">Fractions</button>
+    <button class="tab" data-module="trig">Trig</button>
+    <button class="tab" data-module="logs">Logs</button>
+    <button class="tab" data-module="composition">Composition</button>
+    <button class="tab" data-module="limits">Limits</button>
+    <button class="tab" data-module="derivatives">Derivatives</button>
+    <button class="tab" data-module="integration">Integration</button>
+    <button class="tab" data-module="adv_integration">Adv Integration</button>
     <button class="tab" data-module="all">All</button>
   </div>
 
@@ -206,7 +229,14 @@
     </div>
   </div>
 
+  <div id="unlock-bar">
+    <div class="unlock-modules" id="unlock-modules-list"></div>
+    <div class="unlock-next" id="unlock-next-text"></div>
+  </div>
+  <div id="unlock-toast"></div>
+
   <div id="main">
+    <div id="problem-type"></div>
     <div id="problem-display"><span style="color:var(--muted);font-size:14px;">Loading...</span></div>
     <div id="input-area">
       <div id="input-row">
@@ -368,7 +398,7 @@ function loadStore(){
     if(raw){
       const parsed = JSON.parse(raw);
       const def = defaultStore();
-      ['factoring','exponents','fractions'].forEach(m=>{
+      ['factoring','exponents','fractions','trig','logs','composition','limits','derivatives','integration','adv_integration'].forEach(m=>{
         if(!parsed[m]) parsed[m]=def[m];
         else [1,2,3,4,5].forEach(d=>{ if(!parsed[m][d]) parsed[m][d]=def[m][d]; });
       });
@@ -381,7 +411,7 @@ function loadStore(){
 }
 function defaultStore(){
   const mk = ()=>({1:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},2:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},3:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},4:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},5:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]}});
-  return { factoring: mk(), exponents: mk(), fractions: mk(), sessions:[], badges:{} };
+  return { factoring: mk(), exponents: mk(), fractions: mk(), trig: mk(), logs: mk(), composition: mk(), limits: mk(), derivatives: mk(), integration: mk(), adv_integration: mk(), sessions:[], badges:{} };
 }
 function saveStore(){ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
 let store = loadStore();
@@ -408,7 +438,7 @@ let state = {
   examAnswers: [],
   problemTimer: 0,
   problemTimerInterval: null,
-  autoDiff: { factoring:1, exponents:1, fractions:1, all:1 },
+  autoDiff: { factoring:1, exponents:1, fractions:1, trig:1, logs:1, composition:1, limits:1, derivatives:1, integration:1, adv_integration:1, all:1 },
   recentProblems: [], // dedup window — size governed by CONFIG.adaptive.dedupWindow
 };
 
@@ -1045,7 +1075,7 @@ exponents.diff4.push(()=>{
   return {
     problemTex:`\dfrac{${k}}{x^{${p}/${q}}\cdot\sqrt[${n}]{x}}`,
     answerTex:`${k}x^{-${fracTex}}`,
-    answerNorm:`${k}x^(-${sn}/${sd})`,
+    answerNorm: sd===1 ? `${k}x^(-${sn})` : `${k}x^(-${sn}/${sd})`,
     steps:[
       {label:'Rewrite radical',math:`\dfrac{${k}}{x^{${p}/${q}}\cdot x^{1/${n}}}`,note:''},
       {label:'Product rule in denominator',math:`\dfrac{${k}}{x^{${p}/${q}+1/${n}}}=\dfrac{${k}}{x^{${fracTex}}}`,note:`LCD=${q*n}`},
@@ -1106,7 +1136,7 @@ exponents.diff5.push(()=>{
   return {
     problemTex:`\left(x^{${a}/${b}}\cdot\sqrt[${n}]{x}\right)^{-${m}}`,
     answerTex:`x^{-${fracTex}}`,
-    answerNorm:`x^(${sn}/${sd})`,
+    answerNorm: sd===1 ? `x^(${sn})` : `x^(${sn}/${sd})`,
     steps:[
       {label:'Rewrite radical',math:`\left(x^{${a}/${b}}\cdot x^{1/${n}}\right)^{-${m}}`,note:''},
       {label:'Product rule inside',math:`\left(x^{\frac{${innerNum}}{${innerDen}}}\right)^{-${m}}`,note:`LCD=${b*n}`},
@@ -1650,8 +1680,15 @@ function checkExponentAnswer(problem, u){
   const neg = ans.match(/x\^\((-\d+)\)/);
   if(neg){
     const posExp = Math.abs(parseInt(neg[1]));
-    const recip = `1/x^${posExp}`;
-    if(norm === recip || norm === `1/x^(${posExp})`) return {result:'correct'};
+    if(norm === `1/x^${posExp}` || norm === `1/x^(${posExp})`) return {result:'correct'};
+    if(posExp === 1 && norm === '1/x') return {result:'correct'};
+    // coefficient form: e.g. 4x^(-1) → 4/x or 4/x^1
+    const coeff = ans.match(/^(\d+)x\^\(-\d+\)$/);
+    if(coeff){
+      const k = coeff[1];
+      if(norm === `${k}/x^${posExp}` || norm === `${k}/x^(${posExp})`) return {result:'correct'};
+      if(posExp === 1 && norm === `${k}/x`) return {result:'correct'};
+    }
   }
 
   // Fractional: x^(3/2) and x^1.5
@@ -1663,8 +1700,43 @@ function checkExponentAnswer(problem, u){
 
   // Numeric answers (like 1/x^3 problems)
   if(ans.startsWith('1/') && norm === ans) return {result:'correct'};
+  // 1/x^1 === 1/x  (and k/x^1 === k/x)
+  if(ans.endsWith('x^1') && norm === ans.replace(/x\^1$/, 'x')) return {result:'correct'};
 
   return {result:'wrong'};
+}
+
+function evalFracExpr(expr, x){
+  // Evaluate a user-typed algebraic fraction expression at a given x.
+  // Supports: +,-,*,/,^,**, implicit multiplication between ) and (, digits and x.
+  let s = expr.trim()
+    .toLowerCase()
+    .replace(/\^/g, '**')
+    .replace(/\)\s*\(/g, ')*(')      // (a)(b) -> (a)*(b)
+    .replace(/(\d)\s*\(/g, '$1*(')   // 2(x+1) -> 2*(x+1)
+    .replace(/\)\s*(\d)/g, ')*$1')   // (x+1)2 -> (x+1)*2
+    .replace(/(\d)x/g, '$1*x')       // 2x -> 2*x
+    .replace(/x(\d)/g, 'x*$1');      // x2 -> x*2 (edge case)
+  // Only allow safe characters
+  if(!/^[0-9x+\-*/(). ]+$/.test(s)) return NaN;
+  try {
+    // eslint-disable-next-line no-new-func
+    return Function('x', `"use strict"; return (${s});`)(x);
+  } catch(e){ return NaN; }
+}
+
+function fractionExprsEqual(a, b){
+  // Spot-check 5 irrational-ish x values to avoid accidental integer coincidences.
+  const testVals = [1.3, 2.7, 3.1, 5.9, 7.4];
+  let validTests = 0;
+  for(const x of testVals){
+    const va = evalFracExpr(a, x);
+    const vb = evalFracExpr(b, x);
+    if(!isFinite(va) || !isFinite(vb)) continue; // skip if x is a pole
+    if(Math.abs(va - vb) > 0.0001) return false;
+    validTests++;
+  }
+  return validTests >= 3; // need at least 3 clean comparisons
 }
 
 function checkFractionAnswer(problem, u){
@@ -1686,6 +1758,9 @@ function checkFractionAnswer(problem, u){
   if(!isNaN(Number(norm)) && !isNaN(Number(ans))) {
     if(Math.abs(Number(norm)-Number(ans))<0.001) return {result:'correct'};
   }
+
+  // Numeric spot-check: accepts algebraically equivalent forms
+  if(fractionExprsEqual(u, String(problem.answerNorm))) return {result:'correct'};
 
   return {result:'wrong'};
 }
@@ -1752,8 +1827,121 @@ function getEffectiveDiff(module){
   return state.autoDiff[module] || 1;
 }
 
+const ALL_MODULES = ['factoring','exponents','fractions','trig','logs','composition','limits','derivatives','integration','adv_integration'];
+
+// Sequential unlock chain — each tier unlocks when ALL mods in previous tier hit 80%
+const UNLOCK_CHAIN = [
+  ['factoring','exponents','fractions'],
+  ['trig'],
+  ['logs'],
+  ['composition'],
+  ['limits'],
+  ['derivatives'],
+  ['integration'],
+  ['adv_integration'],
+];
+
+function getModuleAccuracy(m){
+  let total=0, correct=0;
+  for(let d=1;d<=5;d++){
+    const s=store[m]&&store[m][d];
+    if(s&&s.attempts>0){ total+=s.attempts; correct+=s.correct; }
+  }
+  return total>=5 ? correct/total : null; // null = insufficient data
+}
+
+function getUnlockedModules(){
+  const unlocked=[];
+  for(let tier=0;tier<UNLOCK_CHAIN.length;tier++){
+    unlocked.push(...UNLOCK_CHAIN[tier]);
+    if(tier===UNLOCK_CHAIN.length-1) break;
+    // check if this tier is mastered enough to unlock next
+    const tierReady=UNLOCK_CHAIN[tier].every(m=>{
+      const acc=getModuleAccuracy(m);
+      return acc!==null && acc>=0.8;
+    });
+    if(!tierReady) break;
+  }
+  return unlocked;
+}
+
+function getNextLockedTier(unlocked){
+  for(let tier=0;tier<UNLOCK_CHAIN.length;tier++){
+    if(!UNLOCK_CHAIN[tier].every(m=>unlocked.includes(m))) return UNLOCK_CHAIN[tier];
+  }
+  return null;
+}
+
+function pickWeightedModule(){
+  const unlocked=getUnlockedModules();
+  // Weight: high for new/struggling modules, low for mastered
+  const weights=unlocked.map(m=>{
+    const acc=getModuleAccuracy(m);
+    if(acc===null) return 5;          // new module, no data → high priority
+    if(acc<0.8) return 1+(0.8-acc)*6; // struggling → up to ~5.8
+    return 0.25;                       // mastered → maintenance only
+  });
+  const total=weights.reduce((a,b)=>a+b,0);
+  let r=Math.random()*total;
+  for(let i=0;i<unlocked.length;i++){ r-=weights[i]; if(r<=0) return unlocked[i]; }
+  return unlocked[unlocked.length-1];
+}
+
+let _prevUnlocked=null;
+function updateUnlockBar(){
+  const bar=$('unlock-bar');
+  if(state.module!=='all'){ bar.classList.remove('visible'); return; }
+  bar.classList.add('visible');
+
+  const unlocked=getUnlockedModules();
+
+  // detect new unlock — show toast
+  if(_prevUnlocked && unlocked.length>_prevUnlocked.length){
+    const newMods=unlocked.filter(m=>!_prevUnlocked.includes(m));
+    newMods.forEach(m=>showUnlockToast(MODULE_LABELS[m]||m));
+  }
+  _prevUnlocked=[...unlocked];
+
+  // render module pills
+  const list=$('unlock-modules-list');
+  list.innerHTML='';
+  ALL_MODULES.forEach(m=>{
+    const isUnlocked=unlocked.includes(m);
+    const acc=isUnlocked?getModuleAccuracy(m):null;
+    const isNew=isUnlocked&&acc===null;
+    const pill=document.createElement('span');
+    pill.className='umod '+(isUnlocked?(isNew?'new':'active'):'locked');
+    const pct=acc!==null?Math.round(acc*100)+'%':'';
+    pill.textContent=(MODULE_LABELS[m]||m)+(pct?' '+pct:'');
+    if(!isUnlocked) pill.textContent='🔒 '+(MODULE_LABELS[m]||m);
+    list.appendChild(pill);
+  });
+
+  // next unlock progress
+  const nextTier=getNextLockedTier(unlocked);
+  const nextEl=$('unlock-next-text');
+  if(nextTier){
+    // find which tier gates it — the last tier in unlocked
+    const gateTier=UNLOCK_CHAIN[UNLOCK_CHAIN.indexOf(nextTier)-1]||UNLOCK_CHAIN[0];
+    const accs=gateTier.map(m=>getModuleAccuracy(m)??0);
+    const avgPct=Math.round((accs.reduce((a,b)=>a+b,0)/accs.length)*100);
+    nextEl.innerHTML=`Unlock <strong>${(MODULE_LABELS[nextTier[0]]||nextTier[0])}</strong> — reach 80% on current set &nbsp;<progress max="80" value="${Math.min(avgPct,80)}"></progress> ${avgPct}%`;
+  } else {
+    nextEl.textContent='All modules unlocked!';
+  }
+}
+
+let _toastTimer=null;
+function showUnlockToast(label){
+  const t=$('unlock-toast');
+  t.textContent='🔓 Unlocked: '+label+'!';
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
 function pickModule(){
-  if(state.module === 'all') return pick(['factoring','exponents','fractions']);
+  if(state.module==='all') return pickWeightedModule();
   return state.module;
 }
 
@@ -1801,7 +1989,19 @@ function ensureKatex(cb){
   const check = setInterval(()=>{ if(typeof katex!=='undefined'){ clearInterval(check); cb(); } },50);
 }
 
+const MODULE_LABELS = {
+  factoring: 'Factoring', exponents: 'Exponents', fractions: 'Fractions',
+  trig: 'Trig — Unit Circle', logs: 'Logarithms', composition: 'Function Composition',
+  limits: 'Limits', derivatives: 'Derivatives', integration: 'Integration',
+  adv_integration: 'Advanced Integration',
+};
 function renderProblem(problem){
+  const typeEl = $('problem-type');
+  if(state.module === 'all' && problem.module){
+    typeEl.textContent = MODULE_LABELS[problem.module] || problem.module;
+  } else {
+    typeEl.textContent = '';
+  }
   ensureKatex(()=>{
     const el = $('problem-display');
     el.innerHTML='';
@@ -1961,6 +2161,7 @@ async function submitAnswer(){
   state.sessionTotal++;
   updateStats();
   saveStore();
+  updateUnlockBar();
 }
 
 function revealNextStep(){
@@ -1983,7 +2184,7 @@ function updateStats(){
 }
 
 function checkReadiness(){
-  const mods=['factoring','exponents','fractions'];
+  const mods=ALL_MODULES;
   const ready=mods.every(m=>{
     const d2=store[m][2];
     const d3=store[m][3];
@@ -2045,10 +2246,10 @@ async function startSession(){
     state.examProblems=[];
     state.examIdx=0;
     state.examAnswers=[];
-    const mods=['factoring','exponents','fractions'];
+    const mods=ALL_MODULES;
     const examFetches=[];
     for(let i=0;i<20;i++){
-      const m=mods[i%3];
+      const m=mods[i%mods.length];
       const d=Math.min(Math.ceil((i+1)/7),5);
       examFetches.push(fetch(`${API_BASE}/api/problem?module=${m}&difficulty=${d}`).then(r=>r.json()));
     }
@@ -2121,7 +2322,7 @@ async function renderDashboard(){
   // Module grid
   const grid=$('module-grid');
   grid.innerHTML='';
-  const mods=[{key:'factoring',label:'Factoring'},{key:'exponents',label:'Exponents'},{key:'fractions',label:'Fractions'}];
+  const mods=[{key:'factoring',label:'Factoring'},{key:'exponents',label:'Exponents'},{key:'fractions',label:'Fractions'},{key:'trig',label:'Trig'},{key:'logs',label:'Logs'},{key:'composition',label:'Composition'},{key:'limits',label:'Limits'},{key:'derivatives',label:'Derivatives'},{key:'integration',label:'Integration'},{key:'adv_integration',label:'Adv Integration'}];
   mods.forEach(({key,label})=>{
     const card=document.createElement('div');
     card.className='module-card';
@@ -2165,8 +2366,8 @@ async function renderDashboard(){
 
   // Totals
   let totalAttempts=0,totalCorrect=0;
-  ['factoring','exponents','fractions'].forEach(m=>{
-    [1,2,3,4,5].forEach(d=>{ if(store[m][d]){ totalAttempts+=store[m][d].attempts; totalCorrect+=store[m][d].correct; } });
+  ALL_MODULES.forEach(m=>{
+    [1,2,3,4,5].forEach(d=>{ if(store[m]&&store[m][d]){ totalAttempts+=store[m][d].attempts; totalCorrect+=store[m][d].correct; } });
   });
   $('dash-totals').innerHTML=`
     Total problems: <strong>${totalAttempts}</strong><br>
@@ -2312,6 +2513,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
     state.module=tab.dataset.module;
+    updateUnlockBar();
     loadNewProblem();
   });
 });
@@ -2342,6 +2544,8 @@ document.querySelectorAll('.mode-btn').forEach(btn=>{
 // ─────────────────────────────────────────────────────────────────────────────
 
 ensureKatex(()=>{
+  _prevUnlocked=getUnlockedModules();
+  updateUnlockBar();
   startSession();
 });
 

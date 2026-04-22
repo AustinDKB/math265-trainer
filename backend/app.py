@@ -3,7 +3,11 @@ import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from generators import factoring, exponents, fractions
+from generators import (
+    factoring, exponents, fractions,
+    trig_circle, logs, composition,
+    limits, derivatives, integration_basic, integration_advanced,
+)
 from checker import check_answer
 from db import init_db, record_attempt, stats_overview, stats_trend, stats_problem, stats_weak
 
@@ -16,6 +20,13 @@ GENERATORS = {
     "factoring": factoring.POOLS,
     "exponents": exponents.POOLS,
     "fractions": fractions.POOLS,
+    "trig": trig_circle.POOLS,
+    "logs": logs.POOLS,
+    "composition": composition.POOLS,
+    "limits": limits.POOLS,
+    "derivatives": derivatives.POOLS,
+    "integration": integration_basic.POOLS,
+    "adv_integration": integration_advanced.POOLS,
 }
 
 

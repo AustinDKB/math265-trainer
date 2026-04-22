@@ -17,6 +17,20 @@ def check_answer(problem: dict, user_input: str) -> dict:
         return check_exponent_answer(problem, u)
     if module == "fractions":
         return check_fraction_answer(problem, u)
+    if module == "trig":
+        return check_norm_answer(problem, u)
+    if module == "logs":
+        return check_norm_answer(problem, u)
+    if module == "composition":
+        return check_norm_answer(problem, u)
+    if module == "limits":
+        return check_norm_answer(problem, u)
+    if module == "derivatives":
+        return check_norm_answer(problem, u)
+    if module == "integration":
+        return check_integration_answer(problem, u)
+    if module == "adv_integration":
+        return check_integration_answer(problem, u)
     return {"result": "unknown"}
 
 
@@ -177,3 +191,74 @@ def check_trig_factoring_answer(problem: dict, u: str) -> dict:
         "answerTex": "",
     }
     return check_factoring_answer(synthetic, substituted)
+
+
+def _norm_generic(s: str) -> str:
+    """Normalize user input for generic string comparison."""
+    s = s.strip().lower()
+    s = s.replace(" ", "").replace("*", "").replace("\\", "")
+    s = re.sub(r"\{([^}]*)\}", r"\1", s)
+    # collapse multiple parens
+    s = s.replace("()", "")
+    return s
+
+
+def check_norm_answer(problem: dict, u: str) -> dict:
+    """Generic checker: compare against answerNorm with lightweight normalization.
+    Falls back to string-cleaned answerTex comparison."""
+    ans_norm = problem.get("answerNorm", "")
+    if ans_norm:
+        nu = _norm_generic(u)
+        an = _norm_generic(ans_norm)
+        if nu == an:
+            return {"result": "correct"}
+        # Allow "undefined" spelled out
+        if an == "undefined" and nu in ("undefined", "dne", "doesnotexist"):
+            return {"result": "correct"}
+        # Allow numeric float equality
+        try:
+            if abs(float(nu) - float(an)) < 1e-4:
+                return {"result": "correct"}
+        except (ValueError, TypeError):
+            pass
+
+    # Fallback: cleaned LaTeX
+    ans_tex = _norm_generic(problem.get("answerTex", ""))
+    if _norm_generic(u) == ans_tex:
+        return {"result": "correct"}
+
+    return {"result": "wrong"}
+
+
+def check_integration_answer(problem: dict, u: str) -> dict:
+    """Integration checker: strip trailing +C variants, then norm compare."""
+    def strip_c(s):
+        s = _norm_generic(s)
+        s = re.sub(r"\+c$", "", s)
+        s = re.sub(r"\+constant$", "", s)
+        return s.strip("+")
+
+    user_stripped = strip_c(u)
+    ans_norm = strip_c(problem.get("answerNorm", ""))
+    ans_tex = strip_c(problem.get("answerTex", ""))
+
+    if user_stripped == ans_norm or user_stripped == ans_tex:
+        return {"result": "correct"}
+
+    # Also check with +C present
+    if _norm_generic(u) == _norm_generic(problem.get("answerNorm", "")):
+        return {"result": "correct"}
+
+    # "diverges" / "dne" for improper
+    if ans_norm in ("diverges", "dne"):
+        if _norm_generic(u) in ("diverges", "dne", "divergent"):
+            return {"result": "correct"}
+
+    # Numeric fallback for definite integrals / improper
+    try:
+        if abs(float(user_stripped) - float(ans_norm)) < 1e-4:
+            return {"result": "correct"}
+    except (ValueError, TypeError):
+        pass
+
+    return {"result": "wrong"}
