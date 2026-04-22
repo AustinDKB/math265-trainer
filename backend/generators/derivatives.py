@@ -153,7 +153,7 @@ def _product_rule():
     return {
         "problemTex": _d_tex(f"{f_tex} \\cdot {g_tex}"),
         "answerTex": deriv_tex,
-        "answerNorm": deriv_tex.replace("{","").replace("}","").replace("\\","").replace("dfrac",""),
+        "answerNorm": deriv.to_norm(),
         "steps": [
             {"label": "Product rule: (fg)' = f'g + fg'", "math": f"({f_d_tex})({g_tex}) + ({f_tex})({g_d_tex})", "note": ""},
             {"label": "Simplify", "math": deriv_tex, "note": ""},
@@ -178,7 +178,7 @@ def _quotient_rule():
     return {
         "problemTex": _d_tex(f"\\dfrac{{{f_tex}}}{{{g_tex}}}"),
         "answerTex": deriv_tex,
-        "answerNorm": deriv_tex.replace("{","").replace("}","").replace("\\","").replace("dfrac",""),
+        "answerNorm": deriv.to_norm(),
         "steps": [
             {"label": "Quotient rule: (f/g)' = (f'g − fg')/g²", "math": f"\\dfrac{{({f_d_tex})({g_tex})-({f_tex})({g_d_tex})}}{{{g_tex}^2}}", "note": ""},
             {"label": "Simplify", "math": deriv_tex, "note": ""},
@@ -188,25 +188,23 @@ def _quotient_rule():
 
 def _chain_single():
     cases = [
-        (Sin(X),  "\\sin",  pow_expr(X,2),  "x^2",  Cos(pow_expr(X,2)),  "\\cos(x^2)",  mul(Const(2),X),  "2x"),
-        (Exp(X),  "e^u",    mul(Const(3),X),"3x",   Exp(mul(Const(3),X)),"e^{3x}",      Const(3),         "3"),
-        (Ln(X),   "\\ln",   pow_expr(X,2),  "x^2",  Div(Const(2),X),     "2/x",         mul(Const(2),X),  "2x"),
-        (pow_expr(X,2),"u^2",Sin(X),"\\sin x",
-            mul(mul(Const(2),Sin(X)),Cos(X)), "2\\sin x\\cos x",Cos(X),"\\cos x"),
-        (Sin(X),"\\sin",add(X,Const(3)),"x+3",Sin(add(X,Const(3))),"\\sin(x+3)",Const(1),"1"),
-        (Exp(X),"e^u",add(pow_expr(X,2),X),"x^2+x",
-            Mul(Exp(add(pow_expr(X,2),X)),add(mul(Const(2),X),Const(1))),
-            "e^{x^2+x}(2x+1)",add(mul(Const(2),X),Const(1)),"2x+1"),
+        # (func_tex, ans_tex, ans_norm, inner_tex, outer_d_inner_tex, inner_d_tex)
+        ("\\sin(x^2)",  "2x\\cos(x^2)",      "2x*cos(x^2)",        "x^2",    "\\cos(x^2)",       "2x"),
+        ("e^{3x}",      "3e^{3x}",            "3*e^(3x)",           "3x",     "e^{3x}",            "3"),
+        ("\\ln(x^2)",   "\\dfrac{2}{x}",      "2/x",                "x^2",    "\\dfrac{1}{x^2}",  "2x"),
+        ("\\sin^2 x",   "2\\sin x\\cos x",    "2*sin(x)*cos(x)",    "\\sin x","2\\sin x",          "\\cos x"),
+        ("\\sin(x+3)",  "\\cos(x+3)",         "cos(x+3)",           "x+3",    "\\cos(x+3)",        "1"),
+        ("e^{x^2+x}",  "e^{x^2+x}(2x+1)",   "e^(x^2+x)*(2x+1)",  "x^2+x",  "e^{x^2+x}",        "2x+1"),
     ]
-    outer, outer_name, inner_expr, inner_tex, deriv, deriv_tex, inner_deriv, inner_deriv_tex = pick(cases)
+    func_tex, ans_tex, ans_norm, inner_tex, outer_d_tex, inner_d_tex = pick(cases)
     return {
-        "problemTex": _d_tex(deriv_tex.replace("(2x+1)","").rstrip() or f"{outer_name}({inner_tex})"),
-        "answerTex": deriv_tex,
-        "answerNorm": deriv_tex.replace("{","").replace("}","").replace("\\",""),
+        "problemTex": _d_tex(func_tex),
+        "answerTex": ans_tex,
+        "answerNorm": ans_norm,
         "steps": [
             {"label": "Chain rule: d/dx[f(g)] = f'(g)·g'", "math": f"f'({inner_tex}) \\cdot \\dfrac{{d}}{{dx}}[{inner_tex}]", "note": ""},
-            {"label": f"Outer derivative evaluated at inner", "math": f"... \\cdot {inner_deriv_tex}", "note": ""},
-            {"label": "Result", "math": deriv_tex, "note": ""},
+            {"label": f"f'(g) = {outer_d_tex}, g' = {inner_d_tex}", "math": f"{outer_d_tex} \\cdot {inner_d_tex}", "note": ""},
+            {"label": "Result", "math": ans_tex, "note": ""},
         ],
     }
 

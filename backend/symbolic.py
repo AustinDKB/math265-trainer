@@ -41,6 +41,12 @@ class Const(Expr):
             return str(int(f.numerator))
         return f"\\dfrac{{{f.numerator}}}{{{f.denominator}}}"
 
+    def to_norm(self):
+        f = self.val
+        if f.denominator == 1:
+            return str(int(f.numerator))
+        return f"{f.numerator}/{f.denominator}"
+
     def eval(self, x): return float(self.val)
     def is_zero(self): return self.val == 0
     def is_one(self): return self.val == 1
@@ -51,6 +57,7 @@ class Var(Expr):
     def diff(self): return Const(1) if self.name == "x" else Const(0)
     def simplify(self): return self
     def to_tex(self): return self.name
+    def to_norm(self): return self.name
     def eval(self, x): return x
 
 
@@ -68,6 +75,11 @@ class Neg(Expr):
     def to_tex(self):
         inner = self.a.to_tex()
         if isinstance(self.a, (Add,)):
+            return f"-({inner})"
+        return f"-{inner}"
+    def to_norm(self):
+        inner = self.a.to_norm()
+        if isinstance(self.a, Add):
             return f"-({inner})"
         return f"-{inner}"
     def eval(self, x): return -self.a.eval(x)
@@ -93,6 +105,23 @@ class Add(Expr):
         if isinstance(b, Const) and b.val < 0:
             return f"{a_tex} - {Const(-b.val).to_tex()}"
         return f"{a_tex} + {b.to_tex()}"
+    def to_norm(self):
+        a_n = self.a.to_norm()
+        b = self.b
+        # Detect leading-negative b for clean subtraction display
+        if isinstance(b, Neg):
+            return f"{a_n}-{b.a.to_norm()}"
+        if isinstance(b, Const) and b.val < 0:
+            return f"{a_n}-{Const(-b.val).to_norm()}"
+        if isinstance(b, Mul):
+            ba, bb = b.a, b.b
+            if isinstance(bb, Neg):
+                return f"{a_n}-{Mul(ba, bb.a).to_norm()}"
+            if isinstance(ba, Neg):
+                return f"{a_n}-{Mul(ba.a, bb).to_norm()}"
+            if isinstance(ba, Const) and ba.val < 0:
+                return f"{a_n}-{Mul(Const(-ba.val), bb).to_norm()}"
+        return f"{a_n}+{b.to_norm()}"
     def eval(self, x): return self.a.eval(x) + self.b.eval(x)
 
 
@@ -124,6 +153,14 @@ class Mul(Expr):
         if isinstance(a, Neg) and isinstance(a.a, Const):
             return f"-{a.a.to_tex()}{b_tex}"
         return f"{a_tex} \\cdot {b_tex}"
+    def to_norm(self):
+        a, b = self.a, self.b
+        # Pull out leading negative for clean form
+        if isinstance(a, Neg):
+            return f"-{Mul(a.a, b).to_norm()}"
+        if isinstance(b, Neg):
+            return f"-{Mul(a, b.a).to_norm()}"
+        return f"{a.to_norm()}*{b.to_norm()}"
     def eval(self, x): return self.a.eval(x) * self.b.eval(x)
 
 
@@ -144,6 +181,12 @@ class Div(Expr):
         return Div(a, b)
     def to_tex(self):
         return f"\\dfrac{{{self.a.to_tex()}}}{{{self.b.to_tex()}}}"
+    def to_norm(self):
+        num = self.a.to_norm()
+        den = self.b.to_norm()
+        if isinstance(self.b, (Add, Mul)):
+            den = f"({den})"
+        return f"{num}/({den})"
     def eval(self, x):
         d = self.b.eval(x)
         if abs(d) < 1e-12: return float('nan')
@@ -185,6 +228,12 @@ class Pow(Expr):
         else:
             exp_str = f"{{{exp_tex}}}"
         return f"{base_tex}^{exp_str}"
+    def to_norm(self):
+        base = self.base.to_norm()
+        exp = self.exp.to_norm()
+        if isinstance(self.base, (Add, Mul, Div, Neg)):
+            base = f"({base})"
+        return f"{base}^({exp})"
     def eval(self, x):
         b = self.base.eval(x)
         e = self.exp.eval(x)
@@ -199,6 +248,7 @@ class Sin(Expr):
     def diff(self): return Mul(Cos(self.a), self.a.diff()).simplify()
     def simplify(self): return Sin(self.a.simplify())
     def to_tex(self): return f"\\sin({self.a.to_tex()})"
+    def to_norm(self): return f"sin({self.a.to_norm()})"
     def eval(self, x): return math.sin(self.a.eval(x))
 
 
@@ -207,6 +257,7 @@ class Cos(Expr):
     def diff(self): return Mul(Neg(Sin(self.a)), self.a.diff()).simplify()
     def simplify(self): return Cos(self.a.simplify())
     def to_tex(self): return f"\\cos({self.a.to_tex()})"
+    def to_norm(self): return f"cos({self.a.to_norm()})"
     def eval(self, x): return math.cos(self.a.eval(x))
 
 
@@ -217,6 +268,7 @@ class Tan(Expr):
         return Mul(Div(Const(1), Pow(Cos(self.a), Const(2))), self.a.diff()).simplify()
     def simplify(self): return Tan(self.a.simplify())
     def to_tex(self): return f"\\tan({self.a.to_tex()})"
+    def to_norm(self): return f"tan({self.a.to_norm()})"
     def eval(self, x):
         c = math.cos(self.a.eval(x))
         if abs(c) < 1e-12: return float('nan')
@@ -232,6 +284,7 @@ class Exp(Expr):
         if isinstance(inner, Var) and inner.name == "x":
             return "e^x"
         return f"e^{{{inner.to_tex()}}}"
+    def to_norm(self): return f"e^({self.a.to_norm()})"
     def eval(self, x):
         try: return math.exp(self.a.eval(x))
         except OverflowError: return float('inf')
@@ -242,6 +295,7 @@ class Ln(Expr):
     def diff(self): return Div(self.a.diff(), self.a).simplify()
     def simplify(self): return Ln(self.a.simplify())
     def to_tex(self): return f"\\ln({self.a.to_tex()})"
+    def to_norm(self): return f"ln({self.a.to_norm()})"
     def eval(self, x):
         v = self.a.eval(x)
         if v <= 0: return float('nan')

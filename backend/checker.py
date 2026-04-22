@@ -1,5 +1,58 @@
 import re
+import math as _math
 from math_utils import expand_expression, polys_equal, user_input_to_norm
+
+# ── Safe numeric evaluator ─────────────────────────────────────────────────────
+
+_SAFE_NS = {
+    "__builtins__": {},
+    "sin": _math.sin, "cos": _math.cos, "tan": _math.tan,
+    "cot": lambda v: _math.cos(v) / _math.sin(v),
+    "sec": lambda v: 1.0 / _math.cos(v),
+    "csc": lambda v: 1.0 / _math.sin(v),
+    "ln": _math.log, "log": _math.log10,
+    "sqrt": _math.sqrt, "abs": abs,
+    "e": _math.e, "pi": _math.pi,
+}
+
+_UNSAFE_KW = {
+    "import", "exec", "eval", "open", "__", "lambda", "class", "def",
+    "for", "while", "yield", "global", "nonlocal", "del", "assert",
+    "with", "raise", "return", "pass", "break", "continue",
+}
+
+_SAFE_CHARS = set("0123456789abcdefghijklmnopqrstuvwxyz +-*/^().,{}")
+
+
+def _safe_eval(s: str, x_val: float):
+    """Evaluate a math expression at x=x_val in a restricted namespace."""
+    s = s.strip().lower()
+    if any(kw in s for kw in _UNSAFE_KW):
+        return None
+    if not all(c in _SAFE_CHARS for c in s):
+        return None
+    s2 = re.sub(r'\{([^}]*)\}', r'(\1)', s)   # {3x} → (3x)
+    s2 = s2.replace('^', '**')
+    s2 = s2.replace('x', f'({x_val})')
+    s2 = re.sub(r'(\d)\(', r'\1*(', s2)        # 3( → 3*(
+    s2 = re.sub(r'\)\(', r')*(', s2)            # )( → )*(
+    s2 = re.sub(r'\)([a-z])', r')*\1', s2)      # )s → )*s
+    try:
+        return float(eval(s2, _SAFE_NS))        # type: ignore[arg-type]
+    except Exception:
+        return None
+
+
+def _numerically_equal(a: str, b: str) -> bool:
+    """Check numeric equality of two expression strings at several test points."""
+    for xv in (1.3, 2.7, 4.1):
+        av = _safe_eval(a, xv)
+        bv = _safe_eval(b, xv)
+        if av is None or bv is None:
+            return False
+        if abs(av - bv) > 1e-4:
+            return False
+    return True
 
 
 def check_answer(problem: dict, user_input: str) -> dict:
@@ -198,15 +251,25 @@ def _norm_generic(s: str) -> str:
     s = s.strip().lower()
     s = s.replace(" ", "").replace("*", "").replace("\\", "")
     s = re.sub(r"\{([^}]*)\}", r"\1", s)
-    # collapse multiple parens
     s = s.replace("()", "")
+    # normalize bare trig calls: sinx → sin(x), cosx → cos(x), etc.
+    for _fn in ("sin", "cos", "tan", "cot", "sec", "csc", "ln", "log"):
+        s = re.sub(_fn + r"x(?![a-z0-9(])", _fn + "(x)", s)
     return s
 
 
 def check_norm_answer(problem: dict, u: str) -> dict:
     """Generic checker: compare against answerNorm with lightweight normalization.
-    Falls back to string-cleaned answerTex comparison."""
+    Falls back to string-cleaned answerTex comparison, then numeric equality."""
     ans_norm = problem.get("answerNorm", "")
+    # Check validNorms list if present
+    valid_norms = problem.get("validNorms", [])
+    if valid_norms:
+        nu = _norm_generic(u)
+        for vn in valid_norms:
+            if nu == _norm_generic(vn):
+                return {"result": "correct"}
+
     if ans_norm:
         nu = _norm_generic(u)
         an = _norm_generic(ans_norm)
@@ -227,6 +290,12 @@ def check_norm_answer(problem: dict, u: str) -> dict:
     if _norm_generic(u) == ans_tex:
         return {"result": "correct"}
 
+    # Numeric equivalence fallback (handles cot(x), e^(x), fraction forms, etc.)
+    u_eval = u.strip().lower().replace(" ", "")
+    an_eval = (ans_norm or "").strip().lower().replace(" ", "")
+    if u_eval and an_eval and _numerically_equal(u_eval, an_eval):
+        return {"result": "correct"}
+
     return {"result": "wrong"}
 
 
@@ -234,6 +303,13 @@ def check_integration_answer(problem: dict, u: str) -> dict:
     """Integration checker: strip trailing +C variants, then norm compare."""
     def strip_c(s):
         s = _norm_generic(s)
+        s = re.sub(r"\+c$", "", s)
+        s = re.sub(r"\+constant$", "", s)
+        return s.strip("+")
+
+    def strip_c_eval(s):
+        """Strip +C without _norm_generic so * is preserved for safe_eval."""
+        s = s.strip().lower().replace(" ", "")
         s = re.sub(r"\+c$", "", s)
         s = re.sub(r"\+constant$", "", s)
         return s.strip("+")
@@ -260,5 +336,11 @@ def check_integration_answer(problem: dict, u: str) -> dict:
             return {"result": "correct"}
     except (ValueError, TypeError):
         pass
+
+    # Numeric polynomial equivalence — handles x^2/2 vs 1/2*x^2, fraction coeffs, etc.
+    u_eval = strip_c_eval(u)
+    an_eval = strip_c_eval(problem.get("answerNorm", ""))
+    if u_eval and an_eval and _numerically_equal(u_eval, an_eval):
+        return {"result": "correct"}
 
     return {"result": "wrong"}

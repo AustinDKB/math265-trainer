@@ -89,10 +89,20 @@ def _sum_diff():
     a2_tex = f"{c2}x^{{{m+1}}}" if m+1 > 1 else f"{c2}x"
     prob = f"({t1_tex}{'+' if sign=='+' else '-'}{t2_tex})"
     ans = f"{a1_tex}{'+' if sign=='+' else '-'}{a2_tex}"
+    # Build evaluatable norm (no LaTeX dfrac — uses a/b*x^n form)
+    def _coeff_norm(f):
+        return str(f.numerator) if f.denominator == 1 else f"{f.numerator}/{f.denominator}"
+    def _term_norm(coeff_n, exp):
+        if exp == 0: return coeff_n
+        base = f"x^{exp}" if exp > 1 else "x"
+        return base if coeff_n == "1" else f"{coeff_n}*{base}"
+    t1_n = _term_norm(_coeff_norm(f1), n + 1)
+    t2_n = _term_norm(_coeff_norm(f2), m + 1)
+    sep = "+" if sign == "+" else "-"
     return {
         "problemTex": f"\\displaystyle\\int {prob}\\,dx",
         "answerTex": _plus_C(ans),
-        "answerNorm": ans.replace("{","").replace("}","") + "+C",
+        "answerNorm": f"{t1_n}{sep}{t2_n}+C",
         "steps": [{"label": "Integrate term by term", "math": _plus_C(ans), "note": ""}],
     }
 
