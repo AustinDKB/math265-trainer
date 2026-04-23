@@ -83,6 +83,20 @@
   #live-preview .katex { font-size: 1.1rem; }
   #parse-error { font-size: 12px; color: var(--red); font-family: var(--font-mono); padding: 2px 8px; }
 
+  /* input hint */
+  #input-hint { display:none; font-size:12px; color:var(--muted); font-family:var(--font-mono); padding:3px 8px; background:var(--bg2); border-left:2px solid var(--blue); border-radius:3px; margin-top:4px; }
+
+  /* syntax legend */
+  #syntax-toggle { background:none; border:none; color:var(--muted); font-size:11px; cursor:pointer; padding:2px 8px; text-decoration:underline dotted; }
+  #syntax-toggle:hover { color:var(--text); }
+  #syntax-legend { display:none; padding:8px 8px 4px; }
+  #syntax-legend.open { display:block; }
+  .syn-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:4px 16px; }
+  .syn-row { display:flex; align-items:center; gap:8px; font-size:12px; padding:2px 0; }
+  .syn-type { font-family:var(--font-mono); color:var(--muted); white-space:nowrap; }
+  .syn-arrow { color:var(--border); }
+  .syn-render .katex { font-size:1rem; }
+
   /* feedback */
   #feedback { min-height: 26px; padding: 4px 8px; font-size: 13px; font-weight: 600; transition: all 0.3s; }
   #feedback.correct { color: var(--green); }
@@ -104,10 +118,10 @@
     margin-left: auto;
   }
   #skip-btn:hover { border-color: var(--muted); color: var(--text); }
-  #steps-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+  #steps-list { display: flex; flex-direction: column; gap: 6px; }
   .step-item { padding: 8px 12px; background: var(--bg2); border-radius: var(--radius); border-left: 3px solid var(--border); animation: fadeIn 0.2s ease; }
   .step-item.revealed { border-left-color: var(--yellow); }
-  .step-label { font-size: 16.5px; color: var(--yellow); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .step-label { font-size: 16.5px; color: var(--yellow); font-family: var(--font-mono); letter-spacing: 0.05em; margin-bottom: 4px; }
   .step-math { }
   .step-math .katex { font-size: 1.5rem; }
   .step-note { font-size: 16.5px; color: var(--muted); margin-top: 3px; }
@@ -188,6 +202,21 @@
     #tabs { gap: 3px; }
     .tab { padding: 5px 10px; font-size: 12px; }
   }
+
+  /* ── BUG REPORT ── */
+  #bug-report-area { padding: 2px 8px 4px; }
+  #bug-report-link { font-size: 12px; color: var(--muted); cursor: pointer; background: var(--bg2); border: 1px solid var(--border); border-radius: 5px; padding: 4px 10px; }
+  #bug-report-link:hover { border-color: var(--red); color: var(--red); }
+  #bug-report-form { display: none; margin-top: 6px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; gap: 8px; flex-direction: column; }
+  #bug-report-form.open { display: flex; }
+  #bug-note { background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: var(--font-ui); font-size: 12px; padding: 6px 8px; resize: vertical; min-height: 52px; outline: none; }
+  #bug-note:focus { border-color: var(--blue); }
+  #bug-report-actions { display: flex; gap: 8px; align-items: center; }
+  #bug-submit-btn { padding: 5px 14px; background: var(--red); border: none; border-radius: 5px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+  #bug-submit-btn:hover { opacity: 0.85; }
+  #bug-cancel-btn { padding: 5px 10px; background: none; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); font-size: 12px; cursor: pointer; }
+  #bug-cancel-btn:hover { border-color: var(--text); color: var(--text); }
+  #bug-status { font-size: 11px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -201,7 +230,7 @@
   </div>
 
   <div id="tabs">
-    <button class="tab active" data-module="factoring">Factoring</button>
+    <button class="tab" data-module="factoring">Factoring</button>
     <button class="tab" data-module="exponents">Exponents</button>
     <button class="tab" data-module="fractions">Fractions</button>
     <button class="tab" data-module="trig">Trig</button>
@@ -211,7 +240,7 @@
     <button class="tab" data-module="derivatives">Derivatives</button>
     <button class="tab" data-module="integration">Integration</button>
     <button class="tab" data-module="adv_integration">Adv Integration</button>
-    <button class="tab" data-module="all">All</button>
+    <button class="tab active" data-module="all">All</button>
   </div>
 
   <div id="subbar">
@@ -245,7 +274,23 @@
       </div>
       <div id="live-preview"></div>
       <div id="parse-error"></div>
+      <div id="input-hint"></div>
+      <button id="syntax-toggle">syntax help</button>
+      <div id="syntax-legend">
+        <div class="syn-grid" id="syn-grid"></div>
+      </div>
       <div id="feedback"></div>
+    </div>
+    <div id="bug-report-area">
+      <button id="bug-report-link">Report bug</button>
+      <div id="bug-report-form">
+        <textarea id="bug-note" placeholder="Describe the issue (optional)"></textarea>
+        <div id="bug-report-actions">
+          <button id="bug-submit-btn">Submit</button>
+          <button id="bug-cancel-btn">Cancel</button>
+          <span id="bug-status"></span>
+        </div>
+      </div>
     </div>
     <div id="steps-area">
       <div id="steps-controls">
@@ -292,6 +337,11 @@
       <h3>30-Day Accuracy Trend</h3>
       <canvas id="trend-chart" width="500" height="120" style="width:100%;max-width:500px;display:block;"></canvas>
       <div id="trend-empty" style="color:var(--muted);font-size:12px;display:none;"></div>
+    </div>
+    <div class="dash-section">
+      <h3>Questions Per Day (30 days)</h3>
+      <canvas id="volume-chart" width="500" height="100" style="width:100%;max-width:500px;display:block;"></canvas>
+      <div id="volume-empty" style="color:var(--muted);font-size:12px;display:none;"></div>
     </div>
     <div class="dash-section">
       <h3>Weak Spots <small style="color:var(--muted);font-size:11px;">(≥3 attempts, lowest accuracy)</small></h3>
@@ -420,7 +470,7 @@ let store = loadStore();
 // SESSION STATE
 // ─────────────────────────────────────────────────────────────────────────────
 let state = {
-  module: 'factoring',
+  module: 'all',
   difficulty: 'auto',
   mode: 'endless',
   currentProblem: null,
@@ -440,6 +490,9 @@ let state = {
   problemTimerInterval: null,
   autoDiff: { factoring:1, exponents:1, fractions:1, trig:1, logs:1, composition:1, limits:1, derivatives:1, integration:1, adv_integration:1, all:1 },
   recentProblems: [], // dedup window — size governed by CONFIG.adaptive.dedupWindow
+  lastUserAnswer: '',
+  lastAttemptId: null,
+  lastAttemptSnapshot: null,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1951,8 +2004,14 @@ async function generateProblem(){
   const mod = pickModule();
   const diff = getEffectiveDiff(mod==='all'?pickModule():mod);
   const actualMod = mod === 'all' ? pickModule() : mod;
-  const resp = await fetch(`${API_BASE}/api/problem?module=${actualMod}&difficulty=${diff}`);
-  const problem = await resp.json();
+  const seen = new Set(state.recentProblems);
+  let problem;
+  const MAX_TRIES = 8;
+  for(let i=0; i<MAX_TRIES; i++){
+    const resp = await fetch(`${API_BASE}/api/problem?module=${actualMod}&difficulty=${diff}`);
+    problem = await resp.json();
+    if(!seen.has(problem.problemTex)) break;
+  }
   state.recentProblems.push(problem.problemTex);
   if(state.recentProblems.length > CONFIG.adaptive.dedupWindow) state.recentProblems.shift();
   return problem;
@@ -2009,6 +2068,14 @@ function renderProblem(problem){
     el.innerHTML='';
     renderKaTeX(`\\displaystyle ${problem.problemTex}`, el, true);
   });
+  const hintEl = $('input-hint');
+  if(problem.inputHint){
+    hintEl.textContent = problem.inputHint;
+    hintEl.style.display = 'block';
+  } else {
+    hintEl.textContent = '';
+    hintEl.style.display = 'none';
+  }
 }
 
 function renderSteps(problem, revealCount){
@@ -2064,6 +2131,8 @@ async function loadNewProblem(){
   state.currentProblem = problem;
   state.stepsRevealed = 0;
   state.answered = false;
+  state.lastUserAnswer = '';
+  resetBugReport();
 
   const input = $('answer-input');
   input.value='';
@@ -2106,12 +2175,27 @@ async function submitAnswer(){
   });
   const result = await _resp.json();
   state.answered=true;
+  state.lastUserAnswer=u;
+  state.lastAttemptId=result.attemptId||null;
   clearInterval(state.problemTimerInterval);
+  resetBugReport();
 
   const mod=state.currentProblem.module;
   const diff=state.currentProblem.difficulty;
   if(!store[mod][diff]) store[mod][diff]={attempts:0,correct:0,streak:0,best_streak:0,last10:[]};
   const rec=store[mod][diff];
+
+  // Snapshot before any stat mutations so bug report can undo them
+  state.lastAttemptSnapshot={
+    sessionTotal: state.sessionTotal,
+    sessionCorrect: state.sessionCorrect,
+    sessionStreak: state.sessionStreak,
+    mod, diff,
+    recAttempts: rec.attempts,
+    recCorrect: rec.correct,
+    recStreak: rec.streak,
+    recLast10: [...rec.last10],
+  };
 
   const fb=$('feedback');
   if(result.result==='correct'){
@@ -2384,6 +2468,7 @@ async function renderDashboard(){
       fetch(`${API_BASE}/api/stats/weak?min_attempts=3&limit=10`).then(r=>r.json()),
     ]);
     renderTrendChart(trendData);
+    renderVolumeChart(trendData);
     renderWeakSpots(weakData);
   } catch(e){
     $('trend-chart').style.display='none';
@@ -2433,6 +2518,46 @@ function renderTrendChart(data){
   if(labels.length>1) ctx.fillText(labels[labels.length-1],W-34,H-5);
 }
 
+function renderVolumeChart(data){
+  const canvas=$('volume-chart'), empty=$('volume-empty');
+  if(!data||data.length===0){
+    canvas.style.display='none'; empty.style.display='block';
+    empty.textContent='No data yet';
+    return;
+  }
+  canvas.style.display='block'; empty.style.display='none';
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,H);
+  const counts=data.map(d=>d.attempts);
+  const labels=data.map(d=>d.day.slice(5));
+  const maxCount=Math.max(...counts,1);
+  const n=counts.length;
+  const padL=28, padR=6, padT=8, padB=18;
+  const chartW=W-padL-padR, chartH=H-padT-padB;
+  const barW=Math.max(2,Math.floor(chartW/n)-2);
+  const step=chartW/n;
+  // grid lines
+  [0.25,0.5,0.75,1.0].forEach(f=>{
+    const py=padT+chartH*(1-f);
+    ctx.strokeStyle='#2a2d3a'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(padL,py); ctx.lineTo(W-padR,py); ctx.stroke();
+    ctx.fillStyle='#555'; ctx.font='9px monospace'; ctx.fillText(Math.round(f*maxCount),2,py+3);
+  });
+  // bars
+  counts.forEach((c,i)=>{
+    const barH=Math.round(chartH*(c/maxCount));
+    const x=padL+i*step+(step-barW)/2;
+    const y=padT+chartH-barH;
+    ctx.fillStyle='#4d9fff';
+    ctx.fillRect(x,y,barW,barH);
+  });
+  // labels
+  ctx.fillStyle='#666'; ctx.font='9px monospace';
+  if(labels.length>0) ctx.fillText(labels[0],padL,H-4);
+  if(labels.length>1) ctx.fillText(labels[labels.length-1],W-padR-24,H-4);
+}
+
 function renderWeakSpots(data){
   const el=$('weak-spots-list');
   if(!data||data.length===0){
@@ -2458,9 +2583,10 @@ function renderWeakSpots(data){
 
 document.addEventListener('keydown', e=>{
   const inInput=document.activeElement===$('answer-input');
+  const inTextarea=document.activeElement.tagName==='TEXTAREA';
   if(e.key==='Enter' && inInput){ e.preventDefault(); if(!state.answered) submitAnswer(); else loadNewProblem(); return; }
   if(e.key==='Tab' && !inInput){ e.preventDefault(); revealNextStep(); return; }
-  if(e.key===' ' && !inInput){ e.preventDefault(); loadNewProblem(); return; }
+  if(e.key===' ' && !inInput && !inTextarea){ e.preventDefault(); loadNewProblem(); return; }
   if((e.key==='1'||e.key==='2'||e.key==='3'||e.key==='4'||e.key==='5') && !inInput){
     document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
     const btn=document.querySelector(`.diff-btn[data-diff="${e.key}"]`);
@@ -2509,6 +2635,43 @@ $('dash-btn').addEventListener('click',()=>{
 });
 $('dash-close-btn').addEventListener('click',()=>$('dashboard-overlay').classList.remove('visible'));
 
+// Syntax legend
+(function(){
+  const ENTRIES = [
+    ['x_1',      'x_1'],
+    ['x^2',      'x^2'],
+    ['x_1^2',    'x_1^2'],
+    ['\\frac{a}{b}', '\\frac{a}{b}'],
+    ['\\sqrt{x}', '\\sqrt{x}'],
+    ['\\sqrt[3]{x}','\\sqrt[3]{x}'],
+    ['\\pi',     '\\pi'],
+    ['\\theta',  '\\theta'],
+    ['\\infty',  '\\infty'],
+    ['\\cdot',   '\\cdot'],
+    ['\\pm',     '\\pm'],
+    ['\\ln(x)',  '\\ln(x)'],
+    ['\\log(x)', '\\log(x)'],
+    ['\\sin(x)', '\\sin(x)'],
+    ['e^{x+1}',  'e^{x+1}'],
+    ['(x+1)(x-2)','(x+1)(x-2)'],
+  ];
+  const grid = $('syn-grid');
+  ENTRIES.forEach(([typed, tex])=>{
+    const row = document.createElement('div');
+    row.className = 'syn-row';
+    const render = document.createElement('span');
+    render.className = 'syn-render';
+    try { katex.render(tex, render, {throwOnError:false}); } catch(e) { render.textContent = tex; }
+    row.innerHTML = `<span class="syn-type">${typed.replace(/</g,'&lt;')}</span><span class="syn-arrow">→</span>`;
+    row.appendChild(render);
+    grid.appendChild(row);
+  });
+  $('syntax-toggle').addEventListener('click',()=>{
+    $('syntax-legend').classList.toggle('open');
+    $('syntax-toggle').textContent = $('syntax-legend').classList.contains('open') ? 'hide syntax' : 'syntax help';
+  });
+})();
+
 // Module tabs
 document.querySelectorAll('.tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
@@ -2539,6 +2702,69 @@ document.querySelectorAll('.mode-btn').forEach(btn=>{
     state.mode=btn.dataset.mode;
     startSession();
   });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUG REPORT
+// ─────────────────────────────────────────────────────────────────────────────
+
+function resetBugReport(){
+  $('bug-report-form').classList.remove('open');
+  $('bug-note').value='';
+  $('bug-status').textContent='';
+  state.lastAttemptSnapshot=null;
+  state.lastAttemptId=null;
+}
+
+$('bug-report-link').addEventListener('click', ()=>{
+  $('bug-report-form').classList.toggle('open');
+  if($('bug-report-form').classList.contains('open')) $('bug-note').focus();
+});
+
+$('bug-cancel-btn').addEventListener('click', resetBugReport);
+
+$('bug-submit-btn').addEventListener('click', async ()=>{
+  if(!state.currentProblem) return;
+  const note=$('bug-note').value.trim();
+  $('bug-status').textContent='Sending…';
+  $('bug-submit-btn').disabled=true;
+  try {
+    const resp=await fetch(`${API_BASE}/api/report`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        problem: state.currentProblem,
+        userAnswer: state.lastUserAnswer||'',
+        attemptId: state.lastAttemptId||null,
+        note,
+      }),
+    });
+    if(resp.ok){
+      $('bug-status').textContent='Reported. Thanks!';
+      // Restore stats so this attempt doesn't count
+      const snap=state.lastAttemptSnapshot;
+      if(snap){
+        state.sessionTotal=snap.sessionTotal;
+        state.sessionCorrect=snap.sessionCorrect;
+        state.sessionStreak=snap.sessionStreak;
+        const rec=store[snap.mod][snap.diff];
+        if(rec){
+          rec.attempts=snap.recAttempts;
+          rec.correct=snap.recCorrect;
+          rec.streak=snap.recStreak;
+          rec.last10=snap.recLast10;
+        }
+        updateStats();
+        saveStore();
+      }
+      setTimeout(resetBugReport, 1500);
+    } else {
+      $('bug-status').textContent='Error — try again';
+    }
+  } catch(e){
+    $('bug-status').textContent='Network error';
+  }
+  $('bug-submit-btn').disabled=false;
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

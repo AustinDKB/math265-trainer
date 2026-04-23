@@ -21,21 +21,47 @@ def init_db():
                 difficulty  INTEGER NOT NULL,
                 problem_tex TEXT NOT NULL,
                 correct     INTEGER NOT NULL,
-                time_sec    INTEGER DEFAULT 0
+                time_sec    INTEGER DEFAULT 0,
+                disputed    INTEGER DEFAULT 0
             )
         """)
+        # Migrate existing DB — no-op if column already exists
+        try:
+            conn.execute("ALTER TABLE attempts ADD COLUMN disputed INTEGER DEFAULT 0")
+        except Exception:
+            pass
         conn.execute("CREATE INDEX IF NOT EXISTS idx_module_diff ON attempts(module, difficulty)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_ts ON attempts(ts)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_problem_tex ON attempts(problem_tex)")
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS bug_reports (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                ts          INTEGER NOT NULL,
+                module      TEXT NOT NULL,
+                difficulty  INTEGER NOT NULL,
+                problem_tex TEXT NOT NULL,
+                answer_tex  TEXT NOT NULL,
+                user_answer TEXT NOT NULL,
+                note        TEXT DEFAULT '',
+                attempt_id  INTEGER
+            )
+        """)
         conn.commit()
 
 
 def record_attempt(module, difficulty, problem_tex, correct, time_sec=0):
     with get_conn() as conn:
-        conn.execute(
+        cur = conn.execute(
             "INSERT INTO attempts(ts,module,difficulty,problem_tex,correct,time_sec) VALUES(?,?,?,?,?,?)",
             (int(time.time()), module, difficulty, problem_tex, int(correct), int(time_sec))
         )
+        conn.commit()
+        return cur.lastrowid
+
+
+def dispute_attempt(attempt_id):
+    with get_conn() as conn:
+        conn.execute("UPDATE attempts SET disputed=1 WHERE id=?", (attempt_id,))
         conn.commit()
 
 
@@ -46,6 +72,7 @@ def stats_overview():
                    COUNT(*) as attempts,
                    SUM(correct) as correct
             FROM attempts
+            WHERE disputed=0
             GROUP BY module, difficulty
             ORDER BY module, difficulty
         """).fetchall()
@@ -60,7 +87,7 @@ def stats_trend(days=30):
                    COUNT(*) as attempts,
                    SUM(correct) as correct
             FROM attempts
-            WHERE ts >= ?
+            WHERE ts >= ? AND disputed=0
             GROUP BY day
             ORDER BY day
         """, (since,)).fetchall()
@@ -72,9 +99,29 @@ def stats_problem(problem_tex):
         rows = conn.execute("""
             SELECT ts, correct, time_sec
             FROM attempts
-            WHERE problem_tex = ?
+            WHERE problem_tex = ? AND disputed=0
             ORDER BY ts
         """, (problem_tex,)).fetchall()
+    return [dict(r) for r in rows]
+
+
+def record_bug_report(module, difficulty, problem_tex, answer_tex, user_answer, note='', attempt_id=None):
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO bug_reports(ts,module,difficulty,problem_tex,answer_tex,user_answer,note,attempt_id) VALUES(?,?,?,?,?,?,?,?)",
+            (int(time.time()), module, difficulty, problem_tex, answer_tex, user_answer, note, attempt_id)
+        )
+        conn.commit()
+
+
+def list_bug_reports(limit=100):
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT id, ts, module, difficulty, problem_tex, answer_tex, user_answer, note, attempt_id
+            FROM bug_reports
+            ORDER BY ts DESC
+            LIMIT ?
+        """, (limit,)).fetchall()
     return [dict(r) for r in rows]
 
 
@@ -86,6 +133,7 @@ def stats_weak(min_attempts=3, limit=10):
                    SUM(correct) as correct,
                    CAST(SUM(correct) AS REAL) / COUNT(*) as accuracy
             FROM attempts
+            WHERE disputed=0
             GROUP BY problem_tex
             HAVING attempts >= ?
             ORDER BY accuracy ASC, attempts DESC

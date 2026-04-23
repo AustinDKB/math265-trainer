@@ -94,6 +94,7 @@ def _identify_outer_inner():
         "problemTex": f"\\text{{In }} {composed_tex} \\text{{, identify the outer function }} f \\text{{ and inner function }} g.",
         "answerTex": f"f(u)={f[2].replace('{u}','u')},\\; g(x)={g[1]}",
         "answerNorm": f"f={f[0].replace('{','').replace('}','').replace('\\','')},g={g[0].replace('{','').replace('}','').replace('\\','')}",
+        "inputHint": f"Type:  f=<outer>, g=<inner>  e.g.  f=sin(x),g=e^x",
         "steps": [
             {"label": "Inner function: what's inside?", "math": f"g(x) = {g[1]}", "note": "applied first"},
             {"label": "Outer function: what wraps it?", "math": f"f(u) = {f[2].replace('{u}','u')}", "note": "applied second"},
@@ -113,6 +114,7 @@ def _decompose_two():
         "answerTex": f"f(u)={f[2].replace('{u}','u')},\\; g(x)={g[1]}",
         "answerNorm": f"f={f[0].replace('{','').replace('}','').replace('\\','')},g={g[0].replace('{','').replace('}','').replace('\\','')}",
         "validForms": [f"f={f[0].replace('{','').replace('}','').replace('\\','')},g={g[0].replace('{','').replace('}','').replace('\\','')}"],
+        "inputHint": f"Type:  f=<outer>, g=<inner>  e.g.  f=sin(x),g=e^x",
         "steps": [
             {"label": "Find inner (what's applied first?)", "math": f"g(x) = {g[1]}", "note": ""},
             {"label": "Find outer (what wraps g?)", "math": f"f(u) = {f[2].replace('{u}','u')}", "note": ""},
@@ -133,6 +135,7 @@ def _decompose_three():
         "problemTex": f"\\text{{Decompose }} {fgh_tex} \\text{{ as }} f(g(h(x))).",
         "answerTex": f"f(u)={f_u.replace('{u}','u')},\\; g(u)={g_u.replace('{u}','u')},\\; h(x)={h_x}",
         "answerNorm": f"f={f_name},g={g_name},h={h_name}".replace("{","").replace("}","").replace("\\",""),
+        "inputHint": "Type:  f=<outer>, g=<middle>, h=<inner>  e.g.  f=sin(x),g=x^2,h=e^x",
         "steps": [
             {"label": "Innermost (h)", "math": f"h(x)={h_x}", "note": "deepest nested function"},
             {"label": "Middle (g)", "math": f"g(u)={g_u.replace('{u}','u')}", "note": ""},

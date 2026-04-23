@@ -27,14 +27,14 @@ def _add_fractions():
     sn, sd = simplify_frac(n, L)
     answer_tex = str(sn) if sd == 1 else f"\\dfrac{{{sn}}}{{{sd}}}"
     steps = [
-        {"label": "Find LCD", "math": f"\\text{{LCD}}({b},{d})={L}", "note": ""},
+        {"label": "Find least common denominator", "math": f"\\text{{LCD}}({b},{d})={L}", "note": ""},
         {"label": "Rewrite with LCD",
          "math": f"\\frac{{{a*(L//b)}}}{{{L}}}+\\frac{{{c*(L//d)}}}{{{L}}}", "note": ""},
         {"label": "Add numerators", "math": f"\\frac{{{n}}}{{{L}}}", "note": ""},
     ]
     g = gcd(abs(n), L)
     if g > 1:
-        steps.append({"label": "Simplify", "math": f"\\frac{{{sn}}}{{{sd}}}", "note": f"GCF = {g}"})
+        steps.append({"label": "Simplify", "math": f"\\frac{{{sn}}}{{{sd}}}", "note": f"Greatest common factor = {g}"})
     else:
         steps.append({"label": "Already simplified", "math": f"\\frac{{{sn}}}{{{sd}}}", "note": ""})
     return {
@@ -91,7 +91,7 @@ def _complex_frac():
         "answerNorm": "-1/(x(x+h))",
         "steps": [
             {"label": "Common denominator in numerator",
-             "math": "\\frac{\\frac{x-(x+h)}{x(x+h)}}{h}", "note": "LCD = x(x+h)"},
+             "math": "\\frac{\\frac{x-(x+h)}{x(x+h)}}{h}", "note": "Least common denominator = x(x+h)"},
             {"label": "Simplify numerator",
              "math": "\\frac{\\frac{-h}{x(x+h)}}{h}", "note": "x−(x+h)=−h"},
             {"label": "Divide by h",
@@ -110,7 +110,7 @@ def _three_term_lcd():
         "steps": [
             {"label": "Factor last denominator",
              "math": f"x^2-{a2}=(x-{a})(x+{a})", "note": ""},
-            {"label": "LCD",
+            {"label": "Least common denominator",
              "math": f"\\text{{LCD}}=(x-{a})(x+{a})", "note": ""},
             {"label": "Rewrite all fractions",
              "math": f"\\frac{{(x+{a})+(x-{a})+1}}{{(x-{a})(x+{a})}}", "note": ""},
@@ -218,7 +218,7 @@ def _rational_add():
         "answerTex": f"\\dfrac{{2x{S_str}}}{{x^2{S_str}x{P_str}}}",
         "answerNorm": f"(2x{S_str})/(x^2{S_str}x{P_str})",
         "steps": [
-            {"label": "LCD",
+            {"label": "Least common denominator",
              "math": f"(x+{a})(x+{b})=x^2{S_str}x{P_str}", "note": ""},
             {"label": "Rewrite with LCD",
              "math": f"\\dfrac{{x+{b}+(x+{a})}}{{x^2{S_str}x{P_str}}}", "note": ""},
@@ -274,8 +274,8 @@ def _three_term_sub():
         "steps": [
             {"label": "Factor denominator",
              "math": f"x^2-{a2}=(x+{a})(x-{a})", "note": ""},
-            {"label": "Common LCD",
-             "math": f"\\dfrac{{x-{a}-{2*a}+x+{a}}}{{x^2-{a2}}}", "note": "combine over LCD"},
+            {"label": "Combine over common denominator",
+             "math": f"\\dfrac{{x-{a}-{2*a}+x+{a}}}{{x^2-{a2}}}", "note": ""},
             {"label": "Simplify numerator",
              "math": f"\\dfrac{{2x-{2*a}}}{{x^2-{a2}}}=\\dfrac{{2(x-{a})}}{{(x+{a})(x-{a})}}", "note": ""},
             {"label": f"Cancel (x−{a})",

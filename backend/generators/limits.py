@@ -41,7 +41,7 @@ def _factor_cancel():
         "answerTex": str(result),
         "answerNorm": str(result),
         "steps": [
-            {"label": "Try direct sub", "math": f"\\dfrac{{{a}^2-{a2}}}{{{a}-{a}}}=\\dfrac{{0}}{{0}}", "note": "indeterminate — factor"},
+            {"label": "Try direct substitution","math": f"\\dfrac{{{a}^2-{a2}}}{{{a}-{a}}}=\\dfrac{{0}}{{0}}", "note": "indeterminate — factor"},
             {"label": "Factor numerator", "math": f"\\dfrac{{(x+{a})(x-{a})}}{{x-{a}}}", "note": "difference of squares"},
             {"label": "Cancel (x−a)", "math": f"x+{a}", "note": f"x \\neq {a}"},
             {"label": "Evaluate at x={a}", "math": f"{a}+{a}={result}", "note": ""},
@@ -59,7 +59,7 @@ def _factor_cancel_cubic():
         "answerTex": str(result),
         "answerNorm": str(result),
         "steps": [
-            {"label": "Try direct sub", "math": f"\\dfrac{{{a}^3-{a3}}}{{{a}-{a}}}=\\dfrac{{0}}{{0}}", "note": "factor sum of cubes"},
+            {"label": "Try direct substitution","math": f"\\dfrac{{{a}^3-{a3}}}{{{a}-{a}}}=\\dfrac{{0}}{{0}}", "note": "factor sum of cubes"},
             {"label": "Factor", "math": f"\\dfrac{{(x-{a})(x^2+{a}x+{a2})}}{{x-{a}}}", "note": "difference of cubes: a³-b³=(a-b)(a²+ab+b²)"},
             {"label": "Cancel", "math": f"x^2+{a}x+{a2}", "note": ""},
             {"label": "Substitute", "math": f"{a}^2+{a}\\cdot{a}+{a2}={result}", "note": ""},
@@ -197,7 +197,7 @@ def _lhopital_basic():
             "\\dfrac{1}{2}",
             "1/2",
             [
-                {"label": "Direct sub → 0/0", "math": "\\dfrac{e^0-1-0}{0^2}=\\dfrac{0}{0}", "note": ""},
+                {"label": "Direct substitution: 0/0 indeterminate form", "math": "\\dfrac{e^0-1-0}{0^2}=\\dfrac{0}{0}", "note": ""},
                 {"label": "L'Hôpital: differentiate top and bottom", "math": "\\lim_{x\\to0}\\dfrac{e^x-1}{2x}", "note": ""},
                 {"label": "Still 0/0 — apply again", "math": "\\lim_{x\\to0}\\dfrac{e^x}{2}=\\dfrac{1}{2}", "note": ""},
             ],
@@ -207,7 +207,7 @@ def _lhopital_basic():
             "1",
             "1",
             [
-                {"label": "Direct sub → 0/0", "math": "\\dfrac{\\sin 0}{0}=\\dfrac{0}{0}", "note": ""},
+                {"label": "Direct substitution: 0/0 indeterminate form", "math": "\\dfrac{\\sin 0}{0}=\\dfrac{0}{0}", "note": ""},
                 {"label": "L'Hôpital", "math": "\\lim_{x\\to0}\\dfrac{\\cos x}{1}=1", "note": ""},
             ],
         ),
@@ -216,7 +216,7 @@ def _lhopital_basic():
             "1",
             "1",
             [
-                {"label": "Direct sub → 0/0", "math": "\\dfrac{\\ln 1}{0}=\\dfrac{0}{0}", "note": ""},
+                {"label": "Direct substitution: 0/0 indeterminate form", "math": "\\dfrac{\\ln 1}{0}=\\dfrac{0}{0}", "note": ""},
                 {"label": "L'Hôpital: d/dx[ln(1+x)]=1/(1+x)", "math": "\\lim_{x\\to0}\\dfrac{1/(1+x)}{1}=1", "note": ""},
             ],
         ),
@@ -325,7 +325,7 @@ def _one_sided_limits():
             [
                 {"label": "Right limit", "math": "\\lim_{x\\to0^+}|x|/x = 1", "note": "x>0 so |x|=x"},
                 {"label": "Left limit", "math": "\\lim_{x\\to0^-}|x|/x = -1", "note": "x<0 so |x|=-x"},
-                {"label": "One-sided limits differ → DNE", "math": "\\text{DNE}", "note": ""},
+                {"label": "One-sided limits differ — limit does not exist", "math": "\\text{DNE}", "note": ""},
             ],
         ),
     ]

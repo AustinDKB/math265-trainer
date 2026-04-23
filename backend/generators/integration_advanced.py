@@ -44,9 +44,9 @@ def _byparts_x_sin():
         ans = rf"-\dfrac{{x\cos({a}x)}}{{{a}}} + \dfrac{{\sin({a}x)}}{{{a**2}}}"
         ans_norm = f"-x*cos({a}x)/{a}+sin({a}x)/{a**2}"
     steps = [
-        {"label": "IBP: u=x, dv=sin(ax)dx", "math": r"u=x,\;dv=\sin(" + str(a) + r"x)\,dx"},
+        {"label": "Integration by parts: u=x, dv=sin(ax)dx", "math": r"u=x,\;dv=\sin(" + str(a) + r"x)\,dx"},
         {"label": "du=dx, v=−cos(ax)/a", "math": rf"du=dx,\;v=-\dfrac{{\cos({a}x)}}{{{a}}}"},
-        {"label": "uv−∫v du", "math": rf"-\dfrac{{x\cos({a}x)}}{{{a}}} + \dfrac{{1}}{{{a}}}\int\cos({a}x)\,dx"},
+        {"label": "Apply formula: uv minus integral of v du", "math": rf"-\dfrac{{x\cos({a}x)}}{{{a}}} + \dfrac{{1}}{{{a}}}\int\cos({a}x)\,dx"},
         {"label": "Final", "math": rf"-\dfrac{{x\cos({a}x)}}{{{a}}} + \dfrac{{\sin({a}x)}}{{{a**2}}} + C"},
     ]
     return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
@@ -94,7 +94,7 @@ def _byparts_x2_exp():
     ans = r"e^x(x^2 - 2x + 2)"
     ans_norm = "e^x*(x^2-2x+2)"
     steps = [
-        {"label": "IBP twice", "math": r"u=x^2,\;dv=e^x\,dx \Rightarrow \text{apply twice}"},
+        {"label": "Integration by parts twice", "math": r"u=x^2,\;dv=e^x\,dx \Rightarrow \text{apply twice}"},
         {"label": "First application", "math": r"x^2 e^x - 2\int xe^x\,dx"},
         {"label": "Second application", "math": r"x^2 e^x - 2(xe^x - e^x)"},
         {"label": "Simplify", "math": r"e^x(x^2-2x+2)+C"},
@@ -108,7 +108,7 @@ def _byparts_x_cos():
     ans = r"x\sin(x) + \cos(x)"
     ans_norm = "x*sin(x)+cos(x)"
     steps = [
-        {"label": "IBP: u=x, dv=cos(x)dx", "math": r"u=x,\;dv=\cos(x)\,dx"},
+        {"label": "Integration by parts: u=x, dv=cos(x)dx", "math": r"u=x,\;dv=\cos(x)\,dx"},
         {"label": "du=dx, v=sin(x)", "math": r"du=dx,\;v=\sin(x)"},
         {"label": "Apply formula", "math": r"x\sin(x) - \int\sin(x)\,dx"},
         {"label": "Final", "math": r"x\sin(x) + \cos(x) + C"},
@@ -123,7 +123,7 @@ def _trig_power_sin3():
     ans_norm = "-cos(x)+cos^3(x)/3"
     steps = [
         {"label": "Split off one factor", "math": r"\sin^2(x)\cdot\sin(x) = (1-\cos^2 x)\sin(x)"},
-        {"label": "u-sub: u=cos(x), du=-sin(x)dx", "math": r"-\int(1-u^2)\,du"},
+        {"label": "u-substitution: u=cos(x), du=-sin(x)dx", "math": r"-\int(1-u^2)\,du"},
         {"label": "Integrate", "math": r"-(u - \tfrac{u^3}{3}) = -\cos(x)+\tfrac{\cos^3(x)}{3}+C"},
     ]
     return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
@@ -175,8 +175,8 @@ def _byparts_circular():
         ans = r"\dfrac{e^x(\cos(x)+\sin(x))}{2}"
         ans_norm = "e^x*(cos(x)+sin(x))/2"
         steps = [
-            {"label": "IBP: u=e^x, dv=cos(x)dx", "math": r"I = e^x\sin(x) - \int e^x\sin(x)\,dx"},
-            {"label": "IBP again on remainder", "math": r"I = e^x\sin(x) + e^x\cos(x) - I"},
+            {"label": "Integration by parts: u=e^x, dv=cos(x)dx", "math": r"I = e^x\sin(x) - \int e^x\sin(x)\,dx"},
+            {"label": "Integration by parts again on remainder", "math": r"I = e^x\sin(x) + e^x\cos(x) - I"},
             {"label": "Solve for I", "math": r"2I = e^x(\sin(x)+\cos(x))"},
             {"label": "Final", "math": ans + " + C"},
         ]
@@ -185,8 +185,8 @@ def _byparts_circular():
         ans = r"\dfrac{e^x(\sin(x)-\cos(x))}{2}"
         ans_norm = "e^x*(sin(x)-cos(x))/2"
         steps = [
-            {"label": "IBP: u=e^x, dv=sin(x)dx", "math": r"I = -e^x\cos(x) + \int e^x\cos(x)\,dx"},
-            {"label": "IBP again on remainder", "math": r"I = -e^x\cos(x) + e^x\sin(x) - I"},
+            {"label": "Integration by parts: u=e^x, dv=sin(x)dx", "math": r"I = -e^x\cos(x) + \int e^x\cos(x)\,dx"},
+            {"label": "Integration by parts again on remainder", "math": r"I = -e^x\cos(x) + e^x\sin(x) - I"},
             {"label": "Solve for I", "math": r"2I = e^x(\sin(x)-\cos(x))"},
             {"label": "Final", "math": ans + " + C"},
         ]
@@ -240,7 +240,7 @@ def _combo_usub_byparts():
     ans = r"\dfrac{1}{2}e^{x^2}"
     ans_norm = "(1/2)*e^(x^2)"
     steps = [
-        {"label": "u-sub: u=x², du=2x dx", "math": r"\dfrac{1}{2}\int e^u\,du"},
+        {"label": "u-substitution: u=x², du=2x dx", "math": r"\dfrac{1}{2}\int e^u\,du"},
         {"label": "Integrate", "math": r"\dfrac{1}{2}e^u = \dfrac{1}{2}e^{x^2} + C"},
     ]
     return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
@@ -259,7 +259,7 @@ def _long_div_then_pf():
     ans_norm = "x+(1/2)*ln|(x-1)/(x+1)|"
     steps = [
         {"label": "Long division: x²/(x²-1) = 1 + 1/(x²-1)", "math": r"= 1 + \dfrac{1}{(x-1)(x+1)}"},
-        {"label": "PF: 1/((x-1)(x+1)) = (1/2)·[1/(x-1) − 1/(x+1)]", "math": r"\dfrac{1}{2}\cdot\dfrac{1}{x-1} - \dfrac{1}{2}\cdot\dfrac{1}{x+1}"},
+        {"label": "Partial fractions: 1/((x-1)(x+1)) = (1/2)·[1/(x-1) − 1/(x+1)]", "math": r"\dfrac{1}{2}\cdot\dfrac{1}{x-1} - \dfrac{1}{2}\cdot\dfrac{1}{x+1}"},
         {"label": "Integrate", "math": ans + " + C"},
     ]
     return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
@@ -284,7 +284,7 @@ def _byparts_ln():
     ans = r"x\ln(x) - x"
     ans_norm = "x*ln(x)-x"
     steps = [
-        {"label": "IBP: u=ln(x), dv=dx", "math": r"du=\dfrac{1}{x}dx,\;v=x"},
+        {"label": "Integration by parts: u=ln(x), dv=dx", "math": r"du=\dfrac{1}{x}dx,\;v=x"},
         {"label": "Apply formula", "math": r"x\ln(x) - \int x\cdot\dfrac{1}{x}\,dx"},
         {"label": "Simplify", "math": r"x\ln(x) - x + C"},
     ]
@@ -378,8 +378,8 @@ def _three_technique_combo():
     ans = r"\dfrac{x^2}{2}\ln(x) - \dfrac{x^2}{4}"
     ans_norm = "(x^2/2)*ln(x)-x^2/4"
     steps = [
-        {"label": "IBP: u=ln(x), dv=x dx", "math": r"du=\dfrac{dx}{x},\;v=\dfrac{x^2}{2}"},
-        {"label": "uv−∫v du", "math": r"\dfrac{x^2\ln(x)}{2} - \int\dfrac{x}{2}\,dx"},
+        {"label": "Integration by parts: u=ln(x), dv=x dx", "math": r"du=\dfrac{dx}{x},\;v=\dfrac{x^2}{2}"},
+        {"label": "Apply formula: uv minus integral of v du", "math": r"\dfrac{x^2\ln(x)}{2} - \int\dfrac{x}{2}\,dx"},
         {"label": "Final", "math": ans + " + C"},
     ]
     return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}

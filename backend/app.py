@@ -9,7 +9,7 @@ from generators import (
     limits, derivatives, integration_basic, integration_advanced,
 )
 from checker import check_answer
-from db import init_db, record_attempt, stats_overview, stats_trend, stats_problem, stats_weak
+from db import init_db, record_attempt, dispute_attempt, stats_overview, stats_trend, stats_problem, stats_weak, record_bug_report, list_bug_reports
 
 app = Flask(__name__)
 CORS(app)
@@ -67,8 +67,9 @@ def post_check():
 
     result = check_answer(problem, user_input)
 
+    attempt_id = None
     if problem.get("module") and problem.get("problemTex"):
-        record_attempt(
+        attempt_id = record_attempt(
             module=problem["module"],
             difficulty=problem.get("difficulty", 1),
             problem_tex=problem["problemTex"],
@@ -76,6 +77,7 @@ def post_check():
             time_sec=time_sec,
         )
 
+    result["attemptId"] = attempt_id
     return jsonify(result)
 
 
@@ -101,6 +103,33 @@ def get_stats_weak():
     min_att = int(request.args.get("min_attempts", 3))
     limit = int(request.args.get("limit", 10))
     return jsonify(stats_weak(min_att, limit))
+
+
+@app.post("/api/report")
+def post_report():
+    data = request.get_json(force=True)
+    problem = data.get("problem", {})
+    if not problem.get("module") or not problem.get("problemTex"):
+        return jsonify({"error": "missing problem data"}), 400
+    attempt_id = data.get("attemptId")
+    record_bug_report(
+        module=problem["module"],
+        difficulty=problem.get("difficulty", 1),
+        problem_tex=problem["problemTex"],
+        answer_tex=problem.get("answerTex", ""),
+        user_answer=data.get("userAnswer", ""),
+        note=data.get("note", ""),
+        attempt_id=attempt_id,
+    )
+    if attempt_id:
+        dispute_attempt(attempt_id)
+    return jsonify({"ok": True})
+
+
+@app.get("/api/reports")
+def get_reports():
+    limit = int(request.args.get("limit", 100))
+    return jsonify(list_bug_reports(limit))
 
 
 if __name__ == "__main__":
