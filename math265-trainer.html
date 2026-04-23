@@ -2762,7 +2762,8 @@ $('bug-submit-btn').addEventListener('click', async ()=>{
       $('bug-status').textContent='Error — try again';
     }
   } catch(e){
-    $('bug-status').textContent='Network error';
+    console.error('Bug report failed:', e);
+    $('bug-status').textContent='Network error — is backend running?';
   }
   $('bug-submit-btn').disabled=false;
 });

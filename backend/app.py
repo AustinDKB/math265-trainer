@@ -107,23 +107,29 @@ def get_stats_weak():
 
 @app.post("/api/report")
 def post_report():
-    data = request.get_json(force=True)
-    problem = data.get("problem", {})
-    if not problem.get("module") or not problem.get("problemTex"):
-        return jsonify({"error": "missing problem data"}), 400
-    attempt_id = data.get("attemptId")
-    record_bug_report(
-        module=problem["module"],
-        difficulty=problem.get("difficulty", 1),
-        problem_tex=problem["problemTex"],
-        answer_tex=problem.get("answerTex", ""),
-        user_answer=data.get("userAnswer", ""),
-        note=data.get("note", ""),
-        attempt_id=attempt_id,
-    )
-    if attempt_id:
-        dispute_attempt(attempt_id)
-    return jsonify({"ok": True})
+    try:
+        data = request.get_json(force=True)
+        if not data:
+            return jsonify({"error": "invalid request body"}), 400
+        problem = data.get("problem", {})
+        if not problem.get("module") or not problem.get("problemTex"):
+            return jsonify({"error": "missing problem data"}), 400
+        attempt_id = data.get("attemptId")
+        record_bug_report(
+            module=problem["module"],
+            difficulty=problem.get("difficulty", 1),
+            problem_tex=problem["problemTex"],
+            answer_tex=problem.get("answerTex", ""),
+            user_answer=data.get("userAnswer", ""),
+            note=data.get("note", ""),
+            attempt_id=attempt_id,
+        )
+        if attempt_id:
+            dispute_attempt(attempt_id)
+        return jsonify({"ok": True})
+    except Exception as e:
+        app.logger.exception("Bug report failed")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.get("/api/reports")
