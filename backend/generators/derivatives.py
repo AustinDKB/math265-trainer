@@ -14,7 +14,6 @@ def _d_tex(expr_tex): return f"\\dfrac{{d}}{{dx}}\\!\\left[{expr_tex}\\right]"
 def _power_rule():
     n = pick([-3,-2,-1,1,2,3,4,5,6,7,8])
     a = R(1, 8)
-    # d/dx[ax^n] = an·x^(n-1)
     an = a * n
     n_minus = n - 1
     if n == 0:
@@ -34,68 +33,74 @@ def _power_rule():
         "answerTex": ans_tex,
         "answerNorm": ans_norm,
         "steps": [
-            {"label": "Power rule: d/dx[ax^n] = anx^(n-1)", "math": f"{an}x^{{{n_minus}}}", "note": f"multiply by exponent, reduce by 1"},
+            {"label": "Power rule: d/dx[ax^n] = an·x^(n-1)", "math": f"\\text{{multiply exponent by coefficient: }} {a} \\cdot {n} = {an}", "note": f"bring the {n} down, reduce exponent by 1"},
+            {"label": "Reduce exponent by 1", "math": f"n-1 = {n}-1 = {n_minus}", "note": ""},
+            {"label": "Result", "math": ans_tex, "note": ""},
         ],
     }
 
 
 def _trig_basic():
     cases = [
-        ("\\sin x",    "\\cos x",           "cos(x)"),
-        ("\\cos x",    "-\\sin x",          "-sin(x)"),
-        ("\\tan x",    "\\sec^2 x",         "sec^2(x)"),
-        ("\\cot x",    "-\\csc^2 x",        "-csc^2(x)"),
-        ("\\sec x",    "\\sec x\\tan x",    "sec(x)*tan(x)"),
-        ("\\csc x",    "-\\csc x\\cot x",   "-csc(x)*cot(x)"),
+        ("\\sin x",    "\\cos x",           "cos(x)",        "sine becomes cosine"),
+        ("\\cos x",    "-\\sin x",          "-sin(x)",       "cosine becomes negative sine"),
+        ("\\tan x",    "\\sec^2 x",         "sec^2(x)",      "tangent becomes secant squared"),
+        ("\\cot x",    "-\\csc^2 x",        "-csc^2(x)",     "cotangent becomes negative cosecant squared"),
+        ("\\sec x",    "\\sec x\\tan x",    "sec(x)*tan(x)", "secant becomes secant times tangent"),
+        ("\\csc x",    "-\\csc x\\cot x",   "-csc(x)*cot(x)","cosecant becomes negative cosecant times cotangent"),
     ]
-    f_tex, d_tex, d_norm = pick(cases)
+    f_tex, d_tex, d_norm, reason = pick(cases)
     return {
         "problemTex": _d_tex(f_tex),
         "answerTex": d_tex,
         "answerNorm": d_norm,
-        "steps": [{"label": "Standard trig derivative", "math": f"\\dfrac{{d}}{{dx}}[{f_tex}] = {d_tex}", "note": "memorize"}],
+        "steps": [
+            {"label": "Recall standard trig derivative", "math": f"\\dfrac{{d}}{{dx}}[{f_tex}] = {d_tex}", "note": reason},
+        ],
     }
 
 
 def _exponential_rule():
     cases = [
-        ("e^x",         "e^x",         "e^x"),
-        ("e^x",         "e^x",         "e^x"),
-        ("2^x",         "2^x \\ln 2",  "2^x*ln(2)"),
-        ("3^x",         "3^x \\ln 3",  "3^x*ln(3)"),
-        ("10^x",        "10^x \\ln 10","10^x*ln(10)"),
+        ("e^x",   "e^x",          "e^x",          "e^x is its own derivative"),
+        ("e^x",   "e^x",          "e^x",          "e^x is its own derivative"),
+        ("2^x",   "2^x \\ln 2",   "2^x*ln(2)",    "for a^x: multiply by ln(a)"),
+        ("3^x",   "3^x \\ln 3",   "3^x*ln(3)",    "for a^x: multiply by ln(a)"),
+        ("10^x",  "10^x \\ln 10", "10^x*ln(10)",  "for a^x: multiply by ln(a)"),
     ]
-    f_tex, d_tex, d_norm = pick(cases)
+    f_tex, d_tex, d_norm, reason = pick(cases)
     return {
         "problemTex": _d_tex(f_tex),
         "answerTex": d_tex,
         "answerNorm": d_norm,
-        "steps": [{"label": "Exponential derivative", "math": f"\\dfrac{{d}}{{dx}}[{f_tex}] = {d_tex}", "note": ""}],
+        "steps": [
+            {"label": "Exponential derivative rule", "math": f"\\dfrac{{d}}{{dx}}[{f_tex}] = {d_tex}", "note": reason},
+        ],
     }
 
 
 def _log_rule():
     cases = [
-        ("\\ln x",      "\\dfrac{1}{x}",          "1/x"),
-        ("\\log_2 x",   "\\dfrac{1}{x \\ln 2}",   "1/(x*ln(2))"),
-        ("\\log_{10} x","\\dfrac{1}{x \\ln 10}",  "1/(x*ln(10))"),
+        ("\\ln x",       "\\dfrac{1}{x}",          "1/x",           "d/dx[ln x] = 1/x"),
+        ("\\log_2 x",    "\\dfrac{1}{x \\ln 2}",   "1/(x*ln(2))",   "d/dx[log_a x] = 1/(x·ln a)"),
+        ("\\log_{10} x", "\\dfrac{1}{x \\ln 10}",  "1/(x*ln(10))",  "d/dx[log_a x] = 1/(x·ln a)"),
     ]
-    f_tex, d_tex, d_norm = pick(cases)
+    f_tex, d_tex, d_norm, reason = pick(cases)
     return {
         "problemTex": _d_tex(f_tex),
         "answerTex": d_tex,
         "answerNorm": d_norm,
-        "steps": [{"label": "Logarithm derivative", "math": f"\\dfrac{{d}}{{dx}}[{f_tex}] = {d_tex}", "note": ""}],
+        "steps": [
+            {"label": "Logarithm derivative rule", "math": f"\\dfrac{{d}}{{dx}}[{f_tex}] = {d_tex}", "note": reason},
+        ],
     }
 
 
 def _sum_difference():
-    # d/dx[ax^m ± bx^n]
     m, n = pick([2,3,4,5]), pick([0,1,2,3])
     while m == n: n = pick([0,1,2,3])
     a, b = R(1,6), R(1,6)
     pm = a * m; pn = b * n
-    # Build tex
     def term_tex(coeff, exp):
         if exp == 0: return str(coeff)
         if exp == 1: return f"{coeff}x"
@@ -124,7 +129,8 @@ def _sum_difference():
         "answerTex": ans_tex,
         "answerNorm": ans_norm,
         "steps": [
-            {"label": "Differentiate term by term", "math": f"{ans_dm} {'+' if sign=='+' else '-'} {ans_dn}", "note": "sum/difference rule"},
+            {"label": "Sum/difference rule: differentiate each term separately", "math": f"\\dfrac{{d}}{{dx}}[{term_tex(a,m)}] {'+' if sign=='+' else '-'} \\dfrac{{d}}{{dx}}[{term_tex(b,n)}]", "note": ""},
+            {"label": f"Apply power rule to each term", "math": f"{ans_dm} {'+' if sign=='+' else '-'} {ans_dn}", "note": f"d/dx[{term_tex(a,m)}]={ans_dm},\\; d/dx[{term_tex(b,n)}]={ans_dn}"},
         ],
     }
 
@@ -134,7 +140,6 @@ diff1 = [_power_rule, _power_rule, _trig_basic, _exponential_rule, _log_rule, _s
 # ── diff2 — product, quotient, chain ─────────────────────────────────────────
 
 def _product_rule():
-    # d/dx[x^m * trig or exp]
     cases = [
         (X,                "x",    Sin(X),             "\\sin x"),
         (X,                "x",    Cos(X),             "\\cos x"),
@@ -155,7 +160,9 @@ def _product_rule():
         "answerTex": deriv_tex,
         "answerNorm": deriv.to_norm(),
         "steps": [
-            {"label": "Product rule: (fg)' = f'g + fg'", "math": f"({f_d_tex})({g_tex}) + ({f_tex})({g_d_tex})", "note": ""},
+            {"label": "Identify the two factors", "math": f"f = {f_tex}, \\quad g = {g_tex}", "note": ""},
+            {"label": "Differentiate each factor separately", "math": f"f' = {f_d_tex}, \\quad g' = {g_d_tex}", "note": ""},
+            {"label": "Product rule: (fg)' = f'g + fg'", "math": f"({f_d_tex})({g_tex}) + ({f_tex})({g_d_tex})", "note": "first · derivative of second + second · derivative of first"},
             {"label": "Simplify", "math": deriv_tex, "note": ""},
         ],
     }
@@ -180,7 +187,9 @@ def _quotient_rule():
         "answerTex": deriv_tex,
         "answerNorm": deriv.to_norm(),
         "steps": [
-            {"label": "Quotient rule: (f/g)' = (f'g − fg')/g²", "math": f"\\dfrac{{({f_d_tex})({g_tex})-({f_tex})({g_d_tex})}}{{{g_tex}^2}}", "note": ""},
+            {"label": "Identify numerator and denominator", "math": f"f = {f_tex}, \\quad g = {g_tex}", "note": ""},
+            {"label": "Differentiate each", "math": f"f' = {f_d_tex}, \\quad g' = {g_d_tex}", "note": ""},
+            {"label": "Quotient rule: (f/g)' = (f'g − fg')/g²", "math": f"\\dfrac{{({f_d_tex})({g_tex})-({f_tex})({g_d_tex})}}{{{g_tex}^2}}", "note": "low d-high minus high d-low, over low squared"},
             {"label": "Simplify", "math": deriv_tex, "note": ""},
         ],
     }
@@ -188,23 +197,35 @@ def _quotient_rule():
 
 def _chain_single():
     cases = [
-        # (func_tex, ans_tex, ans_norm, inner_tex, outer_d_inner_tex, inner_d_tex)
-        ("\\sin(x^2)",  "2x\\cos(x^2)",      "2x*cos(x^2)",        "x^2",    "\\cos(x^2)",       "2x"),
-        ("e^{3x}",      "3e^{3x}",            "3*e^(3x)",           "3x",     "e^{3x}",            "3"),
-        ("\\ln(x^2)",   "\\dfrac{2}{x}",      "2/x",                "x^2",    "\\dfrac{1}{x^2}",  "2x"),
-        ("\\sin^2 x",   "2\\sin x\\cos x",    "2*sin(x)*cos(x)",    "\\sin x","2\\sin x",          "\\cos x"),
-        ("\\sin(x+3)",  "\\cos(x+3)",         "cos(x+3)",           "x+3",    "\\cos(x+3)",        "1"),
-        ("e^{x^2+x}",  "e^{x^2+x}(2x+1)",   "e^(x^2+x)*(2x+1)",  "x^2+x",  "e^{x^2+x}",        "2x+1"),
+        ("\\sin(x^2)",  "2x\\cos(x^2)",      "2x*cos(x^2)",
+         "x^2",    "\\sin(u)",     "\\cos(x^2)",  "2x",
+         "outer = sin(u), inner = x²"),
+        ("e^{3x}",      "3e^{3x}",            "3*e^(3x)",
+         "3x",     "e^u",          "e^{3x}",      "3",
+         "outer = e^u, inner = 3x"),
+        ("\\ln(x^2)",   "\\dfrac{2}{x}",      "2/x",
+         "x^2",    "\\ln(u)",      "\\dfrac{1}{x^2}", "2x",
+         "outer = ln(u), inner = x²"),
+        ("\\sin^2 x",   "2\\sin x\\cos x",    "2*sin(x)*cos(x)",
+         "\\sin x","u^2",          "2\\sin x",    "\\cos x",
+         "outer = u², inner = sin(x)"),
+        ("\\sin(x+3)",  "\\cos(x+3)",         "cos(x+3)",
+         "x+3",    "\\sin(u)",     "\\cos(x+3)",  "1",
+         "outer = sin(u), inner = x+3"),
+        ("e^{x^2+x}",  "e^{x^2+x}(2x+1)",   "e^(x^2+x)*(2x+1)",
+         "x^2+x",  "e^u",          "e^{x^2+x}",  "2x+1",
+         "outer = e^u, inner = x²+x"),
     ]
-    func_tex, ans_tex, ans_norm, inner_tex, outer_d_tex, inner_d_tex = pick(cases)
+    func_tex, ans_tex, ans_norm, inner_tex, outer_name, outer_d_tex, inner_d_tex, structure = pick(cases)
     return {
         "problemTex": _d_tex(func_tex),
         "answerTex": ans_tex,
         "answerNorm": ans_norm,
         "steps": [
-            {"label": "Chain rule: d/dx[f(g)] = f'(g)·g'", "math": f"f'({inner_tex}) \\cdot \\dfrac{{d}}{{dx}}[{inner_tex}]", "note": ""},
-            {"label": f"f'(g) = {outer_d_tex}, g' = {inner_d_tex}", "math": f"{outer_d_tex} \\cdot {inner_d_tex}", "note": ""},
-            {"label": "Result", "math": ans_tex, "note": ""},
+            {"label": "Identify outer and inner functions", "math": f"\\text{{{structure}}}", "note": "chain rule: differentiate outside first, keep inside intact"},
+            {"label": "Differentiate the outer function (leave inner unchanged)", "math": f"\\dfrac{{d}}{{du}}[{outer_name}] \\text{{ evaluated at inner}} = {outer_d_tex}", "note": ""},
+            {"label": "Differentiate the inner function", "math": f"\\dfrac{{d}}{{dx}}[{inner_tex}] = {inner_d_tex}", "note": ""},
+            {"label": "Multiply: outer derivative × inner derivative", "math": f"{outer_d_tex} \\cdot {inner_d_tex} = {ans_tex}", "note": ""},
         ],
     }
 
@@ -214,114 +235,153 @@ diff2 = [_product_rule, _product_rule, _quotient_rule, _chain_single, _chain_sin
 # ── diff3 — advanced combinations ─────────────────────────────────────────────
 
 def _chain_nested():
-    # d/dx[sin(cos(x²))]
     cases = [
-        (
-            "\\sin(\\cos(x^2))",
-            "\\cos(\\cos(x^2)) \\cdot (-\\sin(x^2)) \\cdot 2x",
-            "cos(cos(x^2))*(-sin(x^2))*2x",
-        ),
-        (
-            "e^{\\sin(x^2)}",
-            "e^{\\sin(x^2)} \\cdot \\cos(x^2) \\cdot 2x",
-            "e^sin(x^2)*cos(x^2)*2x",
-        ),
-        (
-            "\\ln(\\sin(x))",
-            "\\dfrac{\\cos x}{\\sin x} = \\cot x",
-            "cos(x)/sin(x)",
-        ),
+        {
+            "prob": "\\sin(\\cos(x^2))",
+            "ans": "\\cos(\\cos(x^2)) \\cdot (-\\sin(x^2)) \\cdot 2x",
+            "norm": "cos(cos(x^2))*(-sin(x^2))*2x",
+            "steps": [
+                {"label": "Three nested layers: sin( cos( x² ) )", "math": "\\text{outermost} \\to \\text{middle} \\to \\text{innermost}", "note": "apply chain rule once per layer, working outside in"},
+                {"label": "Layer 1 — outer: d/dx[sin(u)] = cos(u), keep u = cos(x²)", "math": "\\cos(\\cos(x^2))", "note": "differentiate sin, leave everything inside untouched"},
+                {"label": "Layer 2 — middle: d/dx[cos(x²)] = −sin(x²), keep x² inside", "math": "\\cdot(-\\sin(x^2))", "note": "differentiate cos, still leave x² alone"},
+                {"label": "Layer 3 — inner: d/dx[x²] = 2x", "math": "\\cdot 2x", "note": "differentiate the innermost expression"},
+                {"label": "Multiply all three layers together", "math": "\\cos(\\cos(x^2)) \\cdot (-\\sin(x^2)) \\cdot 2x", "note": ""},
+            ],
+        },
+        {
+            "prob": "e^{\\sin(x^2)}",
+            "ans": "e^{\\sin(x^2)} \\cdot \\cos(x^2) \\cdot 2x",
+            "norm": "e^sin(x^2)*cos(x^2)*2x",
+            "steps": [
+                {"label": "Three nested layers: e^( sin( x² ) )", "math": "\\text{outermost} \\to \\text{middle} \\to \\text{innermost}", "note": "apply chain rule once per layer, outside in"},
+                {"label": "Layer 1 — outer: d/dx[e^u] = e^u, keep u = sin(x²)", "math": "e^{\\sin(x^2)}", "note": "e^u derivative is itself — leave the exponent unchanged"},
+                {"label": "Layer 2 — middle: d/dx[sin(x²)] = cos(x²), keep x²", "math": "\\cdot \\cos(x^2)", "note": "differentiate sin, leave x² inside"},
+                {"label": "Layer 3 — inner: d/dx[x²] = 2x", "math": "\\cdot 2x", "note": ""},
+                {"label": "Multiply all three layers together", "math": "e^{\\sin(x^2)} \\cdot \\cos(x^2) \\cdot 2x", "note": ""},
+            ],
+        },
+        {
+            "prob": "\\ln(\\sin(x))",
+            "ans": "\\dfrac{\\cos x}{\\sin x} = \\cot x",
+            "norm": "cos(x)/sin(x)",
+            "steps": [
+                {"label": "Two layers: ln( sin(x) )", "math": "\\text{outer} = \\ln(u), \\quad \\text{inner} = \\sin(x)", "note": ""},
+                {"label": "Layer 1 — outer: d/dx[ln(u)] = 1/u, evaluated at u = sin(x)", "math": "\\dfrac{1}{\\sin(x)}", "note": ""},
+                {"label": "Layer 2 — inner: d/dx[sin(x)] = cos(x)", "math": "\\cdot \\cos(x)", "note": ""},
+                {"label": "Multiply and simplify", "math": "\\dfrac{\\cos x}{\\sin x} = \\cot x", "note": "cos/sin = cot by definition"},
+            ],
+        },
     ]
-    prob, ans, norm = pick(cases)
-    return {
-        "problemTex": _d_tex(prob),
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "Identify layers (outermost → innermost)", "math": "\\text{Apply chain rule from outside in}", "note": ""},
-            {"label": "Result", "math": ans, "note": ""},
-        ],
-    }
+    c = pick(cases)
+    return {"problemTex": _d_tex(c["prob"]), "answerTex": c["ans"], "answerNorm": c["norm"], "steps": c["steps"]}
 
 
 def _product_chain():
-    # d/dx[x^n · trig(ax)]
     n = pick([2,3]); a = R(2,5)
     cases = [
-        (f"x^{n}\\sin({a}x)",
-         f"{n}x^{{{n-1}}}\\sin({a}x) + {a}x^{n}\\cos({a}x)",
-         f"{n}x^{n-1}*sin({a}x)+{a}x^{n}*cos({a}x)"),
-        (f"x^{n}e^{{{a}x}}",
-         f"{n}x^{{{n-1}}}e^{{{a}x}} + {a}x^{n}e^{{{a}x}} = x^{{{n-1}}}e^{{{a}x}}({n}+{a}x)",
-         f"x^{n-1}*e^({a}x)*({n}+{a}x)"),
+        {
+            "prob": f"x^{n}\\sin({a}x)",
+            "ans": f"{n}x^{{{n-1}}}\\sin({a}x) + {a}x^{n}\\cos({a}x)",
+            "norm": f"{n}x^{n-1}*sin({a}x)+{a}x^{n}*cos({a}x)",
+            "steps": [
+                {"label": f"Product rule: f = x^{n}, g = sin({a}x)", "math": f"f = x^{n}, \\quad g = \\sin({a}x)", "note": "identify the two factors before differentiating"},
+                {"label": f"Differentiate f using power rule", "math": f"f' = {n}x^{{{n-1}}}", "note": ""},
+                {"label": f"Differentiate g using chain rule: outer = sin(u), inner = {a}x", "math": f"g' = \\cos({a}x) \\cdot {a} = {a}\\cos({a}x)", "note": f"d/dx[sin({a}x)] = cos({a}x) · {a}"},
+                {"label": "Apply product rule: f'g + fg'", "math": f"{n}x^{{{n-1}}}\\sin({a}x) + x^{n}\\cdot {a}\\cos({a}x)", "note": ""},
+            ],
+        },
+        {
+            "prob": f"x^{n}e^{{{a}x}}",
+            "ans": f"{n}x^{{{n-1}}}e^{{{a}x}} + {a}x^{n}e^{{{a}x}} = x^{{{n-1}}}e^{{{a}x}}({n}+{a}x)",
+            "norm": f"x^{n-1}*e^({a}x)*({n}+{a}x)",
+            "steps": [
+                {"label": f"Product rule: f = x^{n}, g = e^{{{a}x}}", "math": f"f = x^{n}, \\quad g = e^{{{a}x}}", "note": ""},
+                {"label": "Differentiate f using power rule", "math": f"f' = {n}x^{{{n-1}}}", "note": ""},
+                {"label": f"Differentiate g using chain rule: outer = e^u, inner = {a}x", "math": f"g' = e^{{{a}x}} \\cdot {a} = {a}e^{{{a}x}}", "note": f"d/dx[e^({a}x)] = e^({a}x) · {a}"},
+                {"label": "Apply product rule: f'g + fg'", "math": f"{n}x^{{{n-1}}}e^{{{a}x}} + x^{n} \\cdot {a}e^{{{a}x}}", "note": ""},
+                {"label": "Factor out common terms", "math": f"x^{{{n-1}}}e^{{{a}x}}({n}+{a}x)", "note": f"x^{n-1} and e^({a}x) appear in both terms"},
+            ],
+        },
     ]
-    prob, ans, norm = pick(cases)
-    return {
-        "problemTex": _d_tex(prob),
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "Product rule: (uv)' = u'v + uv'", "math": "f = x^n,\\; g = \\text{(second factor)}", "note": ""},
-            {"label": "Chain rule on second factor", "math": "\\text{apply chain to inner function}", "note": ""},
-            {"label": "Result", "math": ans, "note": ""},
-        ],
-    }
+    c = pick(cases)
+    return {"problemTex": _d_tex(c["prob"]), "answerTex": c["ans"], "answerNorm": c["norm"], "steps": c["steps"]}
 
 
 def _quotient_chain():
     cases = [
-        (
-            "\\dfrac{e^{2x}}{x^2+1}",
-            "\\dfrac{2e^{2x}(x^2+1) - e^{2x}(2x)}{(x^2+1)^2} = \\dfrac{2e^{2x}(x^2-x+1)}{(x^2+1)^2}",
-            "2e^(2x)*(x^2-x+1)/(x^2+1)^2",
-        ),
-        (
-            "\\dfrac{\\sin(3x)}{x}",
-            "\\dfrac{3x\\cos(3x) - \\sin(3x)}{x^2}",
-            "(3x*cos(3x)-sin(3x))/x^2",
-        ),
+        {
+            "prob": "\\dfrac{e^{2x}}{x^2+1}",
+            "ans": "\\dfrac{2e^{2x}(x^2+1) - e^{2x}(2x)}{(x^2+1)^2} = \\dfrac{2e^{2x}(x^2-x+1)}{(x^2+1)^2}",
+            "norm": "2e^(2x)*(x^2-x+1)/(x^2+1)^2",
+            "steps": [
+                {"label": "Identify numerator and denominator", "math": "f = e^{2x}, \\quad g = x^2+1", "note": ""},
+                {"label": "Differentiate f using chain rule: outer = e^u, inner = 2x", "math": "f' = e^{2x} \\cdot 2 = 2e^{2x}", "note": "multiply e^(2x) by the derivative of the exponent"},
+                {"label": "Differentiate g using power rule", "math": "g' = 2x", "note": ""},
+                {"label": "Quotient rule: (f'g − fg')/g²", "math": "\\dfrac{2e^{2x}(x^2+1) - e^{2x}(2x)}{(x^2+1)^2}", "note": ""},
+                {"label": "Factor e^(2x) from the numerator and simplify", "math": "\\dfrac{2e^{2x}(x^2-x+1)}{(x^2+1)^2}", "note": ""},
+            ],
+        },
+        {
+            "prob": "\\dfrac{\\sin(3x)}{x}",
+            "ans": "\\dfrac{3x\\cos(3x) - \\sin(3x)}{x^2}",
+            "norm": "(3x*cos(3x)-sin(3x))/x^2",
+            "steps": [
+                {"label": "Identify numerator and denominator", "math": "f = \\sin(3x), \\quad g = x", "note": ""},
+                {"label": "Differentiate f using chain rule: outer = sin(u), inner = 3x", "math": "f' = \\cos(3x) \\cdot 3 = 3\\cos(3x)", "note": "derivative of sin is cos, then multiply by derivative of 3x which is 3"},
+                {"label": "Differentiate g using power rule", "math": "g' = 1", "note": ""},
+                {"label": "Quotient rule: (f'g − fg')/g²", "math": "\\dfrac{3\\cos(3x) \\cdot x - \\sin(3x) \\cdot 1}{x^2}", "note": ""},
+                {"label": "Simplify", "math": "\\dfrac{3x\\cos(3x) - \\sin(3x)}{x^2}", "note": ""},
+            ],
+        },
     ]
-    prob, ans, norm = pick(cases)
-    return {
-        "problemTex": _d_tex(prob),
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "Quotient + chain rule", "math": "\\text{(f'g - fg')}/g^2, \\text{ chain on numerator}", "note": ""},
-            {"label": "Result", "math": ans, "note": ""},
-        ],
-    }
+    c = pick(cases)
+    return {"problemTex": _d_tex(c["prob"]), "answerTex": c["ans"], "answerNorm": c["norm"], "steps": c["steps"]}
 
 
 def _implicit_differentiation():
     cases = [
-        (
-            "x^2 + y^2 = r^2",
-            "\\dfrac{dy}{dx} = -\\dfrac{x}{y}",
-            "-x/y",
-        ),
-        (
-            "x^2 + xy + y^2 = 7",
-            "\\dfrac{dy}{dx} = -\\dfrac{2x+y}{x+2y}",
-            "-(2x+y)/(x+2y)",
-        ),
-        (
-            "\\sin(xy) = x",
-            "\\dfrac{dy}{dx} = \\dfrac{1 - y\\cos(xy)}{x\\cos(xy)}",
-            "(1-y*cos(xy))/(x*cos(xy))",
-        ),
+        {
+            "implicit": "x^2 + y^2 = r^2",
+            "ans": "\\dfrac{dy}{dx} = -\\dfrac{x}{y}",
+            "norm": "-x/y",
+            "steps": [
+                {"label": "Differentiate both sides with respect to x", "math": "\\dfrac{d}{dx}[x^2] + \\dfrac{d}{dx}[y^2] = 0", "note": ""},
+                {"label": "d/dx[x²] = 2x by power rule", "math": "2x", "note": ""},
+                {"label": "d/dx[y²] = 2y·(dy/dx) by chain rule — y is a function of x", "math": "2y \\cdot \\dfrac{dy}{dx}", "note": "treat y like a composite function: d/dx[y²] = 2y · y'"},
+                {"label": "Write the full equation", "math": "2x + 2y\\dfrac{dy}{dx} = 0", "note": ""},
+                {"label": "Isolate dy/dx", "math": "2y\\dfrac{dy}{dx} = -2x \\implies \\dfrac{dy}{dx} = -\\dfrac{x}{y}", "note": "divide both sides by 2y"},
+            ],
+        },
+        {
+            "implicit": "x^2 + xy + y^2 = 7",
+            "ans": "\\dfrac{dy}{dx} = -\\dfrac{2x+y}{x+2y}",
+            "norm": "-(2x+y)/(x+2y)",
+            "steps": [
+                {"label": "Differentiate every term with respect to x", "math": "\\dfrac{d}{dx}[x^2] + \\dfrac{d}{dx}[xy] + \\dfrac{d}{dx}[y^2] = 0", "note": ""},
+                {"label": "d/dx[x²] = 2x", "math": "2x", "note": "power rule"},
+                {"label": "d/dx[xy] = y + x·(dy/dx) by product rule", "math": "y + x\\dfrac{dy}{dx}", "note": "treat x and y as two separate functions multiplied together"},
+                {"label": "d/dx[y²] = 2y·(dy/dx) by chain rule", "math": "2y\\dfrac{dy}{dx}", "note": ""},
+                {"label": "Full equation after differentiation", "math": "2x + y + x\\dfrac{dy}{dx} + 2y\\dfrac{dy}{dx} = 0", "note": ""},
+                {"label": "Collect all dy/dx terms on one side", "math": "(x + 2y)\\dfrac{dy}{dx} = -(2x+y)", "note": ""},
+                {"label": "Divide both sides to isolate dy/dx", "math": "\\dfrac{dy}{dx} = -\\dfrac{2x+y}{x+2y}", "note": ""},
+            ],
+        },
+        {
+            "implicit": "\\sin(xy) = x",
+            "ans": "\\dfrac{dy}{dx} = \\dfrac{1 - y\\cos(xy)}{x\\cos(xy)}",
+            "norm": "(1-y*cos(xy))/(x*cos(xy))",
+            "steps": [
+                {"label": "Differentiate both sides with respect to x", "math": "\\dfrac{d}{dx}[\\sin(xy)] = \\dfrac{d}{dx}[x]", "note": ""},
+                {"label": "Left side: chain rule — outer = sin(u), inner = xy", "math": "\\cos(xy) \\cdot \\dfrac{d}{dx}[xy]", "note": "derivative of sin is cos, then multiply by derivative of the inside"},
+                {"label": "d/dx[xy] = y + x·(dy/dx) by product rule", "math": "\\cos(xy) \\cdot \\left(y + x\\dfrac{dy}{dx}\\right)", "note": ""},
+                {"label": "Right side: d/dx[x] = 1", "math": "= 1", "note": ""},
+                {"label": "Expand the left side", "math": "y\\cos(xy) + x\\cos(xy)\\dfrac{dy}{dx} = 1", "note": ""},
+                {"label": "Isolate dy/dx", "math": "\\dfrac{dy}{dx} = \\dfrac{1 - y\\cos(xy)}{x\\cos(xy)}", "note": "subtract y·cos(xy), then divide by x·cos(xy)"},
+            ],
+        },
     ]
-    implicit, ans, norm = pick(cases)
-    return {
-        "problemTex": f"\\text{{Given }} {implicit},\\text{{ find }} \\dfrac{{dy}}{{dx}}.",
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "Differentiate both sides with respect to x", "math": "\\text{remember: d/dx[y] = dy/dx (chain rule)}", "note": ""},
-            {"label": "Collect dy/dx terms", "math": "\\text{move dy/dx to one side}", "note": ""},
-            {"label": "Solve for dy/dx", "math": ans, "note": ""},
-        ],
-    }
+    c = pick(cases)
+    return {"problemTex": f"\\text{{Given }} {c['implicit']},\\text{{ find }} \\dfrac{{dy}}{{dx}}.", "answerTex": c["ans"], "answerNorm": c["norm"], "steps": c["steps"]}
 
 
 def _log_differentiation():
@@ -330,29 +390,32 @@ def _log_differentiation():
         "answerTex": "x^x(\\ln x + 1)",
         "answerNorm": "x^x*(ln(x)+1)",
         "steps": [
-            {"label": "Take ln both sides", "math": "\\ln y = x \\ln x", "note": ""},
-            {"label": "Differentiate implicitly", "math": "\\dfrac{1}{y}\\dfrac{dy}{dx} = \\ln x + 1", "note": "product rule on right"},
-            {"label": "Multiply by y", "math": "\\dfrac{dy}{dx} = y(\\ln x+1) = x^x(\\ln x+1)", "note": ""},
+            {"label": "Take ln of both sides to bring down the exponent", "math": "\\ln y = \\ln(x^x) = x \\ln x", "note": "log rule: ln(a^b) = b·ln(a)"},
+            {"label": "Differentiate both sides with respect to x", "math": "\\dfrac{d}{dx}[\\ln y] = \\dfrac{d}{dx}[x \\ln x]", "note": ""},
+            {"label": "Left side: chain rule — d/dx[ln(y)] = (1/y)·(dy/dx)", "math": "\\dfrac{1}{y}\\dfrac{dy}{dx}", "note": "y is a function of x, so use chain rule"},
+            {"label": "Right side: product rule on x·ln(x)", "math": "1 \\cdot \\ln x + x \\cdot \\dfrac{1}{x} = \\ln x + 1", "note": "d/dx[x]=1, d/dx[ln x]=1/x"},
+            {"label": "Equation so far", "math": "\\dfrac{1}{y}\\dfrac{dy}{dx} = \\ln x + 1", "note": ""},
+            {"label": "Multiply both sides by y to isolate dy/dx", "math": "\\dfrac{dy}{dx} = y(\\ln x+1) = x^x(\\ln x+1)", "note": "substitute y = x^x back in"},
         ],
     }
 
 
 def _higher_order():
     cases = [
-        ("\\sin x", "f''(x) = -\\sin x", "-sin(x)"),
-        ("\\cos x", "f''(x) = -\\cos x", "-cos(x)"),
-        ("e^x",     "f''(x) = e^x",      "e^x"),
-        ("x^4",     "f''(x) = 12x^2",    "12*x^2"),
-        ("x^5",     "f''(x) = 20x^3",    "20*x^3"),
+        ("\\sin x",  "f'(x) = \\cos x",   "f''(x) = -\\sin x", "-sin(x)"),
+        ("\\cos x",  "f'(x) = -\\sin x",  "f''(x) = -\\cos x", "-cos(x)"),
+        ("e^x",      "f'(x) = e^x",        "f''(x) = e^x",      "e^x"),
+        ("x^4",      "f'(x) = 4x^3",       "f''(x) = 12x^2",    "12*x^2"),
+        ("x^5",      "f'(x) = 5x^4",       "f''(x) = 20x^3",    "20*x^3"),
     ]
-    f_tex, d2_tex, d2_norm = pick(cases)
+    f_tex, fp_tex, d2_tex, d2_norm = pick(cases)
     return {
         "problemTex": f"f(x) = {f_tex},\\quad \\text{{find }} f''(x).",
         "answerTex": d2_tex,
         "answerNorm": d2_norm,
         "steps": [
-            {"label": "Differentiate once", "math": f"f'(x) = \\dfrac{{d}}{{dx}}[{f_tex}]", "note": ""},
-            {"label": "Differentiate again", "math": d2_tex, "note": ""},
+            {"label": "First derivative: differentiate f(x) once", "math": fp_tex, "note": ""},
+            {"label": "Second derivative: differentiate f'(x) again", "math": d2_tex, "note": "apply the same derivative rules to f'(x)"},
         ],
     }
 
@@ -363,27 +426,34 @@ diff3 = [_chain_nested, _product_chain, _quotient_chain, _implicit_differentiati
 
 def _all_three_rules():
     cases = [
-        (
-            "\\dfrac{x^2 \\sin x}{e^x}",
-            "\\dfrac{e^x(2x\\sin x + x^2\\cos x) - x^2\\sin x \\cdot e^x}{e^{2x}} = \\dfrac{x(2\\sin x + x\\cos x - x\\sin x)}{e^x}",
-            "x*(2*sin(x)+x*cos(x)-x*sin(x))/e^x",
-        ),
-        (
-            "x^2 e^{\\sin x}",
-            "2xe^{\\sin x} + x^2 e^{\\sin x}\\cos x = xe^{\\sin x}(2 + x\\cos x)",
-            "x*e^(sin(x))*(2+x*cos(x))",
-        ),
+        {
+            "prob": "\\dfrac{x^2 \\sin x}{e^x}",
+            "ans": "\\dfrac{x(2\\sin x + x\\cos x - x\\sin x)}{e^x}",
+            "norm": "x*(2*sin(x)+x*cos(x)-x*sin(x))/e^x",
+            "steps": [
+                {"label": "Structure: quotient — numerator is x²·sin(x), denominator is e^x", "math": "f = x^2\\sin x, \\quad g = e^x", "note": ""},
+                {"label": "Differentiate numerator f using product rule", "math": "f' = 2x\\sin x + x^2\\cos x", "note": "d/dx[x²]=2x, d/dx[sin x]=cos x"},
+                {"label": "Differentiate denominator g", "math": "g' = e^x", "note": "e^x is its own derivative"},
+                {"label": "Apply quotient rule: (f'g − fg')/g²", "math": "\\dfrac{(2x\\sin x + x^2\\cos x)e^x - x^2\\sin x \\cdot e^x}{e^{2x}}", "note": ""},
+                {"label": "Factor e^x from numerator and cancel with e^(2x)", "math": "\\dfrac{e^x(2x\\sin x + x^2\\cos x - x^2\\sin x)}{e^{2x}} = \\dfrac{2x\\sin x + x^2\\cos x - x^2\\sin x}{e^x}", "note": ""},
+                {"label": "Factor x from numerator", "math": "\\dfrac{x(2\\sin x + x\\cos x - x\\sin x)}{e^x}", "note": ""},
+            ],
+        },
+        {
+            "prob": "x^2 e^{\\sin x}",
+            "ans": "xe^{\\sin x}(2 + x\\cos x)",
+            "norm": "x*e^(sin(x))*(2+x*cos(x))",
+            "steps": [
+                {"label": "Structure: product — f = x², g = e^(sin x)", "math": "f = x^2, \\quad g = e^{\\sin x}", "note": ""},
+                {"label": "Differentiate f using power rule", "math": "f' = 2x", "note": ""},
+                {"label": "Differentiate g using chain rule: outer = e^u, inner = sin(x)", "math": "g' = e^{\\sin x} \\cdot \\cos x", "note": "d/dx[e^u] = e^u · u', here u = sin(x), u' = cos(x)"},
+                {"label": "Apply product rule: f'g + fg'", "math": "2x \\cdot e^{\\sin x} + x^2 \\cdot e^{\\sin x}\\cos x", "note": ""},
+                {"label": "Factor x·e^(sin x) from both terms", "math": "xe^{\\sin x}(2 + x\\cos x)", "note": ""},
+            ],
+        },
     ]
-    prob, ans, norm = pick(cases)
-    return {
-        "problemTex": _d_tex(prob),
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "Identify rules needed: quotient/product + chain", "math": "\\text{plan before differentiating}", "note": ""},
-            {"label": "Apply carefully", "math": ans, "note": ""},
-        ],
-    }
+    c = pick(cases)
+    return {"problemTex": _d_tex(c["prob"]), "answerTex": c["ans"], "answerNorm": c["norm"], "steps": c["steps"]}
 
 
 def _implicit_second_order():
@@ -392,9 +462,11 @@ def _implicit_second_order():
         "answerTex": "-\\dfrac{25}{y^3}",
         "answerNorm": "-25/y^3",
         "steps": [
-            {"label": "First: dy/dx = -x/y", "math": "\\dfrac{dy}{dx} = -\\dfrac{x}{y}", "note": "implicit diff"},
-            {"label": "Differentiate again (quotient rule + chain)", "math": "\\dfrac{d^2y}{dx^2} = -\\dfrac{y - x(dy/dx)}{y^2}", "note": ""},
-            {"label": "Substitute dy/dx", "math": "-\\dfrac{y-x(-x/y)}{y^2} = -\\dfrac{y^2+x^2}{y^3} = -\\dfrac{25}{y^3}", "note": "use x²+y²=25"},
+            {"label": "Step 1 — find dy/dx by implicit differentiation", "math": "2x + 2y\\dfrac{dy}{dx} = 0 \\implies \\dfrac{dy}{dx} = -\\dfrac{x}{y}", "note": "differentiate both sides, solve for dy/dx"},
+            {"label": "Step 2 — differentiate dy/dx again using quotient rule", "math": "\\dfrac{d^2y}{dx^2} = \\dfrac{d}{dx}\\!\\left[-\\dfrac{x}{y}\\right] = -\\dfrac{y \\cdot 1 - x \\cdot \\frac{dy}{dx}}{y^2}", "note": "numerator: f=x (f'=1), denominator: g=y (g'=dy/dx)"},
+            {"label": "Substitute dy/dx = −x/y into the expression", "math": "-\\dfrac{y - x(-x/y)}{y^2} = -\\dfrac{y + x^2/y}{y^2}", "note": ""},
+            {"label": "Multiply numerator and denominator by y", "math": "-\\dfrac{y^2 + x^2}{y^3}", "note": ""},
+            {"label": "Use the original equation: x² + y² = 25", "math": "-\\dfrac{25}{y^3}", "note": "substitute the constraint to simplify"},
         ],
     }
 
@@ -405,9 +477,11 @@ def _log_diff_complex():
         "answerTex": "y\\!\\left[\\dfrac{6x}{x^2+1}+\\cot x - \\dfrac{1}{2(x+2)}\\right]",
         "answerNorm": "y*(6x/(x^2+1)+cot(x)-1/(2(x+2)))",
         "steps": [
-            {"label": "Take ln both sides", "math": "\\ln y = 3\\ln(x^2+1)+\\ln(\\sin x)-\\tfrac{1}{2}\\ln(x+2)", "note": ""},
-            {"label": "Differentiate implicitly", "math": "\\dfrac{1}{y}y' = \\dfrac{6x}{x^2+1}+\\cot x-\\dfrac{1}{2(x+2)}", "note": ""},
-            {"label": "Multiply by y", "math": "y' = y\\!\\left[\\dfrac{6x}{x^2+1}+\\cot x-\\dfrac{1}{2(x+2)}\\right]", "note": ""},
+            {"label": "Take ln of both sides — products become sums, powers come down", "math": "\\ln y = \\ln(x^2+1)^3 + \\ln(\\sin x) - \\ln\\sqrt{x+2}", "note": "log rules: ln(ab)=ln a+ln b, ln(a/b)=ln a−ln b"},
+            {"label": "Simplify each log using power rules", "math": "\\ln y = 3\\ln(x^2+1) + \\ln(\\sin x) - \\tfrac{1}{2}\\ln(x+2)", "note": "ln(a^n) = n·ln(a), ln(√a) = (1/2)ln(a)"},
+            {"label": "Differentiate both sides", "math": "\\dfrac{1}{y}\\dfrac{dy}{dx} = \\dfrac{d}{dx}\\left[3\\ln(x^2+1)\\right] + \\dfrac{d}{dx}[\\ln(\\sin x)] - \\dfrac{d}{dx}\\left[\\tfrac{1}{2}\\ln(x+2)\\right]", "note": "left side: chain rule on ln(y)"},
+            {"label": "Differentiate each term (chain rule each time)", "math": "\\dfrac{1}{y}y' = \\dfrac{3 \\cdot 2x}{x^2+1} + \\dfrac{\\cos x}{\\sin x} - \\dfrac{1}{2(x+2)}", "note": "d/dx[ln(u)] = u'/u for each term"},
+            {"label": "Multiply both sides by y", "math": "y' = y\\!\\left[\\dfrac{6x}{x^2+1}+\\cot x-\\dfrac{1}{2(x+2)}\\right]", "note": "leave y as-is — substituting back the full fraction would be messy"},
         ],
     }
 
@@ -418,92 +492,128 @@ diff4 = [_all_three_rules, _all_three_rules, _implicit_second_order, _log_diff_c
 
 def _parametric_derivative():
     cases = [
-        (
-            "x=t^2,\\; y=t^3",
-            "\\dfrac{dy}{dx} = \\dfrac{3t^2}{2t} = \\dfrac{3t}{2}",
-            "3t/2",
-        ),
-        (
-            "x=\\cos t,\\; y=\\sin t",
-            "\\dfrac{dy}{dx} = \\dfrac{\\cos t}{-\\sin t} = -\\cot t",
-            "-cot(t)",
-        ),
-        (
-            "x=e^t,\\; y=t^2",
-            "\\dfrac{dy}{dx} = \\dfrac{2t}{e^t}",
-            "2t/e^t",
-        ),
+        {
+            "prob": "x=t^2,\\; y=t^3",
+            "ans": "\\dfrac{dy}{dx} = \\dfrac{3t^2}{2t} = \\dfrac{3t}{2}",
+            "norm": "3t/2",
+            "steps": [
+                {"label": "Parametric formula: dy/dx = (dy/dt) ÷ (dx/dt)", "math": "\\text{differentiate x and y each with respect to t, then divide}", "note": ""},
+                {"label": "Differentiate x with respect to t", "math": "\\dfrac{dx}{dt} = 2t", "note": "power rule"},
+                {"label": "Differentiate y with respect to t", "math": "\\dfrac{dy}{dt} = 3t^2", "note": "power rule"},
+                {"label": "Divide dy/dt by dx/dt", "math": "\\dfrac{dy}{dx} = \\dfrac{3t^2}{2t}", "note": ""},
+                {"label": "Simplify by cancelling t", "math": "\\dfrac{3t}{2}", "note": ""},
+            ],
+        },
+        {
+            "prob": "x=\\cos t,\\; y=\\sin t",
+            "ans": "\\dfrac{dy}{dx} = \\dfrac{\\cos t}{-\\sin t} = -\\cot t",
+            "norm": "-cot(t)",
+            "steps": [
+                {"label": "Parametric formula: dy/dx = (dy/dt) ÷ (dx/dt)", "math": "\\text{differentiate x and y each with respect to t, then divide}", "note": ""},
+                {"label": "Differentiate x with respect to t", "math": "\\dfrac{dx}{dt} = -\\sin t", "note": "d/dt[cos t] = −sin t"},
+                {"label": "Differentiate y with respect to t", "math": "\\dfrac{dy}{dt} = \\cos t", "note": "d/dt[sin t] = cos t"},
+                {"label": "Divide dy/dt by dx/dt", "math": "\\dfrac{dy}{dx} = \\dfrac{\\cos t}{-\\sin t}", "note": ""},
+                {"label": "Simplify: cos/sin = cot", "math": "-\\cot t", "note": "negative because of the minus sign in dx/dt"},
+            ],
+        },
+        {
+            "prob": "x=e^t,\\; y=t^2",
+            "ans": "\\dfrac{dy}{dx} = \\dfrac{2t}{e^t}",
+            "norm": "2t/e^t",
+            "steps": [
+                {"label": "Parametric formula: dy/dx = (dy/dt) ÷ (dx/dt)", "math": "\\text{differentiate x and y each with respect to t, then divide}", "note": ""},
+                {"label": "Differentiate x with respect to t", "math": "\\dfrac{dx}{dt} = e^t", "note": "e^t is its own derivative"},
+                {"label": "Differentiate y with respect to t", "math": "\\dfrac{dy}{dt} = 2t", "note": "power rule"},
+                {"label": "Divide dy/dt by dx/dt", "math": "\\dfrac{dy}{dx} = \\dfrac{2t}{e^t}", "note": ""},
+            ],
+        },
     ]
-    prob, ans, norm = pick(cases)
-    return {
-        "problemTex": f"\\text{{Parametric: }} {prob}\\quad \\text{{Find }} dy/dx.",
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "dy/dx = (dy/dt) / (dx/dt)", "math": "\\text{divide derivatives with respect to parameter}", "note": ""},
-            {"label": "Compute", "math": ans, "note": ""},
-        ],
-    }
+    c = pick(cases)
+    return {"problemTex": f"\\text{{Parametric: }} {c['prob']}\\quad \\text{{Find }} dy/dx.", "answerTex": c["ans"], "answerNorm": c["norm"], "steps": c["steps"]}
 
 
 def _inverse_trig_chain():
     cases = [
-        (
-            "\\arcsin(\\sqrt{x})",
-            "\\dfrac{1}{2\\sqrt{x}\\sqrt{1-x}} = \\dfrac{1}{2\\sqrt{x-x^2}}",
-            "1/(2*sqrt(x-x^2))",
-        ),
-        (
-            "\\arctan(x^2)",
-            "\\dfrac{2x}{1+x^4}",
-            "2x/(1+x^4)",
-        ),
-        (
-            "\\arccos(2x)",
-            "\\dfrac{-2}{\\sqrt{1-4x^2}}",
-            "-2/sqrt(1-4x^2)",
-        ),
+        {
+            "prob": "\\arcsin(\\sqrt{x})",
+            "ans": "\\dfrac{1}{2\\sqrt{x}\\sqrt{1-x}} = \\dfrac{1}{2\\sqrt{x-x^2}}",
+            "norm": "1/(2*sqrt(x-x^2))",
+            "steps": [
+                {"label": "Formula: d/dx[arcsin(u)] = u' / √(1 − u²)", "math": "\\text{identify } u = \\sqrt{x}", "note": ""},
+                {"label": "Find u': differentiate u = √x = x^(1/2)", "math": "u' = \\dfrac{1}{2\\sqrt{x}}", "note": "power rule: d/dx[x^(1/2)] = (1/2)x^(-1/2) = 1/(2√x)"},
+                {"label": "Compute 1 − u²", "math": "1 - (\\sqrt{x})^2 = 1 - x", "note": ""},
+                {"label": "Substitute into the formula", "math": "\\dfrac{u'}{\\sqrt{1-u^2}} = \\dfrac{1/(2\\sqrt{x})}{\\sqrt{1-x}}", "note": ""},
+                {"label": "Simplify", "math": "\\dfrac{1}{2\\sqrt{x}\\sqrt{1-x}} = \\dfrac{1}{2\\sqrt{x-x^2}}", "note": "√x · √(1-x) = √(x(1-x)) = √(x-x²)"},
+            ],
+        },
+        {
+            "prob": "\\arctan(x^2)",
+            "ans": "\\dfrac{2x}{1+x^4}",
+            "norm": "2x/(1+x^4)",
+            "steps": [
+                {"label": "Formula: d/dx[arctan(u)] = u' / (1 + u²)", "math": "\\text{identify } u = x^2", "note": ""},
+                {"label": "Find u': differentiate u = x²", "math": "u' = 2x", "note": "power rule"},
+                {"label": "Compute 1 + u²", "math": "1 + (x^2)^2 = 1 + x^4", "note": ""},
+                {"label": "Substitute into the formula", "math": "\\dfrac{2x}{1+x^4}", "note": ""},
+            ],
+        },
+        {
+            "prob": "\\arccos(2x)",
+            "ans": "\\dfrac{-2}{\\sqrt{1-4x^2}}",
+            "norm": "-2/sqrt(1-4x^2)",
+            "steps": [
+                {"label": "Formula: d/dx[arccos(u)] = −u' / √(1 − u²)", "math": "\\text{identify } u = 2x", "note": "note the negative sign — arccos derivative is negative arcsin derivative"},
+                {"label": "Find u': differentiate u = 2x", "math": "u' = 2", "note": ""},
+                {"label": "Compute 1 − u²", "math": "1 - (2x)^2 = 1 - 4x^2", "note": ""},
+                {"label": "Substitute into the formula", "math": "\\dfrac{-2}{\\sqrt{1-4x^2}}", "note": ""},
+            ],
+        },
     ]
-    prob, ans, norm = pick(cases)
-    return {
-        "problemTex": _d_tex(prob),
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "Inverse trig derivative + chain rule", "math": "\\dfrac{d}{dx}[\\arcsin u]=\\dfrac{u'}{\\sqrt{1-u^2}},\\; \\dfrac{d}{dx}[\\arctan u]=\\dfrac{u'}{1+u^2}", "note": ""},
-            {"label": "Apply to problem", "math": ans, "note": ""},
-        ],
-    }
+    c = pick(cases)
+    return {"problemTex": _d_tex(c["prob"]), "answerTex": c["ans"], "answerNorm": c["norm"], "steps": c["steps"]}
 
 
 def _full_combo():
     cases = [
-        (
-            "x^2 \\arctan(x)",
-            "2x\\arctan(x) + \\dfrac{x^2}{1+x^2}",
-            "2x*arctan(x)+x^2/(1+x^2)",
-        ),
-        (
-            "e^x \\ln(x^2+1)",
-            "e^x\\ln(x^2+1)+\\dfrac{2xe^x}{x^2+1}",
-            "e^x*ln(x^2+1)+2x*e^x/(x^2+1)",
-        ),
-        (
-            "\\sin^2(\\cos(x))",
-            "2\\sin(\\cos x)\\cos(\\cos x)\\cdot(-\\sin x)",
-            "2*sin(cos(x))*cos(cos(x))*(-sin(x))",
-        ),
+        {
+            "prob": "x^2 \\arctan(x)",
+            "ans": "2x\\arctan(x) + \\dfrac{x^2}{1+x^2}",
+            "norm": "2x*arctan(x)+x^2/(1+x^2)",
+            "steps": [
+                {"label": "Structure: product — f = x², g = arctan(x)", "math": "f = x^2, \\quad g = \\arctan(x)", "note": ""},
+                {"label": "Differentiate f", "math": "f' = 2x", "note": "power rule"},
+                {"label": "Differentiate g using inverse trig formula", "math": "g' = \\dfrac{1}{1+x^2}", "note": "d/dx[arctan(u)] = u'/(1+u²), here u=x, u'=1"},
+                {"label": "Apply product rule: f'g + fg'", "math": "2x \\cdot \\arctan(x) + x^2 \\cdot \\dfrac{1}{1+x^2}", "note": ""},
+                {"label": "Simplify", "math": "2x\\arctan(x) + \\dfrac{x^2}{1+x^2}", "note": ""},
+            ],
+        },
+        {
+            "prob": "e^x \\ln(x^2+1)",
+            "ans": "e^x\\ln(x^2+1)+\\dfrac{2xe^x}{x^2+1}",
+            "norm": "e^x*ln(x^2+1)+2x*e^x/(x^2+1)",
+            "steps": [
+                {"label": "Structure: product — f = e^x, g = ln(x²+1)", "math": "f = e^x, \\quad g = \\ln(x^2+1)", "note": ""},
+                {"label": "Differentiate f", "math": "f' = e^x", "note": "e^x is its own derivative"},
+                {"label": "Differentiate g using chain rule: d/dx[ln(u)] = u'/u", "math": "g' = \\dfrac{2x}{x^2+1}", "note": "u = x²+1, u' = 2x"},
+                {"label": "Apply product rule: f'g + fg'", "math": "e^x \\cdot \\ln(x^2+1) + e^x \\cdot \\dfrac{2x}{x^2+1}", "note": ""},
+                {"label": "Simplify", "math": "e^x\\ln(x^2+1) + \\dfrac{2xe^x}{x^2+1}", "note": ""},
+            ],
+        },
+        {
+            "prob": "\\sin^2(\\cos(x))",
+            "ans": "2\\sin(\\cos x)\\cos(\\cos x)\\cdot(-\\sin x)",
+            "norm": "2*sin(cos(x))*cos(cos(x))*(-sin(x))",
+            "steps": [
+                {"label": "Three nested layers: [sin(cos(x))]²", "math": "\\text{outermost} = u^2, \\quad u = \\sin(\\cos x)", "note": ""},
+                {"label": "Layer 1 — d/dx[u²] = 2u, keep u = sin(cos x) intact", "math": "2\\sin(\\cos x)", "note": "power rule on the outermost square"},
+                {"label": "Layer 2 — d/dx[sin(cos x)] = cos(cos x), keep cos(x) inside", "math": "\\cdot \\cos(\\cos x)", "note": "derivative of sin is cos, leave inner cos(x) unchanged"},
+                {"label": "Layer 3 — d/dx[cos(x)] = −sin(x)", "math": "\\cdot (-\\sin x)", "note": ""},
+                {"label": "Multiply all three layers", "math": "2\\sin(\\cos x) \\cdot \\cos(\\cos x) \\cdot (-\\sin x)", "note": ""},
+            ],
+        },
     ]
-    prob, ans, norm = pick(cases)
-    return {
-        "problemTex": _d_tex(prob),
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "Multiple rules required — plan first", "math": "\\text{identify all rules needed}", "note": ""},
-            {"label": "Apply systematically", "math": ans, "note": ""},
-        ],
-    }
+    c = pick(cases)
+    return {"problemTex": _d_tex(c["prob"]), "answerTex": c["ans"], "answerNorm": c["norm"], "steps": c["steps"]}
 
 
 diff5 = [_parametric_derivative, _inverse_trig_chain, _full_combo, _full_combo]
