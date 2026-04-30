@@ -132,12 +132,9 @@ class _Parser:
 
     def parse_term(self):
         left = self.parse_power()
-        while self.peek() == '*':
-            self.consume('*')
-            right = self.parse_power()
-            left = poly_mul(left, right)
-        # implicit multiplication: (...)(...) or digit(...)
-        while self.peek() == '(':
+        while self.peek() in ('*', '('):
+            if self.peek() == '*':
+                self.consume('*')
             right = self.parse_power()
             left = poly_mul(left, right)
         return left
@@ -208,6 +205,7 @@ def polys_equal(a, b, tol=0.001):
 
 def user_input_to_norm(s):
     s = s.strip().lower().replace(' ', '')
+    s = re.sub(r'\\d?frac\{([^}]*)\}\{([^}]*)\}', r'(\1)/(\2)', s)  # \frac{A}{B} → (A)/(B)
     s = re.sub(r'x\^\{([^}]*)\}', r'x^(\1)', s)          # x^{3} → x^(3)
     s = re.sub(r'x\^(-?\d+(?:/\d+)?)(?!\))', r'x^(\1)', s)  # x^-3/2 → x^(-3/2)
     return s

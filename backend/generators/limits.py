@@ -143,8 +143,10 @@ def _trig_sin_over_x():
         "answerTex": res_tex,
         "answerNorm": f"{f.numerator}/{f.denominator}",
         "steps": [
-            {"label": "Multiply by k/k", "math": f"\\dfrac{{{k}}}{{{m}}} \\cdot \\dfrac{{\\sin({k}x)}}{{{k}x}}", "note": ""},
-            {"label": "Apply known limit: sin(u)/u → 1 as u→0", "math": f"\\dfrac{{{k}}}{{{m}}} \\cdot 1 = {res_tex}", "note": ""},
+            {"label": "Goal: get sin(argument)/same argument", "math": f"\\dfrac{{\\sin({k}x)}}{{{m}x}}", "note": f"The denominator is {m}x but sin's argument is {k}x — they must match for the trig limit to apply."},
+            {"label": f"Multiply numerator and denominator by {k}", "math": f"\\dfrac{{{k}}}{{{m}}} \\cdot \\dfrac{{\\sin({k}x)}}{{{k}x}}", "note": f"Multiplying by {k}/{k} = 1 doesn't change the value. Now sin({k}x) is divided by its own argument {k}x."},
+            {"label": "Substitute u = " + f"{k}x", "math": f"\\dfrac{{{k}}}{{{m}}} \\cdot \\dfrac{{\\sin(u)}}{{u}}, \\quad u = {k}x", "note": f"As x → 0, u = {k}x → 0 as well. This is the standard form of the fundamental trig limit."},
+            {"label": "Fundamental trig limit: sin(u)/u → 1 as u → 0", "math": f"\\dfrac{{{k}}}{{{m}}} \\cdot 1 = {res_tex}", "note": "This limit comes from the squeeze theorem and is a foundational result. The sine of a small angle is approximately equal to that angle itself."},
         ],
     }
 

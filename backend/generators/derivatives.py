@@ -420,7 +420,91 @@ def _higher_order():
     }
 
 
-diff3 = [_chain_nested, _product_chain, _quotient_chain, _implicit_differentiation, _log_differentiation, _higher_order]
+def _y_prime_and_double_prime():
+    cases = [
+        {
+            "prob":      "y = (2 + \\sqrt{x})^3, \\quad \\text{find } y' \\text{ and } y''",
+            "ans1_tex":  "y' = \\dfrac{3(2+\\sqrt{x})^2}{2\\sqrt{x}}",
+            "ans1_norm": "3*(2+sqrt(x))^2/(2*sqrt(x))",
+            "ans2_tex":  "y'' = \\dfrac{3(x-4)}{4x^{3/2}}",
+            "ans2_norm": "3*(x-4)/(4*x^(3/2))",
+            "steps": [
+                {"label": "Identify: outer = u^3, inner = 2 + √x",
+                 "math": "y = (2+\\sqrt{x})^3", "note": "chain rule applies"},
+                {"label": "y′ via chain rule: 3u²·u′, where u′ = 1/(2√x)",
+                 "math": "y' = 3(2+\\sqrt{x})^2 \\cdot \\dfrac{1}{2\\sqrt{x}} = \\dfrac{3(2+\\sqrt{x})^2}{2\\sqrt{x}}", "note": ""},
+                {"label": "y″: differentiate y′ with quotient/product rule, factor (2+√x)(√x−2) = x−4",
+                 "math": "y'' = \\dfrac{3(x-4)}{4x^{3/2}}", "note": ""},
+            ],
+        },
+        {
+            "prob":      "y = (1 + x^2)^4, \\quad \\text{find } y' \\text{ and } y''",
+            "ans1_tex":  "y' = 8x(1+x^2)^3",
+            "ans1_norm": "8*x*(1+x^2)^3",
+            "ans2_tex":  "y'' = 8(1+x^2)^2(1+7x^2)",
+            "ans2_norm": "8*(1+x^2)^2*(1+7*x^2)",
+            "steps": [
+                {"label": "Chain rule: outer = u^4, inner = 1 + x²",
+                 "math": "y' = 4(1+x^2)^3 \\cdot 2x = 8x(1+x^2)^3", "note": ""},
+                {"label": "Product rule on y′ = 8x·(1+x²)^3",
+                 "math": "y'' = 8(1+x^2)^3 + 8x \\cdot 3(1+x^2)^2 \\cdot 2x", "note": ""},
+                {"label": "Factor (1+x²)²",
+                 "math": "y'' = 8(1+x^2)^2[(1+x^2)+6x^2] = 8(1+x^2)^2(1+7x^2)", "note": ""},
+            ],
+        },
+        {
+            "prob":      "y = \\sin^2(x), \\quad \\text{find } y' \\text{ and } y''",
+            "ans1_tex":  "y' = 2\\sin(x)\\cos(x)",
+            "ans1_norm": "2*sin(x)*cos(x)",
+            "ans2_tex":  "y'' = 2\\cos(2x)",
+            "ans2_norm": "2*cos(2x)",
+            "steps": [
+                {"label": "Chain rule: outer = u², inner = sin(x)",
+                 "math": "y' = 2\\sin x\\cos x", "note": "also equals sin(2x)"},
+                {"label": "Rewrite y′ = sin(2x), then chain rule",
+                 "math": "y'' = \\cos(2x) \\cdot 2 = 2\\cos(2x)", "note": ""},
+            ],
+        },
+        {
+            "prob":      "y = xe^x, \\quad \\text{find } y' \\text{ and } y''",
+            "ans1_tex":  "y' = e^x(1+x)",
+            "ans1_norm": "e^x*(1+x)",
+            "ans2_tex":  "y'' = e^x(2+x)",
+            "ans2_norm": "e^x*(2+x)",
+            "steps": [
+                {"label": "Product rule: f = x, g = e^x",
+                 "math": "y' = e^x + xe^x = e^x(1+x)", "note": "f′=1, g′=e^x"},
+                {"label": "Product rule on y′ = e^x(1+x)",
+                 "math": "y'' = e^x(1+x) + e^x = e^x(2+x)", "note": ""},
+            ],
+        },
+        {
+            "prob":      "y = \\ln(x^2), \\quad \\text{find } y' \\text{ and } y''",
+            "ans1_tex":  "y' = \\dfrac{2}{x}",
+            "ans1_norm": "2/x",
+            "ans2_tex":  "y'' = -\\dfrac{2}{x^2}",
+            "ans2_norm": "-2/x^2",
+            "steps": [
+                {"label": "Simplify: ln(x²) = 2ln(x), differentiate",
+                 "math": "y' = \\dfrac{2}{x}", "note": "or chain rule gives same result"},
+                {"label": "Power rule on y′ = 2x^{−1}",
+                 "math": "y'' = -2x^{-2} = -\\dfrac{2}{x^2}", "note": ""},
+            ],
+        },
+    ]
+    c = pick(cases)
+    return {
+        "problemTex":         c["prob"],
+        "requiresDualAnswer": True,
+        "answerTex":          c["ans1_tex"],
+        "answerTex2":         c["ans2_tex"],
+        "answerNorm":         c["ans1_norm"],
+        "answerNorm2":        c["ans2_norm"],
+        "steps":              c["steps"],
+    }
+
+
+diff3 = [_chain_nested, _product_chain, _quotient_chain, _implicit_differentiation, _log_differentiation, _higher_order, _y_prime_and_double_prime]
 
 # ── diff4 — multi-rule combos ─────────────────────────────────────────────────
 

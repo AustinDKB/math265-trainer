@@ -102,7 +102,34 @@ def _identify_outer_inner():
     }
 
 
-diff1 = [_compute_fog, _compute_fog, _compute_gof, _evaluate_numeric, _identify_outer_inner]
+def _simplify_linear_inverse():
+    """f and g are inverses — composition collapses to x."""
+    case = pick([1, 2])
+    if case == 1:
+        a = R(1, 9)
+        return {
+            "problemTex": f"f(x)=x+{a},\\;g(x)=x-{a}.\\quad\\text{{Simplify }}f(g(x)).",
+            "answerTex": "x",
+            "answerNorm": "x",
+            "steps": [
+                {"label": "Substitute g(x) into f", "math": f"f(g(x))=(x-{a})+{a}", "note": ""},
+                {"label": "Simplify", "math": "=x", "note": f"+{a} and \u2212{a} cancel"},
+            ],
+        }
+    else:
+        k = R(2, 7)
+        return {
+            "problemTex": f"f(x)={k}x,\\;g(x)=\\dfrac{{x}}{{{k}}}.\\quad\\text{{Simplify }}f(g(x)).",
+            "answerTex": "x",
+            "answerNorm": "x",
+            "steps": [
+                {"label": "Substitute", "math": f"f(g(x))={k}\\cdot\\dfrac{{x}}{{{k}}}", "note": ""},
+                {"label": "Cancel", "math": "=x", "note": ""},
+            ],
+        }
+
+
+diff1 = [_compute_fog, _compute_fog, _compute_gof, _evaluate_numeric, _identify_outer_inner, _simplify_linear_inverse]
 
 # ── diff2 ──────────────────────────────────────────────────────────────────────
 
@@ -165,7 +192,35 @@ def _build_from_description():
     }
 
 
-diff2 = [_decompose_two, _decompose_two, _decompose_three, _build_from_description]
+def _expand_linear_compose():
+    """f(x)=ax+b, g(x)=cx+d — expand f(g(x)) to slope-intercept form."""
+    a = pick([2, 3, 4, 5])
+    b = R(-5, 5)
+    c = pick([2, 3, 4])
+    d = R(-4, 4)
+    ac = a * c
+    adb = a * d + b
+
+    def sgn(n):
+        return (f"+{n}" if n > 0 else str(n)) if n != 0 else ""
+
+    f_tex = f"{a}x{sgn(b)}"
+    g_tex = f"{c}x{sgn(d)}"
+    result_tex = f"{ac}x{sgn(adb)}"
+    result_norm = f"{ac}*x" + (f"+{adb}" if adb > 0 else (str(adb) if adb < 0 else ""))
+    return {
+        "problemTex": f"f(x)={f_tex},\\;g(x)={g_tex}.\\quad\\text{{Simplify }}f(g(x)).",
+        "answerTex": result_tex,
+        "answerNorm": result_norm,
+        "steps": [
+            {"label": "Substitute g(x) into f", "math": f"f(g(x))={a}({g_tex}){sgn(b)}", "note": ""},
+            {"label": "Distribute", "math": f"{ac}x{sgn(a*d)}{sgn(b)}", "note": ""},
+            {"label": "Combine constants", "math": result_tex, "note": ""},
+        ],
+    }
+
+
+diff2 = [_decompose_two, _decompose_two, _decompose_three, _build_from_description, _expand_linear_compose]
 
 # ── diff3 ──────────────────────────────────────────────────────────────────────
 
@@ -200,7 +255,33 @@ def _multi_compose():
     }
 
 
-diff3 = [_domain_of_composition, _domain_of_composition, _multi_compose]
+def _simplify_log_exp_compose():
+    """Simplify f(g(x)) using e/ln inverse identities."""
+    k = R(2, 4)
+    cases = [
+        {
+            "problemTex": f"f(x)=e^x,\\;g(x)={k}\\ln x.\\quad\\text{{Simplify }}f(g(x)).",
+            "answerTex": f"x^{{{k}}}",
+            "answerNorm": f"x^{k}",
+            "steps": [
+                {"label": "Substitute", "math": f"e^{{{k}\\ln x}}", "note": ""},
+                {"label": "Use a\u00b7ln x = ln(x^a)", "math": f"e^{{\\ln(x^{{{k}}})}}=x^{{{k}}}", "note": "e and ln cancel"},
+            ],
+        },
+        {
+            "problemTex": f"f(x)=\\ln x,\\;g(x)=e^{{{k}x}}.\\quad\\text{{Simplify }}f(g(x)).",
+            "answerTex": f"{k}x",
+            "answerNorm": f"{k}*x",
+            "steps": [
+                {"label": "Substitute", "math": f"\\ln(e^{{{k}x}})", "note": ""},
+                {"label": "Use ln(e^u)=u", "math": f"={k}x", "note": ""},
+            ],
+        },
+    ]
+    return pick(cases)
+
+
+diff3 = [_domain_of_composition, _domain_of_composition, _multi_compose, _simplify_log_exp_compose]
 
 # ── diff4 ──────────────────────────────────────────────────────────────────────
 
@@ -262,7 +343,42 @@ def _solve_fog():
     }
 
 
-diff4 = [_simplify_fog, _fog_commutativity, _solve_fog]
+def _simplify_quadratic_compose():
+    """f(x)=x²+bx, g(x)=x+a — expand f(g(x)) fully, collect terms."""
+    a = R(1, 5)
+    b = pick([-4, -3, -2, -1, 1, 2, 3, 4])
+    # f(g(x)) = (x+a)^2 + b(x+a) = x^2 + (2a+b)x + (a^2+ba)
+    lin = 2 * a + b
+    const = a * a + b * a
+
+    def sgn(n):
+        return (f"+{n}" if n > 0 else str(n)) if n != 0 else ""
+
+    b_term = f"+{b}x" if b > 0 else f"{b}x"
+    f_tex = f"x^2{b_term}"
+    g_tex = f"x+{a}"
+
+    lin_part = (f"+{lin}x" if lin > 0 else (f"{lin}x" if lin < 0 else ""))
+    result_tex = f"x^2{lin_part}{sgn(const)}"
+
+    parts = ["x^2"]
+    if lin: parts.append(f"{lin}*x")
+    if const: parts.append(str(const))
+    result_norm = "+".join(parts).replace("+-", "-")
+
+    return {
+        "problemTex": f"f(x)={f_tex},\\;g(x)={g_tex}.\\quad\\text{{Expand and simplify }}f(g(x)).",
+        "answerTex": result_tex,
+        "answerNorm": result_norm,
+        "steps": [
+            {"label": "Substitute", "math": f"(x+{a})^2+{b}(x+{a})", "note": ""},
+            {"label": "Expand (x+a)²", "math": f"x^2+{2*a}x+{a*a}+{b}x+{b*a}", "note": ""},
+            {"label": "Collect like terms", "math": result_tex, "note": ""},
+        ],
+    }
+
+
+diff4 = [_simplify_fog, _fog_commutativity, _solve_fog, _simplify_quadratic_compose]
 
 # ── diff5 ──────────────────────────────────────────────────────────────────────
 
@@ -341,6 +457,25 @@ def _four_layer_compose():
     }
 
 
-diff5 = [_chain_rule_setup, _inverse_composition_verify, _four_layer_compose]
+def _simplify_triple_chain():
+    """f(x)=e^x, g(x)=kx, h(x)=ln x → f(g(h(x)))=x^k."""
+    k = R(2, 5)
+    return {
+        "problemTex": (
+            f"f(x)=e^x,\\;g(x)={k}x,\\;h(x)=\\ln x.\\quad"
+            f"\\text{{Simplify }}f(g(h(x)))."
+        ),
+        "answerTex": f"x^{{{k}}}",
+        "answerNorm": f"x^{k}",
+        "steps": [
+            {"label": "h(x)", "math": "h(x)=\\ln x", "note": ""},
+            {"label": "g(h(x))", "math": f"g(\\ln x)={k}\\ln x", "note": ""},
+            {"label": "f(g(h(x)))", "math": f"e^{{{k}\\ln x}}", "note": ""},
+            {"label": "Use e^(k\u00b7ln x)=x^k", "math": f"=x^{{{k}}}", "note": ""},
+        ],
+    }
+
+
+diff5 = [_chain_rule_setup, _inverse_composition_verify, _four_layer_compose, _simplify_triple_chain]
 
 POOLS = {1: diff1, 2: diff2, 3: diff3, 4: diff4, 5: diff5}
