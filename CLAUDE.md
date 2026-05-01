@@ -10,7 +10,7 @@ cd backend && python app.py        # Flask on http://127.0.0.1:5000
 python -m http.server 8000         # serve frontend from project root
 ```
 
-No requirements.txt. Install: `pip install flask flask-cors`
+No requirements.txt. Install: `pip install flask flask-cors sympy`
 
 ## Architecture
 
@@ -21,7 +21,7 @@ backend/
   checker.py           Answer validation
   db.py                SQLite wrapper (attempts.db)
   math_utils.py        Polynomial arithmetic + R(), pick(), sign_str()
-  symbolic.py          Expression tree: diff(), simplify(), to_tex(), to_norm()
+  sympy_utils.py       SymPy adapter: to_norm(), to_tex() for generators
   generators/
     factoring.py        POOLS 1-5
     exponents.py        POOLS 1-5
@@ -30,7 +30,7 @@ backend/
     logs.py             POOLS 1-3
     composition.py      POOLS 1-3
     limits.py           POOLS 1-4
-    derivatives.py      POOLS 1-5 (uses symbolic.py)
+    derivatives.py      POOLS 1-5 (uses sympy_utils.py)
     integration_basic.py    POOLS 1-3
     integration_advanced.py POOLS 2-5
 ```
@@ -105,20 +105,22 @@ requiresDualAnswer → check_dual_answer (calls check_norm_answer twice, returns
 3. "undefined" ↔ "dne"/"doesnotexist"
 4. Numeric eval at x ∈ {1.3, 2.7, 4.1}, tolerance 1e-4
 
-## Symbolic Engine (symbolic.py)
+## SymPy Integration (sympy_utils.py)
 
-Node types: `Const`, `Var`, `Add`, `Mul`, `Div`, `Pow`, `Neg`, `Sin`, `Cos`, `Tan`, `Exp`, `Ln`
+Uses SymPy for symbolic differentiation in derivatives.py generators.
 
 ```python
-from symbolic import X, Const, add, mul, pow_expr, Sin, Exp, diff_and_simplify
-expr = pow_expr(add(Const(2), pow_expr(X, Const(0.5))), Const(3))  # (2+√x)^3
-y_prime = expr.diff().simplify()
-print(y_prime.to_tex(), y_prime.to_norm())
+from sympy import symbols, diff, simplify
+from sympy_utils import to_norm, to_tex
+
+x = symbols('x')
+expr = x**2 * exp(x)
+y_prime = simplify(diff(expr, x))
+print(to_tex(y_prime), to_norm(y_prime))
 ```
 
-- `Pow.diff()` only handles constant exponents
-- `.simplify()` is local/greedy — no deep algebraic simplification
-- Sqrt = `Pow(x, Const(Fraction(1,2)))`
+- `to_norm()` converts SymPy expressions to answerNorm format (^ for power, e^() for exp, ln() for log)
+- `to_tex()` converts to LaTeX via sympy.latex()
 - Used in: derivatives.py (product/quotient rule generators). All others hardcoded.
 
 ## math_utils.py

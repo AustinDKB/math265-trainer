@@ -1,8 +1,10 @@
 import random
-from symbolic import (X, Const, Mul, Pow, Sin, Cos, Tan, Exp, Ln, Var, Add, Neg, Div,
-                      add, mul, neg, pow_expr, diff_and_simplify, numeric_equal)
+from sympy import symbols, diff, simplify, sin, cos, tan, exp, log
+from sympy_utils import to_norm, to_tex
 from math_utils import R, pick, sign_str
 from problem_builder import problem, step, dual_problem
+
+x = symbols('x')
 
 def _d_tex(expr_tex): return f"\\dfrac{{d}}{{dx}}\\!\\left[{expr_tex}\\right]"
 
@@ -139,24 +141,26 @@ diff1 = [_power_rule, _power_rule, _trig_basic, _exponential_rule, _log_rule, _s
 
 def _product_rule():
     cases = [
-        (X,                "x",    Sin(X),             "\\sin x"),
-        (X,                "x",    Cos(X),             "\\cos x"),
-        (X,                "x",    Exp(X),             "e^x"),
-        (pow_expr(X,2),    "x^2",  Sin(X),             "\\sin x"),
-        (pow_expr(X,2),    "x^2",  Exp(X),             "e^x"),
-        (pow_expr(X,3),    "x^3",  Ln(X),              "\\ln x"),
-        (mul(Const(2),X),  "2x",   Cos(X),             "\\cos x"),
+        (x,               "x",    sin(x),       r"\sin x"),
+        (x,               "x",    cos(x),       r"\cos x"),
+        (x,               "x",    exp(x),       r"e^x"),
+        (x**2,            "x^2",  sin(x),       r"\sin x"),
+        (x**2,            "x^2",  exp(x),       r"e^x"),
+        (x**3,            "x^3",  log(x),       r"\ln x"),
+        (2*x,             "2x",   cos(x),       r"\cos x"),
     ]
     f_expr, f_tex, g_expr, g_tex = pick(cases)
-    product = Mul(f_expr, g_expr)
-    deriv = product.diff().simplify()
-    deriv_tex = deriv.to_tex()
-    f_d_tex = f_expr.diff().simplify().to_tex()
-    g_d_tex = g_expr.diff().simplify().to_tex()
+    product = f_expr * g_expr
+    deriv = simplify(diff(product, x))
+    deriv_tex = to_tex(deriv)
+    f_d = simplify(diff(f_expr, x))
+    g_d = simplify(diff(g_expr, x))
+    f_d_tex = to_tex(f_d)
+    g_d_tex = to_tex(g_d)
     return problem(
         problem_tex=_d_tex(f"{f_tex} \\cdot {g_tex}"),
         answer_tex=deriv_tex,
-        answer_norm=deriv.to_norm(),
+        answer_norm=to_norm(deriv),
         steps=[
             step("Identify the two factors", f"f = {f_tex}, \\quad g = {g_tex}"),
             step("Differentiate each factor separately", f"f' = {f_d_tex}, \\quad g' = {g_d_tex}"),
@@ -168,22 +172,24 @@ def _product_rule():
 
 def _quotient_rule():
     cases = [
-        (Sin(X),        "\\sin x",  X,              "x"),
-        (Exp(X),        "e^x",      pow_expr(X,2),  "x^2"),
-        (Ln(X),         "\\ln x",   X,              "x"),
-        (pow_expr(X,2), "x^2",      add(X,Const(1)),"x+1"),
-        (Sin(X),        "\\sin x",  Cos(X),         "\\cos x"),
+        (sin(x),       r"\sin x",  x,             "x"),
+        (exp(x),       r"e^x",     x**2,          "x^2"),
+        (log(x),       r"\ln x",   x,             "x"),
+        (x**2,         "x^2",      x+1,           "x+1"),
+        (sin(x),       r"\sin x",  cos(x),        r"\cos x"),
     ]
     f_expr, f_tex, g_expr, g_tex = pick(cases)
-    quotient = Div(f_expr, g_expr)
-    deriv = quotient.diff().simplify()
-    deriv_tex = deriv.to_tex()
-    f_d_tex = f_expr.diff().simplify().to_tex()
-    g_d_tex = g_expr.diff().simplify().to_tex()
+    quotient = f_expr / g_expr
+    deriv = simplify(diff(quotient, x))
+    deriv_tex = to_tex(deriv)
+    f_d = simplify(diff(f_expr, x))
+    g_d = simplify(diff(g_expr, x))
+    f_d_tex = to_tex(f_d)
+    g_d_tex = to_tex(g_d)
     return problem(
         problem_tex=_d_tex(f"\\dfrac{{{f_tex}}}{{{g_tex}}}"),
         answer_tex=deriv_tex,
-        answer_norm=deriv.to_norm(),
+        answer_norm=to_norm(deriv),
         steps=[
             step("Identify numerator and denominator", f"f = {f_tex}, \\quad g = {g_tex}"),
             step("Differentiate each", f"f' = {f_d_tex}, \\quad g' = {g_d_tex}"),

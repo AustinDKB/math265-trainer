@@ -1,7 +1,6 @@
 import random
 from fractions import Fraction
 from math_utils import R, pick, sign_str
-from symbolic import X, Const, Mul, Pow, Sin, Cos, Exp, Ln, Var, add, mul, neg, pow_expr, diff_and_simplify
 from problem_builder import problem, step
 
 # ── diff1 ──────────────────────────────────────────────────────────────────────
