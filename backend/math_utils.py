@@ -34,6 +34,16 @@ def sign_str(n):
     return f"+{n}" if n >= 0 else str(n)
 
 
+def plus_C(tex):
+    return tex + " + C"
+
+
+def interval_tex(a, b, left_open=False, right_open=False):
+    l = "(" if left_open else "["
+    r = ")" if right_open else "]"
+    return f"{l}{a}, {b}{r}"
+
+
 def frac_to_tex(sn, sd):
     return str(sn) if sd == 1 else f"\\frac{{{sn}}}{{{sd}}}"
 

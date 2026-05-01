@@ -9,7 +9,10 @@ from generators import (
     trig_circle, logs, composition,
     limits, derivatives, integration_basic, integration_advanced,
 )
+from generators import ALL_MODULES
+from module_config import UNLOCK_TIERS
 from checker import check_answer, check_dual_answer
+from checker_registry import get_checker
 from db import (
     init_db, record_attempt, dispute_attempt,
     stats_overview, stats_trend, stats_problem, stats_weak,
@@ -17,6 +20,10 @@ from db import (
     award_xp, get_total_xp, xp_for_level,
     time_to_fsrs_rating, update_fsrs_skill, get_fsrs_due_skills,
 )
+
+NUM_DIFFICULTIES = 5
+
+from module_config import UNLOCK_TIERS, MODULES
 
 app = Flask(__name__)
 CORS(app)
@@ -36,17 +43,6 @@ GENERATORS = {
     "adv_integration": integration_advanced.POOLS,
 }
 
-UNLOCK_CHAIN = [
-    ["factoring", "exponents", "fractions"],
-    ["trig"],
-    ["logs"],
-    ["composition"],
-    ["limits"],
-    ["derivatives"],
-    ["integration"],
-    ["adv_integration"],
-]
-
 
 def _get_unlocked_modules(pair_stats):
     mod_totals = {}
@@ -58,9 +54,9 @@ def _get_unlocked_modules(pair_stats):
         mod_totals[m]["correct"] += row["correct"]
 
     unlocked = []
-    for tier_idx, tier in enumerate(UNLOCK_CHAIN):
+    for tier_idx, tier in enumerate(UNLOCK_TIERS):
         unlocked.extend(tier)
-        if tier_idx == len(UNLOCK_CHAIN) - 1:
+        if tier_idx == len(UNLOCK_TIERS) - 1:
             break
         tier_ready = all(
             mod_totals.get(m, {}).get("attempts", 0) >= 5
@@ -87,6 +83,16 @@ def _compute_xp(difficulty, time_sec, session_streak, correct):
     return int((base + speed_bonus) * mult)
 
 
+def _build_problem(fn, module, diff, **extra):
+    problem = fn()
+    problem["module"] = module
+    problem["difficulty"] = diff
+    if "originalExpanded" in problem and isinstance(problem["originalExpanded"], dict):
+        problem["originalExpanded"] = {str(k): v for k, v in problem["originalExpanded"].items()}
+    problem.update(extra)
+    return problem
+
+
 @app.get("/api/problem")
 def get_problem():
     module = request.args.get("module", "factoring")
@@ -100,22 +106,8 @@ def get_problem():
     if diff not in available:
         diff = available[0]
 
-    pool = pools[diff]
-    fn = random.choice(pool)
-    problem = fn()
-    problem["module"] = module
-    problem["difficulty"] = diff
-
-    if "originalExpanded" in problem and isinstance(problem["originalExpanded"], dict):
-        problem["originalExpanded"] = {str(k): v for k, v in problem["originalExpanded"].items()}
-
-    return jsonify(problem)
-
-
-@app.get("/api/problem/smart")
-def get_smart_problem():
-    """Legacy alias — delegates to auto endpoint logic."""
-    return get_auto_problem()
+    fn = random.choice(pools[diff])
+    return jsonify(_build_problem(fn, module, diff))
 
 
 @app.get("/api/problem/auto")
@@ -138,13 +130,7 @@ def get_auto_problem():
     if due_skills and random.random() < 0.35:
         module, diff = due_skills[0]  # most overdue skill
         fn = random.choice(GENERATORS[module][diff])
-        problem = fn()
-        problem["module"] = module
-        problem["difficulty"] = diff
-        problem["bucket"] = "review"
-        if "originalExpanded" in problem and isinstance(problem["originalExpanded"], dict):
-            problem["originalExpanded"] = {str(k): v for k, v in problem["originalExpanded"].items()}
-        return jsonify(problem)
+        return jsonify(_build_problem(fn, module, diff, bucket="review"))
 
     # Build challenge / success buckets
     challenge, success = [], []
@@ -186,15 +172,7 @@ def get_auto_problem():
 
     module, diff = picked["module"], picked["diff"]
     fn = random.choice(GENERATORS[module][diff])
-    problem = fn()
-    problem["module"] = module
-    problem["difficulty"] = diff
-    problem["bucket"] = bucket
-
-    if "originalExpanded" in problem and isinstance(problem["originalExpanded"], dict):
-        problem["originalExpanded"] = {str(k): v for k, v in problem["originalExpanded"].items()}
-
-    return jsonify(problem)
+    return jsonify(_build_problem(fn, module, diff, bucket=bucket))
 
 
 @app.post("/api/check")
@@ -325,6 +303,38 @@ def post_report():
 def get_reports():
     limit = int(request.args.get("limit", 100))
     return jsonify(list_bug_reports(limit))
+
+
+@app.get("/api/modules")
+def get_modules():
+    return jsonify({
+        "modules": ALL_MODULES,
+        "unlockTiers": UNLOCK_TIERS,
+        "labels": {m: MODULES[m]["label"] for m in ALL_MODULES},
+    })
+
+
+@app.get("/api/unlock-status")
+def get_unlock_status():
+    pair_stats = stats_overview()
+    unlocked = _get_unlocked_modules(pair_stats)
+    unlocked_tiers = []
+    for tier_idx, tier in enumerate(UNLOCK_TIERS):
+        unlocked_tiers.append(tier)
+        if tier_idx == len(UNLOCK_TIERS) - 1:
+            break
+        tier_ready = all(
+            any(r["module"] == m and r["attempts"] >= 5 and r["correct"] / r["attempts"] >= 0.8
+                for r in pair_stats)
+            for m in tier
+        )
+        if not tier_ready:
+            break
+    return jsonify({
+        "unlockedModules": unlocked,
+        "unlockedTiers": unlocked_tiers,
+        "nextLockedTier": UNLOCK_TIERS[len(unlocked_tiers)] if len(unlocked_tiers) < len(UNLOCK_TIERS) else None,
+    })
 
 
 if __name__ == "__main__":

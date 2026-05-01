@@ -1,10 +1,8 @@
 import random
 from fractions import Fraction
 from math_utils import R, pick, sign_str
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from symbolic import X, Const, Mul, Pow, Sin, Cos, Exp, Ln, Var, add, mul, neg, pow_expr, diff_and_simplify
+from problem_builder import problem, step
 
 # ── diff1 ──────────────────────────────────────────────────────────────────────
 
@@ -20,15 +18,15 @@ def _direct_substitution():
     b_tex = "" if b == 0 else sign_str(b) + "x" if c != 0 else (str(b) + "x")
     d_tex = "" if d == 0 else sign_str(d) if (c != 0 or b != 0) else str(d)
     poly = c_tex + b_tex + d_tex or "0"
-    return {
-        "problemTex": f"\\lim_{{x \\to {a}}} \\left({poly}\\right)",
-        "answerTex": str(result),
-        "answerNorm": str(result),
-        "steps": [
-            {"label": "Direct substitution", "math": f"\\text{{Plug in }} x={a}", "note": "polynomial → just substitute"},
-            {"label": "Compute", "math": f"{poly.replace('x', f'({a})')} = {result}", "note": ""},
+    return problem(
+        problem_tex=f"\\lim_{{x \\to {a}}} \\left({poly}\\right)",
+        answer_tex=str(result),
+        answer_norm=str(result),
+        steps=[
+            step("Direct substitution", f"\\text{{Plug in }} x={a}", "polynomial → just substitute"),
+            step("Compute", f"{poly.replace('x', f'({a})')} = {result}"),
         ],
-    }
+    )
 
 
 def _factor_cancel():
@@ -36,17 +34,17 @@ def _factor_cancel():
     # lim(x→a) (x² - a²)/(x - a) = x + a, limit = 2a
     a2 = a * a
     result = 2 * a
-    return {
-        "problemTex": f"\\lim_{{x \\to {a}}} \\dfrac{{x^2-{a2}}}{{x-{a}}}",
-        "answerTex": str(result),
-        "answerNorm": str(result),
-        "steps": [
-            {"label": "Try direct substitution","math": f"\\dfrac{{{a}^2-{a2}}}{{{a}-{a}}}=\\dfrac{{0}}{{0}}", "note": "indeterminate — factor"},
-            {"label": "Factor numerator", "math": f"\\dfrac{{(x+{a})(x-{a})}}{{x-{a}}}", "note": "difference of squares"},
-            {"label": "Cancel (x−a)", "math": f"x+{a}", "note": f"x \\neq {a}"},
-            {"label": "Evaluate at x={a}", "math": f"{a}+{a}={result}", "note": ""},
+    return problem(
+        problem_tex=f"\\lim_{{x \\to {a}}} \\dfrac{{x^2-{a2}}}{{x-{a}}}",
+        answer_tex=str(result),
+        answer_norm=str(result),
+        steps=[
+            step("Try direct substitution", f"\\dfrac{{{a}^2-{a2}}}{{{a}-{a}}}=\\dfrac{{0}}{{0}}", "indeterminate — factor"),
+            step("Factor numerator", f"\\dfrac{{(x+{a})(x-{a})}}{{x-{a}}}", "difference of squares"),
+            step("Cancel (x−a)", f"x+{a}", f"x \\neq {a}"),
+            step("Evaluate at x={a}", f"{a}+{a}={result}"),
         ],
-    }
+    )
 
 
 def _factor_cancel_cubic():
@@ -54,17 +52,17 @@ def _factor_cancel_cubic():
     # lim(x→a) (x³ - a³)/(x - a) = x² + ax + a², limit = 3a²
     a3 = a**3; a2 = a**2
     result = 3 * a2
-    return {
-        "problemTex": f"\\lim_{{x \\to {a}}} \\dfrac{{x^3-{a3}}}{{x-{a}}}",
-        "answerTex": str(result),
-        "answerNorm": str(result),
-        "steps": [
-            {"label": "Try direct substitution","math": f"\\dfrac{{{a}^3-{a3}}}{{{a}-{a}}}=\\dfrac{{0}}{{0}}", "note": "factor sum of cubes"},
-            {"label": "Factor", "math": f"\\dfrac{{(x-{a})(x^2+{a}x+{a2})}}{{x-{a}}}", "note": "difference of cubes: a³-b³=(a-b)(a²+ab+b²)"},
-            {"label": "Cancel", "math": f"x^2+{a}x+{a2}", "note": ""},
-            {"label": "Substitute", "math": f"{a}^2+{a}\\cdot{a}+{a2}={result}", "note": ""},
+    return problem(
+        problem_tex=f"\\lim_{{x \\to {a}}} \\dfrac{{x^3-{a3}}}{{x-{a}}}",
+        answer_tex=str(result),
+        answer_norm=str(result),
+        steps=[
+            step("Try direct substitution", f"\\dfrac{{{a}^3-{a3}}}{{{a}-{a}}}=\\dfrac{{0}}{{0}}", "factor sum of cubes"),
+            step("Factor", f"\\dfrac{{(x-{a})(x^2+{a}x+{a2})}}{{x-{a}}}", "difference of cubes: a³-b³=(a-b)(a²+ab+b²)"),
+            step("Cancel", f"x^2+{a}x+{a2}"),
+            step("Substitute", f"{a}^2+{a}\\cdot{a}+{a2}={result}"),
         ],
-    }
+    )
 
 
 def _inf_rational():
@@ -73,39 +71,39 @@ def _inf_rational():
     if case == 1:
         # deg num < deg denom → 0
         a, b = R(1,5), R(1,5)
-        return {
-            "problemTex": f"\\lim_{{x \\to \\infty}} \\dfrac{{{a}x+{R(1,5)}}}{{{b}x^2+1}}",
-            "answerTex": "0",
-            "answerNorm": "0",
-            "steps": [
-                {"label": "Highest power in denominator", "math": "x^2", "note": ""},
-                {"label": "Divide all terms by x²", "math": f"\\dfrac{{{a}/x+{R(1,5)}/x^2}}{{{b}+1/x^2}} \\to \\dfrac{{0}}{{{b}}}=0", "note": ""},
+        return problem(
+            problem_tex=f"\\lim_{{x \\to \\infty}} \\dfrac{{{a}x+{R(1,5)}}}{{{b}x^2+1}}",
+            answer_tex="0",
+            answer_norm="0",
+            steps=[
+                step("Highest power in denominator", "x^2"),
+                step("Divide all terms by x²", f"\\dfrac{{{a}/x+{R(1,5)}/x^2}}{{{b}+1/x^2}} \\to \\dfrac{{0}}{{{b}}}=0"),
             ],
-        }
+        )
     elif case == 2:
         # deg num = deg denom → a/b
         a, b = R(1,6), R(1,6)
         f = Fraction(a, b)
         res_tex = str(int(f)) if f.denominator == 1 else f"\\dfrac{{{f.numerator}}}{{{f.denominator}}}"
-        return {
-            "problemTex": f"\\lim_{{x \\to \\infty}} \\dfrac{{{a}x^2+3x}}{{{b}x^2-1}}",
-            "answerTex": res_tex,
-            "answerNorm": f"{f.numerator}/{f.denominator}",
-            "steps": [
-                {"label": "Equal degrees → ratio of leading coefficients", "math": f"\\dfrac{{{a}}}{{{b}}}={res_tex}", "note": ""},
+        return problem(
+            problem_tex=f"\\lim_{{x \\to \\infty}} \\dfrac{{{a}x^2+3x}}{{{b}x^2-1}}",
+            answer_tex=res_tex,
+            answer_norm=f"{f.numerator}/{f.denominator}",
+            steps=[
+                step("Equal degrees → ratio of leading coefficients", f"\\dfrac{{{a}}}{{{b}}}={res_tex}"),
             ],
-        }
+        )
     else:
         # deg num > deg denom → ∞
         a = R(1,4)
-        return {
-            "problemTex": f"\\lim_{{x \\to \\infty}} \\dfrac{{{a}x^3+1}}{{x^2+5}}",
-            "answerTex": "\\infty",
-            "answerNorm": "inf",
-            "steps": [
-                {"label": "Numerator degree > denominator degree", "math": "\\to \\infty", "note": "numerator grows faster"},
+        return problem(
+            problem_tex=f"\\lim_{{x \\to \\infty}} \\dfrac{{{a}x^3+1}}{{x^2+5}}",
+            answer_tex="\\infty",
+            answer_norm="inf",
+            steps=[
+                step("Numerator degree > denominator degree", "\\to \\infty", "numerator grows faster"),
             ],
-        }
+        )
 
 
 diff1 = [_direct_substitution, _factor_cancel, _factor_cancel, _factor_cancel_cubic, _inf_rational]
@@ -120,17 +118,17 @@ def _rationalize():
     f = Fraction(1, 2 * sa)
     res_tex = f"\\dfrac{{1}}{{2\\sqrt{{{a}}}}} = \\dfrac{{{f.numerator}}}{{{f.denominator}}}"
     res_norm = f"{f.numerator}/{f.denominator}"
-    return {
-        "problemTex": f"\\lim_{{x \\to {a}}} \\dfrac{{\\sqrt{{x}}-{sa}}}{{x-{a}}}",
-        "answerTex": res_tex,
-        "answerNorm": res_norm,
-        "steps": [
-            {"label": "0/0 — multiply by conjugate", "math": f"\\cdot \\dfrac{{\\sqrt{{x}}+{sa}}}{{\\sqrt{{x}}+{sa}}}", "note": ""},
-            {"label": "Numerator: difference of squares", "math": f"\\dfrac{{x-{a}}}{{(x-{a})(\\sqrt{{x}}+{sa})}}", "note": "(√x−a)(√x+a)=x−a"},
-            {"label": "Cancel (x−a)", "math": f"\\dfrac{{1}}{{\\sqrt{{x}}+{sa}}}", "note": ""},
-            {"label": "Substitute x={a}", "math": f"\\dfrac{{1}}{{{sa}+{sa}}}={res_tex}", "note": ""},
+    return problem(
+        problem_tex=f"\\lim_{{x \\to {a}}} \\dfrac{{\\sqrt{{x}}-{sa}}}{{x-{a}}}",
+        answer_tex=res_tex,
+        answer_norm=res_norm,
+        steps=[
+            step("0/0 — multiply by conjugate", f"\\cdot \\dfrac{{\\sqrt{{x}}+{sa}}}{{\\sqrt{{x}}+{sa}}}"),
+            step("Numerator: difference of squares", f"\\dfrac{{x-{a}}}{{(x-{a})(\\sqrt{{x}}+{sa})}}", "(√x−a)(√x+a)=x−a"),
+            step("Cancel (x−a)", f"\\dfrac{{1}}{{\\sqrt{{x}}+{sa}}}"),
+            step("Substitute x={a}", f"\\dfrac{{1}}{{{sa}+{sa}}}={res_tex}"),
         ],
-    }
+    )
 
 
 def _trig_sin_over_x():
@@ -138,17 +136,17 @@ def _trig_sin_over_x():
     k, m = R(1,7), R(1,7)
     f = Fraction(k, m)
     res_tex = str(int(f)) if f.denominator == 1 else f"\\dfrac{{{f.numerator}}}{{{f.denominator}}}"
-    return {
-        "problemTex": f"\\lim_{{x \\to 0}} \\dfrac{{\\sin({k}x)}}{{{m}x}}",
-        "answerTex": res_tex,
-        "answerNorm": f"{f.numerator}/{f.denominator}",
-        "steps": [
-            {"label": "Goal: get sin(argument)/same argument", "math": f"\\dfrac{{\\sin({k}x)}}{{{m}x}}", "note": f"The denominator is {m}x but sin's argument is {k}x — they must match for the trig limit to apply."},
-            {"label": f"Multiply numerator and denominator by {k}", "math": f"\\dfrac{{{k}}}{{{m}}} \\cdot \\dfrac{{\\sin({k}x)}}{{{k}x}}", "note": f"Multiplying by {k}/{k} = 1 doesn't change the value. Now sin({k}x) is divided by its own argument {k}x."},
-            {"label": "Substitute u = " + f"{k}x", "math": f"\\dfrac{{{k}}}{{{m}}} \\cdot \\dfrac{{\\sin(u)}}{{u}}, \\quad u = {k}x", "note": f"As x → 0, u = {k}x → 0 as well. This is the standard form of the fundamental trig limit."},
-            {"label": "Fundamental trig limit: sin(u)/u → 1 as u → 0", "math": f"\\dfrac{{{k}}}{{{m}}} \\cdot 1 = {res_tex}", "note": "This limit comes from the squeeze theorem and is a foundational result. The sine of a small angle is approximately equal to that angle itself."},
+    return problem(
+        problem_tex=f"\\lim_{{x \\to 0}} \\dfrac{{\\sin({k}x)}}{{{m}x}}",
+        answer_tex=res_tex,
+        answer_norm=f"{f.numerator}/{f.denominator}",
+        steps=[
+            step("Goal: get sin(argument)/same argument", f"\\dfrac{{\\sin({k}x)}}{{{m}x}}", f"The denominator is {m}x but sin's argument is {k}x — they must match for the trig limit to apply."),
+            step(f"Multiply numerator and denominator by {k}", f"\\dfrac{{{k}}}{{{m}}} \\cdot \\dfrac{{\\sin({k}x)}}{{{k}x}}", f"Multiplying by {k}/{k} = 1 doesn't change the value. Now sin({k}x) is divided by its own argument {k}x."),
+            step("Substitute u = " + f"{k}x", f"\\dfrac{{{k}}}{{{m}}} \\cdot \\dfrac{{\\sin(u)}}{{u}}, \\quad u = {k}x", f"As x → 0, u = {k}x → 0 as well. This is the standard form of the fundamental trig limit."),
+            step("Fundamental trig limit: sin(u)/u → 1 as u → 0", f"\\dfrac{{{k}}}{{{m}}} \\cdot 1 = {res_tex}", "This limit comes from the squeeze theorem and is a foundational result. The sine of a small angle is approximately equal to that angle itself."),
         ],
-    }
+    )
 
 
 def _trig_one_minus_cos():
@@ -157,15 +155,15 @@ def _trig_one_minus_cos():
     k2 = k * k
     f = Fraction(k2, 2)
     res_tex = str(int(f)) if f.denominator == 1 else f"\\dfrac{{{f.numerator}}}{{{f.denominator}}}"
-    return {
-        "problemTex": f"\\lim_{{x \\to 0}} \\dfrac{{1-\\cos({k}x)}}{{x^2}}",
-        "answerTex": res_tex,
-        "answerNorm": f"{f.numerator}/{f.denominator}",
-        "steps": [
-            {"label": "Rewrite with k²", "math": f"k^2 \\cdot \\dfrac{{1-\\cos({k}x)}}{{{k}^2x^2}}", "note": ""},
-            {"label": "Known limit: (1-cos u)/u² → 1/2", "math": f"{k2} \\cdot \\dfrac{{1}}{{2}} = {res_tex}", "note": ""},
+    return problem(
+        problem_tex=f"\\lim_{{x \\to 0}} \\dfrac{{1-\\cos({k}x)}}{{x^2}}",
+        answer_tex=res_tex,
+        answer_norm=f"{f.numerator}/{f.denominator}",
+        steps=[
+            step("Rewrite with k²", f"k^2 \\cdot \\dfrac{{1-\\cos({k}x)}}{{{k}^2x^2}}"),
+            step("Known limit: (1-cos u)/u² → 1/2", f"{k2} \\cdot \\dfrac{{1}}{{2}} = {res_tex}"),
         ],
-    }
+    )
 
 
 def _trig_tan_sin():
@@ -173,16 +171,16 @@ def _trig_tan_sin():
     k, m = R(1, 6), R(1, 6)
     f = Fraction(k, m)
     res_tex = str(int(f)) if f.denominator == 1 else f"\\dfrac{{{f.numerator}}}{{{f.denominator}}}"
-    return {
-        "problemTex": f"\\lim_{{x \\to 0}} \\dfrac{{\\tan({k}x)}}{{\\sin({m}x)}}",
-        "answerTex": res_tex,
-        "answerNorm": f"{f.numerator}/{f.denominator}",
-        "steps": [
-            {"label": "Write tan as sin/cos", "math": f"\\dfrac{{\\sin({k}x)}}{{\\cos({k}x)\\cdot\\sin({m}x)}}", "note": ""},
-            {"label": "Multiply/divide by x", "math": f"\\dfrac{{{k}}}{{m}} \\cdot \\dfrac{{\\sin({k}x)/{k}x}}{{\\sin({m}x)/{m}x}} \\cdot \\dfrac{{1}}{{\\cos({k}x)}}", "note": ""},
-            {"label": "Apply sin(u)/u → 1, cos(0)=1", "math": f"\\dfrac{{{k}}}{{{m}}} \\cdot 1 \\cdot 1 = {res_tex}", "note": ""},
+    return problem(
+        problem_tex=f"\\lim_{{x \\to 0}} \\dfrac{{\\tan({k}x)}}{{\\sin({m}x)}}",
+        answer_tex=res_tex,
+        answer_norm=f"{f.numerator}/{f.denominator}",
+        steps=[
+            step("Write tan as sin/cos", f"\\dfrac{{\\sin({k}x)}}{{\\cos({k}x)\\cdot\\sin({m}x)}}"),
+            step("Multiply/divide by x", f"\\dfrac{{{k}}}{{m}} \\cdot \\dfrac{{\\sin({k}x)/{k}x}}{{\\sin({m}x)/{m}x}} \\cdot \\dfrac{{1}}{{\\cos({k}x)}}"),
+            step("Apply sin(u)/u → 1, cos(0)=1", f"\\dfrac{{{k}}}{{{m}}} \\cdot 1 \\cdot 1 = {res_tex}"),
         ],
-    }
+    )
 
 
 diff2 = [_rationalize, _trig_sin_over_x, _trig_sin_over_x, _trig_one_minus_cos, _trig_tan_sin]
@@ -193,15 +191,14 @@ def _lhopital_basic():
     # lim(x→0) (e^x - 1 - x) / x² = 1/2
     # Or lim(x→0) (sin x - x) / x³ = -1/6 — too hard, use simpler
     cases = [
-        # (problemTex, answerTex, answerNorm, steps)
         (
             "\\lim_{x \\to 0} \\dfrac{e^x - 1 - x}{x^2}",
             "\\dfrac{1}{2}",
             "1/2",
             [
-                {"label": "Direct substitution: 0/0 indeterminate form", "math": "\\dfrac{e^0-1-0}{0^2}=\\dfrac{0}{0}", "note": ""},
-                {"label": "L'Hôpital: differentiate top and bottom", "math": "\\lim_{x\\to0}\\dfrac{e^x-1}{2x}", "note": ""},
-                {"label": "Still 0/0 — apply again", "math": "\\lim_{x\\to0}\\dfrac{e^x}{2}=\\dfrac{1}{2}", "note": ""},
+                step("Direct substitution: 0/0 indeterminate form", "\\dfrac{e^0-1-0}{0^2}=\\dfrac{0}{0}"),
+                step("L'Hôpital: differentiate top and bottom", "\\lim_{x\\to0}\\dfrac{e^x-1}{2x}"),
+                step("Still 0/0 — apply again", "\\lim_{x\\to0}\\dfrac{e^x}{2}=\\dfrac{1}{2}"),
             ],
         ),
         (
@@ -209,8 +206,8 @@ def _lhopital_basic():
             "1",
             "1",
             [
-                {"label": "Direct substitution: 0/0 indeterminate form", "math": "\\dfrac{\\sin 0}{0}=\\dfrac{0}{0}", "note": ""},
-                {"label": "L'Hôpital", "math": "\\lim_{x\\to0}\\dfrac{\\cos x}{1}=1", "note": ""},
+                step("Direct substitution: 0/0 indeterminate form", "\\dfrac{\\sin 0}{0}=\\dfrac{0}{0}"),
+                step("L'Hôpital", "\\lim_{x\\to0}\\dfrac{\\cos x}{1}=1"),
             ],
         ),
         (
@@ -218,46 +215,41 @@ def _lhopital_basic():
             "1",
             "1",
             [
-                {"label": "Direct substitution: 0/0 indeterminate form", "math": "\\dfrac{\\ln 1}{0}=\\dfrac{0}{0}", "note": ""},
-                {"label": "L'Hôpital: d/dx[ln(1+x)]=1/(1+x)", "math": "\\lim_{x\\to0}\\dfrac{1/(1+x)}{1}=1", "note": ""},
+                step("Direct substitution: 0/0 indeterminate form", "\\dfrac{\\ln 1}{0}=\\dfrac{0}{0}"),
+                step("L'Hôpital: d/dx[ln(1+x)]=1/(1+x)", "\\lim_{x\\to0}\\dfrac{1/(1+x)}{1}=1"),
             ],
         ),
     ]
     prob = pick(cases)
-    return {
-        "problemTex": prob[0],
-        "answerTex": prob[1],
-        "answerNorm": prob[2],
-        "steps": prob[3],
-    }
+    return problem(problem_tex=prob[0], answer_tex=prob[1], answer_norm=prob[2], steps=prob[3])
 
 
 def _difference_quotient():
     # lim(h→0) [f(x+h) - f(x)] / h for simple f
     cases = [
         ("x^2", "2x", "2x", [
-            {"label": "Expand (x+h)²", "math": "\\dfrac{x^2+2xh+h^2-x^2}{h}", "note": ""},
-            {"label": "Simplify", "math": "\\dfrac{2xh+h^2}{h}=2x+h", "note": ""},
-            {"label": "h→0", "math": "2x", "note": ""},
+            step("Expand (x+h)²", "\\dfrac{x^2+2xh+h^2-x^2}{h}"),
+            step("Simplify", "\\dfrac{2xh+h^2}{h}=2x+h"),
+            step("h→0", "2x"),
         ]),
         ("x^3", "3x^2", "3x^2", [
-            {"label": "Expand (x+h)³", "math": "\\dfrac{x^3+3x^2h+3xh^2+h^3-x^3}{h}", "note": ""},
-            {"label": "Factor h", "math": "3x^2+3xh+h^2", "note": ""},
-            {"label": "h→0", "math": "3x^2", "note": ""},
+            step("Expand (x+h)³", "\\dfrac{x^3+3x^2h+3xh^2+h^3-x^3}{h}"),
+            step("Factor h", "3x^2+3xh+h^2"),
+            step("h→0", "3x^2"),
         ]),
         ("\\sqrt{x}", "\\dfrac{1}{2\\sqrt{x}}", "1/(2*sqrt(x))", [
-            {"label": "Multiply by conjugate", "math": "\\dfrac{\\sqrt{x+h}-\\sqrt{x}}{h}\\cdot\\dfrac{\\sqrt{x+h}+\\sqrt{x}}{\\sqrt{x+h}+\\sqrt{x}}", "note": ""},
-            {"label": "Numerator simplifies", "math": "\\dfrac{(x+h)-x}{h(\\sqrt{x+h}+\\sqrt{x})}=\\dfrac{1}{\\sqrt{x+h}+\\sqrt{x}}", "note": ""},
-            {"label": "h→0", "math": "\\dfrac{1}{2\\sqrt{x}}", "note": ""},
+            step("Multiply by conjugate", "\\dfrac{\\sqrt{x+h}-\\sqrt{x}}{h}\\cdot\\dfrac{\\sqrt{x+h}+\\sqrt{x}}{\\sqrt{x+h}+\\sqrt{x}}"),
+            step("Numerator simplifies", "\\dfrac{(x+h)-x}{h(\\sqrt{x+h}+\\sqrt{x})}=\\dfrac{1}{\\sqrt{x+h}+\\sqrt{x}}"),
+            step("h→0", "\\dfrac{1}{2\\sqrt{x}}"),
         ]),
     ]
     case = pick(cases)
-    return {
-        "problemTex": f"\\lim_{{h \\to 0}} \\dfrac{{({case[0]}+h)_{{\\text{{at }}x+h}} - ({case[0]})}}{{h}}",
-        "answerTex": case[1],
-        "answerNorm": case[2],
-        "steps": case[3],
-    }
+    return problem(
+        problem_tex=f"\\lim_{{h \\to 0}} \\dfrac{{({case[0]}+h)_{{\\text{{at }}x+h}} - ({case[0]})}}{{h}}",
+        answer_tex=case[1],
+        answer_norm=case[2],
+        steps=case[3],
+    )
 
 
 def _piecewise_continuity():
@@ -272,20 +264,20 @@ def _piecewise_continuity():
     cts = abs(left_val - right_val) < 0.001
     b_const = a - c * a
     b_tex = f"+{b_const}" if b_const >= 0 else str(b_const)
-    return {
-        "problemTex": (
+    return problem(
+        problem_tex=(
             f"f(x) = \\begin{{cases}} {c}x{b_tex} & x < {a} \\\\ x^2 - {a*a} + {c*a} & x \\geq {a} \\end{{cases}}"
             f"\\quad \\text{{Is }} f \\text{{ continuous at }} x={a}?"
         ),
-        "answerTex": "\\text{Yes}" if cts else "\\text{No}",
-        "answerNorm": "yes" if cts else "no",
-        "steps": [
-            {"label": "Left limit", "math": f"\\lim_{{x\\to{a}^-}} ({c}x{b_tex}) = {int(left_val)}", "note": ""},
-            {"label": "Right limit", "math": f"\\lim_{{x\\to{a}^+}} (x^2-{a*a}+{c*a}) = {int(right_val)}", "note": ""},
-            {"label": "f(a)", "math": f"f({a}) = {int(right_val)}", "note": ""},
-            {"label": "Conclusion", "math": "\\text{Continuous}" if cts else f"\\text{{Not continuous: limits differ ({int(left_val)} ≠ {int(right_val)})}}", "note": ""},
+        answer_tex="\\text{Yes}" if cts else "\\text{No}",
+        answer_norm="yes" if cts else "no",
+        steps=[
+            step("Left limit", f"\\lim_{{x\\to{a}^-}} ({c}x{b_tex}) = {int(left_val)}"),
+            step("Right limit", f"\\lim_{{x\\to{a}^+}} (x^2-{a*a}+{c*a}) = {int(right_val)}"),
+            step("f(a)", f"f({a}) = {int(right_val)}"),
+            step("Conclusion", "\\text{Continuous}" if cts else f"\\text{{Not continuous: limits differ ({int(left_val)} ≠ {int(right_val)})}}"),
         ],
-    }
+    )
 
 
 diff3 = [_lhopital_basic, _lhopital_basic, _difference_quotient, _piecewise_continuity]
@@ -294,16 +286,16 @@ diff3 = [_lhopital_basic, _lhopital_basic, _difference_quotient, _piecewise_cont
 
 def _lhopital_product_form():
     # lim(x→0+) x·ln(x) = 0 — classic 0·(-∞) form
-    return {
-        "problemTex": "\\lim_{x \\to 0^+} x \\ln x",
-        "answerTex": "0",
-        "answerNorm": "0",
-        "steps": [
-            {"label": "Form: 0·(-∞) — rewrite as fraction", "math": "\\lim_{x\\to0^+}\\dfrac{\\ln x}{1/x}", "note": "-∞/∞ form"},
-            {"label": "L'Hôpital: d/dx[ln x]=1/x, d/dx[1/x]=-1/x²", "math": "\\lim_{x\\to0^+}\\dfrac{1/x}{-1/x^2}=\\lim_{x\\to0^+}(-x)", "note": ""},
-            {"label": "Evaluate", "math": "\\lim_{x\\to0^+}(-x)=0", "note": ""},
+    return problem(
+        problem_tex="\\lim_{x \\to 0^+} x \\ln x",
+        answer_tex="0",
+        answer_norm="0",
+        steps=[
+            step("Form: 0·(-∞) — rewrite as fraction", "\\lim_{x\\to0^+}\\dfrac{\\ln x}{1/x}", "-∞/∞ form"),
+            step("L'Hôpital: d/dx[ln x]=1/x, d/dx[1/x]=-1/x²", "\\lim_{x\\to0^+}\\dfrac{1/x}{-1/x^2}=\\lim_{x\\to0^+}(-x)"),
+            step("Evaluate", "\\lim_{x\\to0^+}(-x)=0"),
         ],
-    }
+    )
 
 
 def _one_sided_limits():
@@ -312,27 +304,27 @@ def _one_sided_limits():
             "\\lim_{x \\to 0^+} \\dfrac{1}{x}",
             "+\\infty",
             "inf",
-            [{"label": "x→0 from right, 1/x→+∞", "math": "\\to +\\infty", "note": ""}],
+            [step("x→0 from right, 1/x→+∞", "\\to +\\infty")],
         ),
         (
             "\\lim_{x \\to 0^-} \\dfrac{1}{x}",
             "-\\infty",
             "-inf",
-            [{"label": "x→0 from left, 1/x→-∞", "math": "\\to -\\infty", "note": ""}],
+            [step("x→0 from left, 1/x→-∞", "\\to -\\infty")],
         ),
         (
             "\\lim_{x \\to 0} |x|/x",
             "\\text{DNE}",
             "DNE",
             [
-                {"label": "Right limit", "math": "\\lim_{x\\to0^+}|x|/x = 1", "note": "x>0 so |x|=x"},
-                {"label": "Left limit", "math": "\\lim_{x\\to0^-}|x|/x = -1", "note": "x<0 so |x|=-x"},
-                {"label": "One-sided limits differ — limit does not exist", "math": "\\text{DNE}", "note": ""},
+                step("Right limit", "\\lim_{x\\to0^+}|x|/x = 1", "x>0 so |x|=x"),
+                step("Left limit", "\\lim_{x\\to0^-}|x|/x = -1", "x<0 so |x|=-x"),
+                step("One-sided limits differ — limit does not exist", "\\text{DNE}"),
             ],
         ),
     ]
     prob = pick(cases)
-    return {"problemTex": prob[0], "answerTex": prob[1], "answerNorm": prob[2], "steps": prob[3]}
+    return problem(problem_tex=prob[0], answer_tex=prob[1], answer_norm=prob[2], steps=prob[3])
 
 
 def _limit_ln_exp():
@@ -342,8 +334,8 @@ def _limit_ln_exp():
             "0",
             "0",
             [
-                {"label": "Rewrite: xe^{-x} = x/e^x → ∞/∞", "math": "\\lim_{x\\to\\infty}\\dfrac{x}{e^x}", "note": ""},
-                {"label": "L'Hôpital", "math": "\\lim_{x\\to\\infty}\\dfrac{1}{e^x}=0", "note": "e^x grows faster"},
+                step("Rewrite: xe^{-x} = x/e^x → ∞/∞", "\\lim_{x\\to\\infty}\\dfrac{x}{e^x}"),
+                step("L'Hôpital", "\\lim_{x\\to\\infty}\\dfrac{1}{e^x}=0", "e^x grows faster"),
             ],
         ),
         (
@@ -351,12 +343,12 @@ def _limit_ln_exp():
             "0",
             "0",
             [
-                {"label": "∞/∞ — L'Hôpital", "math": "\\lim_{x\\to\\infty}\\dfrac{1/x}{1}=0", "note": "ln grows slower than x"},
+                step("∞/∞ — L'Hôpital", "\\lim_{x\\to\\infty}\\dfrac{1/x}{1}=0", "ln grows slower than x"),
             ],
         ),
     ]
     prob = pick(cases)
-    return {"problemTex": prob[0], "answerTex": prob[1], "answerNorm": prob[2], "steps": prob[3]}
+    return problem(problem_tex=prob[0], answer_tex=prob[1], answer_norm=prob[2], steps=prob[3])
 
 
 diff4 = [_lhopital_product_form, _one_sided_limits, _one_sided_limits, _limit_ln_exp]
@@ -364,29 +356,29 @@ diff4 = [_lhopital_product_form, _one_sided_limits, _one_sided_limits, _limit_ln
 # ── diff5 ──────────────────────────────────────────────────────────────────────
 
 def _indeterminate_inf_minus_inf():
-    return {
-        "problemTex": "\\lim_{x \\to 0} \\left(\\dfrac{1}{\\sin x} - \\dfrac{1}{x}\\right)",
-        "answerTex": "0",
-        "answerNorm": "0",
-        "steps": [
-            {"label": "∞−∞ form — combine fractions", "math": "\\dfrac{x - \\sin x}{x \\sin x}", "note": "common denominator"},
-            {"label": "0/0 — L'Hôpital once", "math": "\\dfrac{1-\\cos x}{\\sin x + x\\cos x}", "note": ""},
-            {"label": "Still 0/0 — L'Hôpital again", "math": "\\dfrac{\\sin x}{2\\cos x - x\\sin x}=\\dfrac{0}{2}=0", "note": ""},
+    return problem(
+        problem_tex="\\lim_{x \\to 0} \\left(\\dfrac{1}{\\sin x} - \\dfrac{1}{x}\\right)",
+        answer_tex="0",
+        answer_norm="0",
+        steps=[
+            step("∞−∞ form — combine fractions", "\\dfrac{x - \\sin x}{x \\sin x}", "common denominator"),
+            step("0/0 — L'Hôpital once", "\\dfrac{1-\\cos x}{\\sin x + x\\cos x}"),
+            step("Still 0/0 — L'Hôpital again", "\\dfrac{\\sin x}{2\\cos x - x\\sin x}=\\dfrac{0}{2}=0"),
         ],
-    }
+    )
 
 
 def _lhopital_three():
-    return {
-        "problemTex": "\\lim_{x \\to 0} \\dfrac{x - \\sin x}{x^3}",
-        "answerTex": "\\dfrac{1}{6}",
-        "answerNorm": "1/6",
-        "steps": [
-            {"label": "0/0 — L'Hôpital once", "math": "\\dfrac{1-\\cos x}{3x^2}", "note": ""},
-            {"label": "Still 0/0 — again", "math": "\\dfrac{\\sin x}{6x}", "note": ""},
-            {"label": "Apply trig limit sin(x)/x → 1", "math": "\\dfrac{1}{6}\\cdot 1 = \\dfrac{1}{6}", "note": ""},
+    return problem(
+        problem_tex="\\lim_{x \\to 0} \\dfrac{x - \\sin x}{x^3}",
+        answer_tex="\\dfrac{1}{6}",
+        answer_norm="1/6",
+        steps=[
+            step("0/0 — L'Hôpital once", "\\dfrac{1-\\cos x}{3x^2}"),
+            step("Still 0/0 — again", "\\dfrac{\\sin x}{6x}"),
+            step("Apply trig limit sin(x)/x → 1", "\\dfrac{1}{6}\\cdot 1 = \\dfrac{1}{6}"),
         ],
-    }
+    )
 
 
 def _limit_sequence():
@@ -395,20 +387,20 @@ def _limit_sequence():
             "\\lim_{n \\to \\infty} \\left(1+\\dfrac{1}{n}\\right)^n",
             "e",
             "e",
-            [{"label": "Definition of e", "math": "e = \\lim_{n\\to\\infty}\\left(1+\\frac{1}{n}\\right)^n", "note": "fundamental limit"}],
+            [step("Definition of e", "e = \\lim_{n\\to\\infty}\\left(1+\\frac{1}{n}\\right)^n", "fundamental limit")],
         ),
         (
             "\\lim_{n \\to \\infty} n^{1/n}",
             "1",
             "1",
             [
-                {"label": "Let y=n^{1/n}, take ln", "math": "\\ln y = \\dfrac{\\ln n}{n}\\to 0", "note": "L'Hôpital or squeeze"},
-                {"label": "So y = e^0 = 1", "math": "\\lim n^{1/n}=1", "note": ""},
+                step("Let y=n^{1/n}, take ln", "\\ln y = \\dfrac{\\ln n}{n}\\to 0", "L'Hôpital or squeeze"),
+                step("So y = e^0 = 1", "\\lim n^{1/n}=1"),
             ],
         ),
     ]
     prob = pick(cases)
-    return {"problemTex": prob[0], "answerTex": prob[1], "answerNorm": prob[2], "steps": prob[3]}
+    return problem(problem_tex=prob[0], answer_tex=prob[1], answer_norm=prob[2], steps=prob[3])
 
 
 diff5 = [_indeterminate_inf_minus_inf, _lhopital_three, _limit_sequence]

@@ -1,6 +1,7 @@
 import re
 import math as _math
 from math_utils import expand_expression, polys_equal, user_input_to_norm
+from checker_registry import get_checker
 
 # ── Safe numeric evaluator ─────────────────────────────────────────────────────
 
@@ -61,31 +62,10 @@ def check_answer(problem: dict, user_input: str) -> dict:
     if not u:
         return {"result": "empty"}
     module = problem.get("module")
-    if module == "factoring":
-        if problem.get("isFracExpGcf"):
-            return check_exp_factoring_answer(problem, u)
-        if problem.get("isTrigFactoring"):
-            return check_trig_factoring_answer(problem, u)
-        return check_factoring_answer(problem, u)
-    if module == "exponents":
-        return check_exponent_answer(problem, u)
-    if module == "fractions":
-        return check_fraction_answer(problem, u)
-    if module == "trig":
-        return check_norm_answer(problem, u)
-    if module == "logs":
-        return check_norm_answer(problem, u)
-    if module == "composition":
-        return check_norm_answer(problem, u)
-    if module == "limits":
-        return check_norm_answer(problem, u)
-    if module == "derivatives":
-        return check_norm_answer(problem, u)
-    if module == "integration":
-        return check_integration_answer(problem, u)
-    if module == "adv_integration":
-        return check_integration_answer(problem, u)
-    return {"result": "unknown"}
+    checker = get_checker(module)
+    if checker is None:
+        return {"result": "unknown"}
+    return checker(problem, u)
 
 
 def check_factoring_answer(problem: dict, u: str) -> dict:
