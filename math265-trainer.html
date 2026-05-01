@@ -55,6 +55,13 @@
   /* ── MAIN PROBLEM AREA ── */
   #main { flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; padding: 8px 0; }
   #problem-type { text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 6px 0 0; min-height: 18px; }
+  #auto-badge { display: none; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; margin: 2px auto 0; width: fit-content; }
+  #auto-badge.challenge { display: block; background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+  #auto-badge.win { display: block; background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid rgba(74,222,128,0.3); }
+  #auto-badge.review { display: block; background: rgba(167,139,250,0.12); color: var(--purple); border: 1px solid rgba(167,139,250,0.3); }
+  #auto-btn { padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg2); color: var(--muted); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  #auto-btn:hover { border-color: var(--green); color: var(--text); }
+  #auto-btn.active { background: var(--green); border-color: var(--green); color: #0f1117; font-weight: 600; }
   #problem-display { text-align: center; padding: 12px 16px 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
   #problem-display .katex-display { margin: 0; }
   #problem-display .katex { font-size: 2.2rem; }
@@ -70,6 +77,17 @@
   #answer-input:focus { border-color: var(--blue); }
   #answer-input.correct { border-color: var(--green); background: rgba(74,222,128,0.08); }
   #answer-input.wrong { border-color: var(--red); background: rgba(248,113,113,0.08); }
+  #answer-input-2 {
+    flex:1; padding:10px 14px; background:var(--bg2); border:1px solid var(--border);
+    border-radius:var(--radius); color:var(--text); font-family:var(--font-mono);
+    font-size:15px; outline:none; transition:border-color 0.15s;
+  }
+  #answer-input-2:focus { border-color:var(--blue); }
+  #answer-input-2.correct { border-color:var(--green); background:rgba(74,222,128,0.08); }
+  #answer-input-2.wrong { border-color:var(--red); background:rgba(248,113,113,0.08); }
+  #answer-input-2-row { display:none; gap:8px; align-items:center; margin-top:6px; }
+  #answer-input-2-row.visible { display:flex; }
+  .dual-label { font-size:12px; color:var(--muted); font-family:var(--font-mono); white-space:nowrap; }
   #check-btn {
     padding: 10px 20px; background: var(--accent); border: 1px solid #2ea043;
     border-radius: var(--radius); color: #fff; font-size: 14px; font-weight: 600;
@@ -82,6 +100,20 @@
   #live-preview { min-height: 28px; padding: 4px 8px; font-size: 13px; color: var(--muted); }
   #live-preview .katex { font-size: 1.1rem; }
   #parse-error { font-size: 12px; color: var(--red); font-family: var(--font-mono); padding: 2px 8px; }
+
+  /* input hint */
+  #input-hint { display:none; font-size:12px; color:var(--muted); font-family:var(--font-mono); padding:3px 8px; background:var(--bg2); border-left:2px solid var(--blue); border-radius:3px; margin-top:4px; }
+
+  /* syntax legend */
+  #syntax-toggle { background:none; border:none; color:var(--muted); font-size:11px; cursor:pointer; padding:2px 8px; text-decoration:underline dotted; }
+  #syntax-toggle:hover { color:var(--text); }
+  #syntax-legend { display:none; padding:8px 8px 4px; }
+  #syntax-legend.open { display:block; }
+  .syn-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:4px 16px; }
+  .syn-row { display:flex; align-items:center; gap:8px; font-size:12px; padding:2px 0; }
+  .syn-type { font-family:var(--font-mono); color:var(--muted); white-space:nowrap; }
+  .syn-arrow { color:var(--border); }
+  .syn-render .katex { font-size:1rem; }
 
   /* feedback */
   #feedback { min-height: 26px; padding: 4px 8px; font-size: 13px; font-weight: 600; transition: all 0.3s; }
@@ -104,21 +136,21 @@
     margin-left: auto;
   }
   #skip-btn:hover { border-color: var(--muted); color: var(--text); }
-  #steps-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+  #steps-list { display: flex; flex-direction: column; gap: 6px; }
   .step-item { padding: 8px 12px; background: var(--bg2); border-radius: var(--radius); border-left: 3px solid var(--border); animation: fadeIn 0.2s ease; }
   .step-item.revealed { border-left-color: var(--yellow); }
-  .step-label { font-size: 16.5px; color: var(--yellow); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .step-label { font-size: 16.5px; color: var(--yellow); font-family: var(--font-mono); letter-spacing: 0.05em; margin-bottom: 4px; }
   .step-math { }
   .step-math .katex { font-size: 1.5rem; }
   .step-note { font-size: 16.5px; color: var(--muted); margin-top: 3px; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 
   /* ── STATS BAR ── */
-  #stats-bar { border-top: 1px solid var(--border); padding: 8px 0 10px; flex-shrink: 0; }
-  #stats-row { display: flex; align-items: center; gap: 16px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
-  #stats-row strong { color: var(--text); }
-  #progress-bar-wrap { flex: 1; min-width: 100px; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-  #progress-bar-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.3s; }
+  #stats-bar { border-top: 1px solid var(--border); padding: 10px 0 12px; flex-shrink: 0; }
+  #stats-row { display: flex; align-items: center; gap: 16px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  #stats-row strong { color: var(--text); font-size: 14px; }
+  #progress-bar-wrap { flex: 1; min-width: 100px; height: 27px; background: var(--bg3); border-radius: 14px; overflow: hidden; }
+  #progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), #86efac); border-radius: 14px; transition: width 0.3s; box-shadow: 0 0 12px rgba(74,222,128,0.6); }
   #streak-display { font-family: var(--font-mono); }
   #readiness { font-size: 11px; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); }
   #readiness.ready { border-color: var(--green); color: var(--green); }
@@ -166,6 +198,28 @@
   .flash-correct { animation: flashGreen 0.6s ease; }
   .flash-wrong { animation: flashRed 0.6s ease; }
 
+  /* ── XP BAR ── */
+  #xp-bar-row { display: flex; align-items: center; gap: 8px; padding: 6px 0 4px; font-size: 12px; color: var(--muted); }
+  #xp-level-badge { font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: var(--purple); white-space: nowrap; min-width: 44px; }
+  #xp-bar-track { flex: 1; height: 24px; background: var(--bg3); border-radius: 12px; overflow: hidden; }
+  @keyframes xpPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(168,85,247,0.5), 0 0 20px rgba(168,85,247,0.2); opacity: 1; }
+    50%       { box-shadow: 0 0 18px rgba(192,132,252,0.9), 0 0 36px rgba(168,85,247,0.5); opacity: 0.88; }
+  }
+  #xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--purple), #c084fc); border-radius: 12px; transition: width 0.4s ease; width: 0%; animation: xpPulse 1.8s ease-in-out infinite; }
+  #xp-bar-label { font-family: var(--font-mono); font-size: 11px; white-space: nowrap; }
+
+  /* XP floating pop */
+  @keyframes xpFloat {
+    0%   { opacity:0; transform:translateY(0) scale(0.6); }
+    15%  { opacity:1; transform:translateY(-10px) scale(1.25); }
+    60%  { opacity:1; transform:translateY(-40px) scale(1.05); }
+    100% { opacity:0; transform:translateY(-80px) scale(0.9); }
+  }
+  .xp-pop { position:absolute; right:24px; top:40%; font-family:var(--font-mono); font-size:22px; font-weight:900; color:#c084fc; text-shadow:0 0 12px rgba(192,132,252,0.9), 0 2px 8px rgba(0,0,0,0.5); pointer-events:none; animation:xpFloat 1.5s cubic-bezier(0.22,1,0.36,1) forwards; white-space:nowrap; letter-spacing:0.04em; z-index:50; }
+  .xp-pop.streak { color:#fbbf24; text-shadow:0 0 14px rgba(251,191,36,0.9), 0 2px 8px rgba(0,0,0,0.5); font-size:26px; }
+  #xp-confetti-canvas { position:fixed; inset:0; pointer-events:none; z-index:49; }
+
   /* unlock bar */
   #unlock-bar { display:none; padding: 4px 12px 6px; font-size: 11px; color: var(--muted); text-align: center; }
   #unlock-bar.visible { display:block; }
@@ -188,6 +242,46 @@
     #tabs { gap: 3px; }
     .tab { padding: 5px 10px; font-size: 12px; }
   }
+
+  /* ── STUDY RESOURCES ── */
+  #study-resources-area { padding: 4px 0 2px; border-top: 1px solid var(--border); margin-top: 2px; }
+  #study-toggle { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 11px; cursor: pointer; padding: 3px 10px; border-radius: 5px; transition: all 0.15s; }
+  #study-toggle:hover { border-color: var(--blue); color: var(--text); }
+  #study-toggle.open { border-color: var(--blue); color: var(--blue); }
+  #study-panel { display: none; padding: 8px 0 4px; gap: 8px; flex-direction: column; }
+  #study-panel.open { display: flex; }
+  .study-section { background: var(--bg2); border-radius: var(--radius); padding: 10px 12px; border: 1px solid var(--border); }
+  .study-section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .study-search-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .study-tag { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; padding: 4px 10px; font-size: 12px; color: var(--text); }
+  .study-tag a { color: var(--blue); text-decoration: none; font-size: 11px; white-space: nowrap; }
+  .study-tag a:hover { text-decoration: underline; }
+  .study-tag-copy { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 0 2px; line-height: 1; }
+  .study-tag-copy:hover { color: var(--text); }
+  .study-channels { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px,1fr)); gap: 6px; }
+  .study-channel { background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; padding: 6px 10px; }
+  .study-channel-name a { font-size: 12px; color: var(--blue); font-weight: 600; text-decoration: none; }
+  .study-channel-name a:hover { text-decoration: underline; }
+  .study-channel-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  #study-prompt-text { font-size: 12px; color: var(--text); font-family: var(--font-mono); background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 6px; }
+  #study-copy-prompt { padding: 5px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  #study-copy-prompt:hover { border-color: var(--purple); color: var(--purple); }
+  #study-copy-prompt.copied { border-color: var(--green); color: var(--green); }
+
+  /* ── BUG REPORT ── */
+  #bug-report-area { padding: 2px 8px 4px; }
+  #bug-report-link { font-size: 12px; color: var(--muted); cursor: pointer; background: var(--bg2); border: 1px solid var(--border); border-radius: 5px; padding: 4px 10px; }
+  #bug-report-link:hover { border-color: var(--red); color: var(--red); }
+  #bug-report-form { display: none; margin-top: 6px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; gap: 8px; flex-direction: column; }
+  #bug-report-form.open { display: flex; }
+  #bug-note { background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: var(--font-ui); font-size: 12px; padding: 6px 8px; resize: vertical; min-height: 52px; outline: none; }
+  #bug-note:focus { border-color: var(--blue); }
+  #bug-report-actions { display: flex; gap: 8px; align-items: center; }
+  #bug-submit-btn { padding: 5px 14px; background: var(--red); border: none; border-radius: 5px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+  #bug-submit-btn:hover { opacity: 0.85; }
+  #bug-cancel-btn { padding: 5px 10px; background: none; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); font-size: 12px; cursor: pointer; }
+  #bug-cancel-btn:hover { border-color: var(--text); color: var(--text); }
+  #bug-status { font-size: 11px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -201,7 +295,7 @@
   </div>
 
   <div id="tabs">
-    <button class="tab active" data-module="factoring">Factoring</button>
+    <button class="tab" data-module="factoring">Factoring</button>
     <button class="tab" data-module="exponents">Exponents</button>
     <button class="tab" data-module="fractions">Fractions</button>
     <button class="tab" data-module="trig">Trig</button>
@@ -211,7 +305,7 @@
     <button class="tab" data-module="derivatives">Derivatives</button>
     <button class="tab" data-module="integration">Integration</button>
     <button class="tab" data-module="adv_integration">Adv Integration</button>
-    <button class="tab" data-module="all">All</button>
+    <button class="tab active" data-module="all">All</button>
   </div>
 
   <div id="subbar">
@@ -226,6 +320,7 @@
       <button class="mode-btn active" data-mode="endless">Endless</button>
       <button class="mode-btn" data-mode="sprint">Sprint 25</button>
       <button class="mode-btn" data-mode="exam">Exam Sim</button>
+      <button id="auto-btn" title="Auto Mode: SRS review, flow-state difficulty, and performance tracking">Auto</button>
     </div>
   </div>
 
@@ -235,17 +330,40 @@
   </div>
   <div id="unlock-toast"></div>
 
+  <canvas id="xp-confetti-canvas"></canvas>
   <div id="main">
     <div id="problem-type"></div>
+    <div id="auto-badge"></div>
     <div id="problem-display"><span style="color:var(--muted);font-size:14px;">Loading...</span></div>
     <div id="input-area">
       <div id="input-row">
+        <span class="dual-label" id="answer-label-1" style="display:none">y′ =</span>
         <input id="answer-input" type="text" placeholder="type answer here" autocomplete="off" autocorrect="off" spellcheck="false">
         <button id="check-btn">Check</button>
       </div>
+      <div id="answer-input-2-row">
+        <span class="dual-label">y″ =</span>
+        <input id="answer-input-2" type="text" placeholder="second answer" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
       <div id="live-preview"></div>
       <div id="parse-error"></div>
+      <div id="input-hint"></div>
+      <button id="syntax-toggle">syntax help</button>
+      <div id="syntax-legend">
+        <div class="syn-grid" id="syn-grid"></div>
+      </div>
       <div id="feedback"></div>
+    </div>
+    <div id="bug-report-area">
+      <button id="bug-report-link">Report bug</button>
+      <div id="bug-report-form">
+        <textarea id="bug-note" placeholder="Describe the issue (optional)"></textarea>
+        <div id="bug-report-actions">
+          <button id="bug-submit-btn">Submit</button>
+          <button id="bug-cancel-btn">Cancel</button>
+          <span id="bug-status"></span>
+        </div>
+      </div>
     </div>
     <div id="steps-area">
       <div id="steps-controls">
@@ -253,6 +371,24 @@
         <button id="skip-btn">Skip →</button>
       </div>
       <div id="steps-list"></div>
+    </div>
+    <div id="study-resources-area">
+      <button id="study-toggle">&#128218; Study Resources</button>
+      <div id="study-panel">
+        <div class="study-section">
+          <div class="study-section-title">YouTube Search Terms</div>
+          <div id="study-search-terms" class="study-search-tags"></div>
+        </div>
+        <div class="study-section">
+          <div class="study-section-title">Top Channels for This Subject</div>
+          <div id="study-channels" class="study-channels"></div>
+        </div>
+        <div class="study-section">
+          <div class="study-section-title">Ask an AI to Teach You This Concept</div>
+          <div id="study-prompt-text"></div>
+          <button id="study-copy-prompt">Copy Prompt</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -263,6 +399,11 @@
       <span id="streak-display">Streak: <strong id="stat-streak">0</strong></span>
       <span>Best: <strong id="stat-best">0</strong></span>
       <span id="readiness" class="not-ready">exam ready?</span>
+    </div>
+    <div id="xp-bar-row">
+      <span id="xp-level-badge">LVL 1</span>
+      <div id="xp-bar-track"><div id="xp-bar-fill"></div></div>
+      <span id="xp-bar-label">— XP</span>
     </div>
   </div>
 </div>
@@ -294,6 +435,11 @@
       <div id="trend-empty" style="color:var(--muted);font-size:12px;display:none;"></div>
     </div>
     <div class="dash-section">
+      <h3>Questions Per Day (30 days)</h3>
+      <canvas id="volume-chart" width="500" height="100" style="width:100%;max-width:500px;display:block;"></canvas>
+      <div id="volume-empty" style="color:var(--muted);font-size:12px;display:none;"></div>
+    </div>
+    <div class="dash-section">
       <h3>Weak Spots <small style="color:var(--muted);font-size:11px;">(≥3 attempts, lowest accuracy)</small></h3>
       <div id="weak-spots-list"></div>
     </div>
@@ -319,7 +465,7 @@ const pick = arr => arr[R(0,arr.length-1)];
 const gcd = (a,b) => b===0?Math.abs(a):gcd(b,a%b);
 const lcm = (a,b) => Math.abs(a*b)/gcd(a,b);
 function simplifyFrac(n,d){ const g=gcd(Math.abs(n),Math.abs(d)); return [n/g,d/g]; }
-const fracToTex = (sn,sd) => sd===1?`${sn}`:`\frac{${sn}}{${sd}}`;
+const fracToTex = (sn,sd) => sd===1?`${sn}`:`\\frac{${sn}}{${sd}}`;
 const expFracToNorm = (sn,sd) => sd===1?(sn===1?'x':`x^${sn}`):`x^(${sn}/${sd})`;
 const signStr = n => n>=0?`+${n}`:`${n}`;
 
@@ -404,6 +550,7 @@ function loadStore(){
       });
       if(!parsed.sessions) parsed.sessions=[];
       if(!parsed.badges) parsed.badges={};
+      if(!parsed.autoDiff) parsed.autoDiff=def.autoDiff;
       return parsed;
     }
   } catch(e){}
@@ -411,7 +558,7 @@ function loadStore(){
 }
 function defaultStore(){
   const mk = ()=>({1:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},2:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},3:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},4:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]},5:{attempts:0,correct:0,streak:0,best_streak:0,last10:[]}});
-  return { factoring: mk(), exponents: mk(), fractions: mk(), trig: mk(), logs: mk(), composition: mk(), limits: mk(), derivatives: mk(), integration: mk(), adv_integration: mk(), sessions:[], badges:{} };
+  return { factoring: mk(), exponents: mk(), fractions: mk(), trig: mk(), logs: mk(), composition: mk(), limits: mk(), derivatives: mk(), integration: mk(), adv_integration: mk(), sessions:[], badges:{}, autoDiff:{factoring:1,exponents:1,fractions:1,trig:1,logs:1,composition:1,limits:1,derivatives:1,integration:1,adv_integration:1,all:1} };
 }
 function saveStore(){ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
 let store = loadStore();
@@ -420,9 +567,11 @@ let store = loadStore();
 // SESSION STATE
 // ─────────────────────────────────────────────────────────────────────────────
 let state = {
-  module: 'factoring',
+  module: 'all',
   difficulty: 'auto',
   mode: 'endless',
+  autoMode: true,
+  lastAutoBucket: null,
   currentProblem: null,
   stepsRevealed: 0,
   answered: false,
@@ -430,6 +579,7 @@ let state = {
   sessionTotal: 0,
   sessionStreak: 0,
   sessionBestStreak: 0,
+  sessionXp: 0,
   timerSeconds: 0,
   timerInterval: null,
   sprintEnd: null,
@@ -438,8 +588,13 @@ let state = {
   examAnswers: [],
   problemTimer: 0,
   problemTimerInterval: null,
-  autoDiff: { factoring:1, exponents:1, fractions:1, trig:1, logs:1, composition:1, limits:1, derivatives:1, integration:1, adv_integration:1, all:1 },
+  autoDiff: store.autoDiff,
   recentProblems: [], // dedup window — size governed by CONFIG.adaptive.dedupWindow
+  recentModules: [],  // last 4 modules picked — used to enforce variety
+  recentTimes: [],   // last 5 active solve times for flow-state adjustment
+  lastUserAnswer: '',
+  lastAttemptId: null,
+  lastAttemptSnapshot: null,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1026,12 +1181,12 @@ exponents.diff4.push(()=>{
   const [sn,sd]=simplifyFrac(numRaw,n);
   const fracTex=fracToTex(sn,sd);
   return {
-    problemTex:`\dfrac{\sqrt[${n}]{x^{${m}}}}{x^{${p}}}`,
+    problemTex:`\\dfrac{\\sqrt[${n}]{x^{${m}}}}{x^{${p}}}`,
     answerTex:`x^{${fracTex}}`,
     answerNorm:expFracToNorm(sn,sd),
     steps:[
-      {label:'Rewrite radical',math:`\dfrac{x^{${m}/${n}}}{x^{${p}}}`,note:`\sqrt[${n}]{x^m}=x^{m/${n}}`},
-      {label:'Quotient rule',math:`x^{${m}/${n}-${p}}=x^{\frac{${m}-${p*n}}{${n}}}`,note:'subtract exponents'},
+      {label:'Rewrite radical',math:`\\dfrac{x^{${m}/${n}}}{x^{${p}}}`,note:`\\sqrt[${n}]{x^m}=x^{m/${n}}`},
+      {label:'Quotient rule',math:`x^{${m}/${n}-${p}}=x^{\\frac{${m}-${p*n}}{${n}}}`,note:'subtract exponents'},
       {label:'Simplify',math:`x^{${fracTex}}`,note:''},
     ]
   };
@@ -1054,12 +1209,12 @@ exponents.diff4.push(()=>{
   const [isn,isd]=simplifyFrac(sumNum,L);
   const intermTex=fracToTex(isn,isd);
   return {
-    problemTex:`\dfrac{x^{${a1f}/${b1f}}\cdot x^{${a2f}/${b2f}}}{x^{${ef}}}`,
+    problemTex:`\\dfrac{x^{${a1f}/${b1f}}\\cdot x^{${a2f}/${b2f}}}{x^{${ef}}}`,
     answerTex:`x^{${fracToTex(sn,sd)}}`,
     answerNorm:expFracToNorm(sn,sd),
     steps:[
-      {label:'Product rule: add top exponents',math:`x^{\frac{${a1f}}{${b1f}}+\frac{${a2f}}{${b2f}}}=x^{${intermTex}}`,note:`LCD=${L}`},
-      {label:'Quotient rule: subtract bottom',math:`x^{${intermTex}-${ef}}=x^{\frac{${totalNum}}{${L}}}`,note:''},
+      {label:'Product rule: add top exponents',math:`x^{\\frac{${a1f}}{${b1f}}+\\frac{${a2f}}{${b2f}}}=x^{${intermTex}}`,note:`LCD=${L}`},
+      {label:'Quotient rule: subtract bottom',math:`x^{${intermTex}-${ef}}=x^{\\frac{${totalNum}}{${L}}}`,note:''},
       {label:'Simplify',math:`x^{${fracToTex(sn,sd)}}`,note:''},
     ]
   };
@@ -1073,12 +1228,12 @@ exponents.diff4.push(()=>{
   const [sn,sd]=simplifyFrac(totalNum,totalDen);
   const fracTex=fracToTex(sn,sd);
   return {
-    problemTex:`\dfrac{${k}}{x^{${p}/${q}}\cdot\sqrt[${n}]{x}}`,
+    problemTex:`\\dfrac{${k}}{x^{${p}/${q}}\\cdot\\sqrt[${n}]{x}}`,
     answerTex:`${k}x^{-${fracTex}}`,
     answerNorm: sd===1 ? `${k}x^(-${sn})` : `${k}x^(-${sn}/${sd})`,
     steps:[
-      {label:'Rewrite radical',math:`\dfrac{${k}}{x^{${p}/${q}}\cdot x^{1/${n}}}`,note:''},
-      {label:'Product rule in denominator',math:`\dfrac{${k}}{x^{${p}/${q}+1/${n}}}=\dfrac{${k}}{x^{${fracTex}}}`,note:`LCD=${q*n}`},
+      {label:'Rewrite radical',math:`\\dfrac{${k}}{x^{${p}/${q}}\\cdot x^{1/${n}}}`,note:''},
+      {label:'Product rule in denominator',math:`\\dfrac{${k}}{x^{${p}/${q}+1/${n}}}=\\dfrac{${k}}{x^{${fracTex}}}`,note:`LCD=${q*n}`},
       {label:'Negative exponent',math:`${k}x^{-${fracTex}}`,note:'1/x^a=x^{-a}'},
     ]
   };
@@ -1093,12 +1248,12 @@ exponents.diff5.push(()=>{
   const [sn,sd]=simplifyFrac(inner*p,q);
   const fracTex=fracToTex(sn,sd);
   return {
-    problemTex:`\left(\dfrac{x^{${a}}}{x^{${b}}}\right)^{${p}/${q}}`,
+    problemTex:`\\left(\\dfrac{x^{${a}}}{x^{${b}}}\\right)^{${p}/${q}}`,
     answerTex:`x^{${fracTex}}`,
     answerNorm:expFracToNorm(sn,sd),
     steps:[
-      {label:'Quotient rule inside',math:`\left(x^{${a}-${b}}\right)^{${p}/${q}}=\left(x^{${inner}}\right)^{${p}/${q}}`,note:''},
-      {label:'Power rule',math:`x^{${inner}\cdot\frac{${p}}{${q}}}=x^{\frac{${inner*p}}{${q}}}`,note:'multiply exponents'},
+      {label:'Quotient rule inside',math:`\\left(x^{${a}-${b}}\\right)^{${p}/${q}}=\\left(x^{${inner}}\\right)^{${p}/${q}}`,note:''},
+      {label:'Power rule',math:`x^{${inner}\\cdot\\frac{${p}}{${q}}}=x^{\\frac{${inner*p}}{${q}}}`,note:'multiply exponents'},
       {label:'Simplify',math:`x^{${fracTex}}`,note:''},
     ]
   };
@@ -1114,12 +1269,12 @@ exponents.diff5.push(()=>{
   const [isn,isd]=simplifyFrac(sumNum,L);
   const intermTex=fracToTex(isn,isd);
   return {
-    problemTex:`\left(x^{${a1}/${b1}}\cdot x^{${a2}/${b2}}\right)^{${n}}`,
+    problemTex:`\\left(x^{${a1}/${b1}}\\cdot x^{${a2}/${b2}}\\right)^{${n}}`,
     answerTex:`x^{${fracToTex(sn,sd)}}`,
     answerNorm:expFracToNorm(sn,sd),
     steps:[
-      {label:'Product rule inside',math:`\left(x^{${intermTex}}\right)^{${n}}`,note:`LCD=${L}`},
-      {label:'Power rule',math:`x^{${intermTex}\cdot ${n}}=x^{\frac{${sumNum*n}}{${L}}}`,note:''},
+      {label:'Product rule inside',math:`\\left(x^{${intermTex}}\\right)^{${n}}`,note:`LCD=${L}`},
+      {label:'Power rule',math:`x^{${intermTex}\\cdot ${n}}=x^{\\frac{${sumNum*n}}{${L}}}`,note:''},
       {label:'Simplify',math:`x^{${fracToTex(sn,sd)}}`,note:''},
     ]
   };
@@ -1134,13 +1289,13 @@ exponents.diff5.push(()=>{
   const [sn,sd]=simplifyFrac(totalNum,innerDen);
   const fracTex=fracToTex(Math.abs(sn),sd);
   return {
-    problemTex:`\left(x^{${a}/${b}}\cdot\sqrt[${n}]{x}\right)^{-${m}}`,
+    problemTex:`\\left(x^{${a}/${b}}\\cdot\\sqrt[${n}]{x}\\right)^{-${m}}`,
     answerTex:`x^{-${fracTex}}`,
     answerNorm: sd===1 ? `x^(${sn})` : `x^(${sn}/${sd})`,
     steps:[
-      {label:'Rewrite radical',math:`\left(x^{${a}/${b}}\cdot x^{1/${n}}\right)^{-${m}}`,note:''},
-      {label:'Product rule inside',math:`\left(x^{\frac{${innerNum}}{${innerDen}}}\right)^{-${m}}`,note:`LCD=${b*n}`},
-      {label:'Power rule',math:`x^{-${m}\cdot\frac{${innerNum}}{${innerDen}}}=x^{-\frac{${innerNum*m}}{${innerDen}}}`,note:''},
+      {label:'Rewrite radical',math:`\\left(x^{${a}/${b}}\\cdot x^{1/${n}}\\right)^{-${m}}`,note:''},
+      {label:'Product rule inside',math:`\\left(x^{\\frac{${innerNum}}{${innerDen}}}\\right)^{-${m}}`,note:`LCD=${b*n}`},
+      {label:'Power rule',math:`x^{-${m}\\cdot\\frac{${innerNum}}{${innerDen}}}=x^{-\\frac{${innerNum*m}}{${innerDen}}}`,note:''},
       {label:'Simplify',math:`x^{-${fracTex}}`,note:''},
     ]
   };
@@ -1876,17 +2031,30 @@ function getNextLockedTier(unlocked){
 
 function pickWeightedModule(){
   const unlocked=getUnlockedModules();
-  // Weight: high for new/struggling modules, low for mastered
+  const recent=state.recentModules||[];
+  // Weight: high for new/struggling modules, baseline 1.0 for mastered
   const weights=unlocked.map(m=>{
     const acc=getModuleAccuracy(m);
-    if(acc===null) return 5;          // new module, no data → high priority
-    if(acc<0.8) return 1+(0.8-acc)*6; // struggling → up to ~5.8
-    return 0.25;                       // mastered → maintenance only
+    let w;
+    if(acc===null) w=5;           // new module → high priority
+    else if(acc<0.8) w=1+(0.8-acc)*6; // struggling → up to ~5.8
+    else w=1.0;                    // mastered → maintenance (was 0.25, raised for variety)
+    // recency penalty: dampen recently-picked modules to enforce variety
+    const recIdx=recent.lastIndexOf(m);
+    if(recIdx!==-1){
+      const age=recent.length-recIdx; // 1=just picked, 2=one ago, etc.
+      w*=(age*0.33);                   // 0.33x if just picked, 0.66x one ago, 1.0x two+ ago
+    }
+    return Math.max(w,0.05);           // floor so no module totally starved
   });
   const total=weights.reduce((a,b)=>a+b,0);
   let r=Math.random()*total;
-  for(let i=0;i<unlocked.length;i++){ r-=weights[i]; if(r<=0) return unlocked[i]; }
-  return unlocked[unlocked.length-1];
+  let chosen;
+  for(let i=0;i<unlocked.length;i++){ r-=weights[i]; if(r<=0){ chosen=unlocked[i]; break; } }
+  if(!chosen) chosen=unlocked[unlocked.length-1];
+  state.recentModules.push(chosen);
+  if(state.recentModules.length>4) state.recentModules.shift();
+  return chosen;
 }
 
 let _prevUnlocked=null;
@@ -1948,11 +2116,30 @@ function pickModule(){
 }
 
 async function generateProblem(){
-  const mod = pickModule();
-  const diff = getEffectiveDiff(mod==='all'?pickModule():mod);
-  const actualMod = mod === 'all' ? pickModule() : mod;
-  const resp = await fetch(`${API_BASE}/api/problem?module=${actualMod}&difficulty=${diff}`);
-  const problem = await resp.json();
+  const seen = new Set(state.recentProblems);
+  let problem;
+  const MAX_TRIES = 8;
+  if (state.autoMode) {
+    state.lastAutoBucket = null;
+    const avgTime = state.recentTimes.length
+      ? Math.round(state.recentTimes.reduce((a,b)=>a+b,0) / state.recentTimes.length)
+      : 40;
+    for(let i=0; i<MAX_TRIES; i++){
+      const resp = await fetch(`${API_BASE}/api/problem/auto?avg_time=${avgTime}`);
+      problem = await resp.json();
+      if(!seen.has(problem.problemTex)) break;
+    }
+    state.lastAutoBucket = problem.bucket || null;
+  } else {
+    state.lastAutoBucket = null;
+    const actualMod = pickModule();
+    const diff = getEffectiveDiff(actualMod);
+    for(let i=0; i<MAX_TRIES; i++){
+      const resp = await fetch(`${API_BASE}/api/problem?module=${actualMod}&difficulty=${diff}`);
+      problem = await resp.json();
+      if(!seen.has(problem.problemTex)) break;
+    }
+  }
   state.recentProblems.push(problem.problemTex);
   if(state.recentProblems.length > CONFIG.adaptive.dedupWindow) state.recentProblems.shift();
   return problem;
@@ -1972,7 +2159,7 @@ function updateAdaptiveDiff(mod, diff, correct){
   const last5 = rec.last10.slice(-5);
   const sumLast5 = last5.reduce((s,v)=>s+v,0);
 
-  if(last5.length===bump && sumLast5===bump && diff < 5){
+  if(last5.length>=4 && sumLast5>=4 && diff < 5){   // 4/5 correct → bump up
     state.autoDiff[mod] = Math.min(5, diff+1);
   } else if(last5.length>=drop && (last5.length-sumLast5)>=drop && diff > 1){
     state.autoDiff[mod] = Math.max(1, diff-1);
@@ -1997,18 +2184,36 @@ const MODULE_LABELS = {
   limits: 'Limits', derivatives: 'Derivatives', integration: 'Integration',
   adv_integration: 'Advanced Integration',
 };
+
 function renderProblem(problem){
   const typeEl = $('problem-type');
-  if(state.module === 'all' && problem.module){
-    typeEl.textContent = MODULE_LABELS[problem.module] || problem.module;
+  if((state.module === 'all' || state.autoMode) && problem.module){
+    typeEl.textContent = (MODULE_LABELS[problem.module] || problem.module) + ' · Level ' + (problem.difficulty || '?');
   } else {
     typeEl.textContent = '';
+  }
+  const badgeEl = $('auto-badge');
+  if (state.autoMode && state.lastAutoBucket) {
+    const b = state.lastAutoBucket;
+    badgeEl.className = b;
+    badgeEl.textContent = b === 'challenge' ? 'Challenge' : b === 'review' ? 'Review' : 'Win';
+  } else {
+    badgeEl.className = '';
+    badgeEl.textContent = '';
   }
   ensureKatex(()=>{
     const el = $('problem-display');
     el.innerHTML='';
     renderKaTeX(`\\displaystyle ${problem.problemTex}`, el, true);
   });
+  const hintEl = $('input-hint');
+  if(problem.inputHint){
+    hintEl.textContent = problem.inputHint;
+    hintEl.style.display = 'block';
+  } else {
+    hintEl.textContent = '';
+    hintEl.style.display = 'none';
+  }
 }
 
 function renderSteps(problem, revealCount){
@@ -2051,6 +2256,30 @@ function renderSteps(problem, revealCount){
   }
 }
 
+async function skipProblem(){
+  if(!state.currentProblem || state.answered) { loadNewProblem(); return; }
+  const p = state.currentProblem;
+  const mod = p.module;
+  const diff = p.difficulty || 1;
+  const rec = (store[mod]||{})[diff];
+  state.answered = true;
+  // Record fail in backend (SRS quality=0, attempt=wrong)
+  try {
+    await fetch(`${API_BASE}/api/check`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({problem: p, input: '__skip__', timeSec: state.problemTimer, sessionStreak: state.sessionStreak})
+    });
+  } catch(e){}
+  // Update frontend state same as wrong answer
+  state.sessionStreak = 0;
+  state.sessionTotal++;
+  if(rec){ rec.attempts++; rec.streak=0; }
+  updateAdaptiveDiff(mod, diff, false);
+  updateStats(); saveStore(); updateUnlockBar();
+  flashMain('wrong');
+  setTimeout(()=>loadNewProblem(), 400);
+}
+
 async function loadNewProblem(){
   let problem;
   if(state.mode==='exam'){
@@ -2064,11 +2293,19 @@ async function loadNewProblem(){
   state.currentProblem = problem;
   state.stepsRevealed = 0;
   state.answered = false;
+  state.lastUserAnswer = '';
+  resetBugReport();
 
   const input = $('answer-input');
   input.value='';
   input.className='';
   input.disabled=false;
+  const isDualLoad = !!(problem && problem.requiresDualAnswer);
+  $('answer-input-2-row').classList.toggle('visible', isDualLoad);
+  $('answer-label-1').style.display = isDualLoad ? 'inline' : 'none';
+  $('answer-input-2').value='';
+  $('answer-input-2').className='';
+  $('answer-input-2').disabled=false;
   $('feedback').textContent='';
   $('feedback').className='';
   $('live-preview').innerHTML='';
@@ -2077,6 +2314,7 @@ async function loadNewProblem(){
 
   renderProblem(problem);
   renderSteps(problem, 0);
+  if($('study-panel').classList.contains('open')) updateStudyResources();
   input.focus();
 
   // problem timer
@@ -2095,27 +2333,54 @@ function flashMain(type){
 async function submitAnswer(){
   if(state.answered) return;
   const input=$('answer-input');
+  const isDual=!!(state.currentProblem && state.currentProblem.requiresDualAnswer);
   const u=input.value.trim();
-  if(!u) return;
+  const u2=isDual ? $('answer-input-2').value.trim() : '';
+  if(!u || (isDual && !u2)) return;
 
   $('check-btn').disabled=true;
   const _resp = await fetch(`${API_BASE}/api/check`, {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({problem: state.currentProblem, input: u, timeSec: state.problemTimer})
+    body: isDual
+      ? JSON.stringify({problem: state.currentProblem, inputs: [u, u2], timeSec: state.problemTimer, sessionStreak: state.sessionStreak})
+      : JSON.stringify({problem: state.currentProblem, input: u, timeSec: state.problemTimer, sessionStreak: state.sessionStreak})
   });
   const result = await _resp.json();
   state.answered=true;
+  state.lastUserAnswer=u;
+  state.lastAttemptId=result.attemptId||null;
+
+  // Track solve time for flow state (skip AFK times)
+  if(state.problemTimer > 0 && state.problemTimer <= 180){
+    state.recentTimes.push(state.problemTimer);
+    if(state.recentTimes.length > 5) state.recentTimes.shift();
+  }
+
   clearInterval(state.problemTimerInterval);
+  resetBugReport();
 
   const mod=state.currentProblem.module;
   const diff=state.currentProblem.difficulty;
   if(!store[mod][diff]) store[mod][diff]={attempts:0,correct:0,streak:0,best_streak:0,last10:[]};
   const rec=store[mod][diff];
 
+  // Snapshot before any stat mutations so bug report can undo them
+  state.lastAttemptSnapshot={
+    sessionTotal: state.sessionTotal,
+    sessionCorrect: state.sessionCorrect,
+    sessionStreak: state.sessionStreak,
+    mod, diff,
+    recAttempts: rec.attempts,
+    recCorrect: rec.correct,
+    recStreak: rec.streak,
+    recLast10: [...rec.last10],
+  };
+
   const fb=$('feedback');
   if(result.result==='correct'){
     input.className='correct';
+    if(isDual){ $('answer-input-2').className='correct'; $('answer-input-2').disabled=true; }
     fb.textContent='✓ Correct!';
     fb.className='correct';
     flashMain('correct');
@@ -2126,6 +2391,12 @@ async function submitAnswer(){
     if(rec.streak>rec.best_streak) rec.best_streak=rec.streak;
     updateAdaptiveDiff(mod,diff,true);
     awardBadge(mod,diff,rec);
+    // XP
+    if(result.xpEarned){
+      state.sessionXp += result.xpEarned;
+      showXpPop(result.xpEarned, state.sessionStreak);
+      updateXpDisplay(result.totalXp, result.level, result.currentLevelXp, result.nextLevelXp);
+    }
     // Auto-advance after short delay
     setTimeout(()=>{
       $('check-btn').disabled=true;
@@ -2139,17 +2410,33 @@ async function submitAnswer(){
     input.disabled=false;
     $('check-btn').disabled=false;
   } else {
-    input.className='wrong';
     fb.className='wrong';
-    // Show canonical answer
-    let canonTex='';
-    ensureKatex(()=>{
-      const span=document.createElement('span');
-      try { renderKaTeX(`\\boxed{${state.currentProblem.answerTex}}`,span); } catch(e){ span.textContent='—'; }
-      fb.textContent='✗ Incorrect. Answer: ';
-      fb.appendChild(span);
-    });
     flashMain('wrong');
+    if(isDual){
+      const ws=result.wrongSlot||[1,2];
+      input.className=ws.includes(1)?'wrong':'correct';
+      $('answer-input-2').className=ws.includes(2)?'wrong':'correct';
+      $('answer-input-2').disabled=true;
+      ensureKatex(()=>{
+        const p=state.currentProblem;
+        const s1=document.createElement('span');
+        const s2=document.createElement('span');
+        try{ renderKaTeX(`\\boxed{${p.answerTex}}`,s1); }catch(e){ s1.textContent='—'; }
+        try{ renderKaTeX(`\\boxed{${p.answerTex2}}`,s2); }catch(e){ s2.textContent='—'; }
+        fb.textContent='✗ Incorrect. Answers: ';
+        fb.appendChild(s1);
+        fb.appendChild(document.createTextNode('  '));
+        fb.appendChild(s2);
+      });
+    } else {
+      input.className='wrong';
+      ensureKatex(()=>{
+        const span=document.createElement('span');
+        try { renderKaTeX(`\\boxed{${state.currentProblem.answerTex}}`,span); } catch(e){ span.textContent='—'; }
+        fb.textContent='✗ Incorrect. Answer: ';
+        fb.appendChild(span);
+      });
+    }
     state.sessionStreak=0;
     rec.attempts++; rec.streak=0;
     updateAdaptiveDiff(mod,diff,false);
@@ -2236,7 +2523,7 @@ function endSprint(){
 
 async function startSession(){
   state.sessionCorrect=0; state.sessionTotal=0;
-  state.sessionStreak=0; state.sessionBestStreak=0;
+  state.sessionStreak=0; state.sessionBestStreak=0; state.sessionXp=0;
   updateStats();
   clearInterval(state.timerInterval);
   $('timer').textContent='—';
@@ -2275,6 +2562,7 @@ function showSessionSummary(){
     <div class="summary-row"><span>Problems attempted</span><strong>${state.sessionTotal}</strong></div>
     <div class="summary-row"><span>Correct</span><strong>${state.sessionCorrect}</strong></div>
     <div class="summary-row"><span>Best streak</span><strong>${state.sessionBestStreak}</strong></div>
+    ${state.sessionXp > 0 ? `<div class="summary-row"><span>XP earned</span><strong style="color:var(--purple)">+${state.sessionXp}</strong></div>` : ''}
   `;
   // Save session
   const now=new Date();
@@ -2384,6 +2672,7 @@ async function renderDashboard(){
       fetch(`${API_BASE}/api/stats/weak?min_attempts=3&limit=10`).then(r=>r.json()),
     ]);
     renderTrendChart(trendData);
+    renderVolumeChart(trendData);
     renderWeakSpots(weakData);
   } catch(e){
     $('trend-chart').style.display='none';
@@ -2433,6 +2722,46 @@ function renderTrendChart(data){
   if(labels.length>1) ctx.fillText(labels[labels.length-1],W-34,H-5);
 }
 
+function renderVolumeChart(data){
+  const canvas=$('volume-chart'), empty=$('volume-empty');
+  if(!data||data.length===0){
+    canvas.style.display='none'; empty.style.display='block';
+    empty.textContent='No data yet';
+    return;
+  }
+  canvas.style.display='block'; empty.style.display='none';
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#1a1d27'; ctx.fillRect(0,0,W,H);
+  const counts=data.map(d=>d.attempts);
+  const labels=data.map(d=>d.day.slice(5));
+  const maxCount=Math.max(...counts,1);
+  const n=counts.length;
+  const padL=28, padR=6, padT=8, padB=18;
+  const chartW=W-padL-padR, chartH=H-padT-padB;
+  const barW=Math.max(2,Math.floor(chartW/n)-2);
+  const step=chartW/n;
+  // grid lines
+  [0.25,0.5,0.75,1.0].forEach(f=>{
+    const py=padT+chartH*(1-f);
+    ctx.strokeStyle='#2a2d3a'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(padL,py); ctx.lineTo(W-padR,py); ctx.stroke();
+    ctx.fillStyle='#555'; ctx.font='9px monospace'; ctx.fillText(Math.round(f*maxCount),2,py+3);
+  });
+  // bars
+  counts.forEach((c,i)=>{
+    const barH=Math.round(chartH*(c/maxCount));
+    const x=padL+i*step+(step-barW)/2;
+    const y=padT+chartH-barH;
+    ctx.fillStyle='#4d9fff';
+    ctx.fillRect(x,y,barW,barH);
+  });
+  // labels
+  ctx.fillStyle='#666'; ctx.font='9px monospace';
+  if(labels.length>0) ctx.fillText(labels[0],padL,H-4);
+  if(labels.length>1) ctx.fillText(labels[labels.length-1],W-padR-24,H-4);
+}
+
 function renderWeakSpots(data){
   const el=$('weak-spots-list');
   if(!data||data.length===0){
@@ -2457,10 +2786,11 @@ function renderWeakSpots(data){
 // ─────────────────────────────────────────────────────────────────────────────
 
 document.addEventListener('keydown', e=>{
-  const inInput=document.activeElement===$('answer-input');
+  const inInput=document.activeElement===$('answer-input')||document.activeElement===$('answer-input-2');
+  const inTextarea=document.activeElement.tagName==='TEXTAREA';
   if(e.key==='Enter' && inInput){ e.preventDefault(); if(!state.answered) submitAnswer(); else loadNewProblem(); return; }
   if(e.key==='Tab' && !inInput){ e.preventDefault(); revealNextStep(); return; }
-  if(e.key===' ' && !inInput){ e.preventDefault(); loadNewProblem(); return; }
+  if(e.key===' ' && !inInput && !inTextarea){ e.preventDefault(); loadNewProblem(); return; }
   if((e.key==='1'||e.key==='2'||e.key==='3'||e.key==='4'||e.key==='5') && !inInput){
     document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
     const btn=document.querySelector(`.diff-btn[data-diff="${e.key}"]`);
@@ -2496,7 +2826,7 @@ $('answer-input').addEventListener('input', e=>{
 
 $('check-btn').addEventListener('click', submitAnswer);
 $('reveal-step-btn').addEventListener('click', revealNextStep);
-$('skip-btn').addEventListener('click', ()=>loadNewProblem());
+$('skip-btn').addEventListener('click', ()=>skipProblem());
 $('summary-continue-btn').addEventListener('click',()=>{
   $('session-summary-overlay').classList.remove('visible');
   state.mode='endless';
@@ -2508,6 +2838,43 @@ $('dash-btn').addEventListener('click',()=>{
   $('dashboard-overlay').classList.add('visible');
 });
 $('dash-close-btn').addEventListener('click',()=>$('dashboard-overlay').classList.remove('visible'));
+
+// Syntax legend
+(function(){
+  const ENTRIES = [
+    ['x_1',      'x_1'],
+    ['x^2',      'x^2'],
+    ['x_1^2',    'x_1^2'],
+    ['\\frac{a}{b}', '\\frac{a}{b}'],
+    ['\\sqrt{x}', '\\sqrt{x}'],
+    ['\\sqrt[3]{x}','\\sqrt[3]{x}'],
+    ['\\pi',     '\\pi'],
+    ['\\theta',  '\\theta'],
+    ['\\infty',  '\\infty'],
+    ['\\cdot',   '\\cdot'],
+    ['\\pm',     '\\pm'],
+    ['\\ln(x)',  '\\ln(x)'],
+    ['\\log(x)', '\\log(x)'],
+    ['\\sin(x)', '\\sin(x)'],
+    ['e^{x+1}',  'e^{x+1}'],
+    ['(x+1)(x-2)','(x+1)(x-2)'],
+  ];
+  const grid = $('syn-grid');
+  ENTRIES.forEach(([typed, tex])=>{
+    const row = document.createElement('div');
+    row.className = 'syn-row';
+    const render = document.createElement('span');
+    render.className = 'syn-render';
+    try { katex.render(tex, render, {throwOnError:false}); } catch(e) { render.textContent = tex; }
+    row.innerHTML = `<span class="syn-type">${typed.replace(/</g,'&lt;')}</span><span class="syn-arrow">→</span>`;
+    row.appendChild(render);
+    grid.appendChild(row);
+  });
+  $('syntax-toggle').addEventListener('click',()=>{
+    $('syntax-legend').classList.toggle('open');
+    $('syntax-toggle').textContent = $('syntax-legend').classList.contains('open') ? 'hide syntax' : 'syntax help';
+  });
+})();
 
 // Module tabs
 document.querySelectorAll('.tab').forEach(tab=>{
@@ -2541,10 +2908,401 @@ document.querySelectorAll('.mode-btn').forEach(btn=>{
   });
 });
 
+// Auto mode toggle
+$('auto-btn').addEventListener('click', ()=>{
+  state.autoMode = !state.autoMode;
+  $('auto-btn').classList.toggle('active', state.autoMode);
+  if(state.autoMode) loadNewProblem();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUG REPORT
+// ─────────────────────────────────────────────────────────────────────────────
+
+function resetBugReport(){
+  $('bug-report-form').classList.remove('open');
+  $('bug-note').value='';
+  $('bug-status').textContent='';
+  state.lastAttemptSnapshot=null;
+  state.lastAttemptId=null;
+}
+
+$('bug-report-link').addEventListener('click', ()=>{
+  $('bug-report-form').classList.toggle('open');
+  if($('bug-report-form').classList.contains('open')) $('bug-note').focus();
+});
+
+$('bug-cancel-btn').addEventListener('click', resetBugReport);
+
+$('bug-submit-btn').addEventListener('click', async ()=>{
+  if(!state.currentProblem) return;
+  const note=$('bug-note').value.trim();
+  $('bug-status').textContent='Sending…';
+  $('bug-submit-btn').disabled=true;
+  try {
+    const resp=await fetch(`${API_BASE}/api/report`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        problem: state.currentProblem,
+        userAnswer: state.lastUserAnswer||'',
+        attemptId: state.lastAttemptId||null,
+        note,
+      }),
+    });
+    if(resp.ok){
+      $('bug-status').textContent='Reported. Thanks!';
+      // Restore stats so this attempt doesn't count
+      const snap=state.lastAttemptSnapshot;
+      if(snap){
+        state.sessionTotal=snap.sessionTotal;
+        state.sessionCorrect=snap.sessionCorrect;
+        state.sessionStreak=snap.sessionStreak;
+        const rec=store[snap.mod][snap.diff];
+        if(rec){
+          rec.attempts=snap.recAttempts;
+          rec.correct=snap.recCorrect;
+          rec.streak=snap.recStreak;
+          rec.last10=snap.recLast10;
+        }
+        updateStats();
+        saveStore();
+      }
+      setTimeout(resetBugReport, 1500);
+    } else {
+      $('bug-status').textContent='Error — try again';
+    }
+  } catch(e){
+    console.error('Bug report failed:', e);
+    $('bug-status').textContent='Network error — is backend running?';
+  }
+  $('bug-submit-btn').disabled=false;
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// XP DISPLAY
+// ─────────────────────────────────────────────────────────────────────────────
+
+function updateXpDisplay(totalXp, level, currentLevelXp, nextLevelXp){
+  $('xp-level-badge').textContent = 'LVL ' + level;
+  const span = nextLevelXp - currentLevelXp;
+  const progress = span > 0 ? Math.min(100, Math.max(0, (totalXp - currentLevelXp) / span * 100)) : 100;
+  $('xp-bar-fill').style.width = progress + '%';
+  $('xp-bar-label').textContent = (totalXp - currentLevelXp) + ' / ' + span + ' XP';
+}
+
+function showXpPop(amount, streak){
+  const area = $('main');
+  const el = document.createElement('div');
+  const hasStreak = streak >= 5;
+  el.className = 'xp-pop' + (hasStreak ? ' streak' : '');
+  const mult = streak >= 10 ? ' ×2 🔥' : streak >= 5 ? ' ×1.5 ⚡' : '';
+  el.textContent = '+' + amount + ' XP' + mult;
+  area.style.position = 'relative';
+  area.appendChild(el);
+  setTimeout(()=>{ if(el.parentNode) el.parentNode.removeChild(el); }, 1600);
+  if(hasStreak || amount >= 10) spawnConfetti(amount);
+}
+
+function spawnConfetti(amount){
+  const canvas = $('xp-confetti-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const colors = ['#c084fc','#a78bfa','#fbbf24','#4ade80','#60a5fa','#f472b6'];
+  const count = Math.min(60, 20 + amount * 2);
+  const particles = Array.from({length: count}, () => ({
+    x: canvas.width * (0.3 + Math.random() * 0.4),
+    y: canvas.height * 0.55,
+    vx: (Math.random() - 0.5) * 8,
+    vy: -(4 + Math.random() * 8),
+    r: 4 + Math.random() * 5,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    rot: Math.random() * Math.PI * 2,
+    rspeed: (Math.random() - 0.5) * 0.2,
+    shape: Math.random() > 0.5 ? 'rect' : 'circle',
+    alpha: 1,
+  }));
+  let frame;
+  function draw(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.25;
+      p.vx *= 0.98; p.rot += p.rspeed; p.alpha -= 0.018;
+      if(p.alpha <= 0) return;
+      alive = true;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      if(p.shape === 'rect'){ ctx.fillRect(-p.r, -p.r/2, p.r*2, p.r); }
+      else { ctx.beginPath(); ctx.arc(0,0,p.r,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    });
+    if(alive) frame = requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  if(frame) cancelAnimationFrame(frame);
+  draw();
+}
+
+async function initXp(){
+  try {
+    const r = await fetch(`${API_BASE}/api/xp`);
+    const d = await r.json();
+    updateXpDisplay(d.totalXp, d.level, d.currentLevelXp, d.nextLevelXp);
+  } catch(e){ /* backend not running yet */ }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STUDY RESOURCES
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STUDY_DATA = {
+  factoring: {
+    searches: {
+      1: ['factor GCF algebra tutorial', 'difference of squares factoring', 'factor trinomials x squared bx c'],
+      2: ['AC method factoring trinomials', 'factor trinomials leading coefficient', 'trial and error factoring ax2+bx+c'],
+      3: ['factoring by grouping 4 terms', 'sum difference of cubes factoring', 'factor completely algebra tutorial'],
+      4: ['factoring GCF negative fractional exponents', 'factor variable out GCF', 'advanced factoring trig expressions'],
+      5: ['trig trinomial factoring sin cos', 'u-substitution factoring disguised quadratic', 'advanced polynomial factoring techniques'],
+    },
+    prompts: {
+      1: 'I am learning to factor polynomials at the introductory level: GCF factoring, difference of squares, and simple trinomials (x²+bx+c where the leading coefficient is 1). Teach me each technique step by step with 2 worked examples each. Then give me 3 practice problems to try.',
+      2: 'I am learning to factor trinomials where the leading coefficient is not 1, like ax²+bx+c, using the AC method or trial and error. Walk me through the technique with 2 full examples, then give me 3 practice problems.',
+      3: 'I am learning to factor by grouping (4-term polynomials) and to factor sum/difference of cubes (a³±b³). Explain both techniques with 2 examples each, then give me 3 practice problems.',
+      4: 'I am learning advanced factoring: pulling out a GCF that contains fractional or negative exponents, and factoring expressions with trig functions. Show me 2 examples, explain the strategy, then give me 3 practice problems.',
+      5: 'I am learning to factor trig trinomials like 2sin²x+5sinx+3 and to recognize disguised quadratics that need u-substitution before factoring. Walk me through the technique with 2 examples, then quiz me with 3 challenging problems.',
+    }
+  },
+  exponents: {
+    searches: {
+      1: ['exponent rules product quotient power tutorial', 'multiplying dividing same base exponents', 'zero and one exponent rules'],
+      2: ['negative exponents rewrite without negative', 'rational fractional exponents tutorial', 'negative exponent to fraction'],
+      3: ['radical notation to rational exponent form', 'nth root as fractional exponent', 'convert between radicals and exponents'],
+      4: ['fractional exponent arithmetic multiply divide', 'simplify expressions with rational exponents', 'add subtract fractional exponents same base'],
+      5: ['higher index radicals cube 4th root simplify', 'complex radical expression simplification', 'advanced rational exponents algebra'],
+    },
+    prompts: {
+      1: 'I am learning the basic exponent rules: product rule (x^a·x^b = x^(a+b)), quotient rule, power rule ((x^a)^b = x^(ab)), and rules for 0 and 1 as exponents. Explain each rule clearly with 2 examples, then give me 3 practice problems.',
+      2: 'I am learning negative exponents and how to rewrite expressions so all exponents are positive. Teach me the rule x^(-n) = 1/x^n with 2 examples including fraction bases, then give me 3 practice problems.',
+      3: 'I am learning to convert between radical notation and rational exponent form, for example ⁿ√(x^m) = x^(m/n). Explain the conversion rule with 2 examples in both directions, then give me 3 practice problems.',
+      4: 'I am learning arithmetic with fractional exponents — multiplying, dividing, and simplifying expressions like x^(2/3) · x^(1/2). Teach me the rules with 2 worked examples, then give me 3 practice problems.',
+      5: 'I am learning to simplify complex radical expressions with higher indices (cube roots, 4th roots) and multiple variable factors. Walk me through the simplification strategy with 2 full examples, then give me 3 challenging practice problems.',
+    }
+  },
+  fractions: {
+    searches: {
+      1: ['adding subtracting fractions find LCD', 'dividing fractions multiply by reciprocal', 'simplify fractions reduce GCF'],
+      2: ['simplifying rational expressions factor cancel', 'cancel common factors numerator denominator', 'rational expressions algebra tutorial'],
+      3: ['adding rational expressions unlike denominators LCD', 'LCD rational expressions polynomial', 'complex fractions simplify algebra'],
+      4: ['rational expressions multi-step simplification', 'factor polynomials rational expression simplify', 'algebra rational expressions factoring'],
+      5: ['three term rational expressions LCD', 'complex rational expressions advanced', 'polynomial rational expressions advanced algebra'],
+    },
+    prompts: {
+      1: 'I am learning to add, subtract, and divide basic fractions including finding the least common denominator. Teach me each operation with 2 examples, then give me 3 practice problems.',
+      2: 'I am learning to simplify rational expressions by factoring the numerator and denominator then canceling common factors. Walk me through the factor-then-cancel technique with 2 examples, then give me 3 practice problems.',
+      3: 'I am learning to add and subtract rational expressions with different denominators by finding the LCD and combining. Walk me through the full process with 2 examples, then give me 3 practice problems.',
+      4: 'I am learning to simplify multi-step rational expressions that require fully factoring polynomials in both numerator and denominator. Show me the complete process with 2 examples, then give me 3 practice problems.',
+      5: 'I am learning to work with complex rational expressions involving three or more terms, polynomial denominators, and multi-step factoring. Walk me through 2 challenging examples completely, then give me 3 practice problems.',
+    }
+  },
+  trig: {
+    searches: {
+      1: ['unit circle sin cos tan exact values tutorial', 'memorize unit circle fast trick', 'trig values 0 30 45 60 90 degrees'],
+      2: ['trig values all four quadrants reference angle', 'ASTC rule all students take calculus', 'find exact trig value any angle'],
+      3: ['trig identities tutorial Pythagorean', 'solving trig equations general solution', 'trig with radians unit circle'],
+    },
+    prompts: {
+      1: 'I am learning the unit circle: the exact values of sin, cos, and tan at the standard angles (0°, 30°, 45°, 60°, 90°). Teach me a memory trick or pattern, explain why the values are what they are, then quiz me on 6 specific values.',
+      2: 'I am learning to find exact trig values for any angle in all four quadrants using reference angles and the ASTC sign rule. Explain the method step by step with 3 examples spread across different quadrants, then quiz me with 5 problems.',
+      3: 'I am learning to apply trig identities (Pythagorean, reciprocal, quotient) and solve basic trig equations. Explain each identity and when to use it, walk me through 2 equation examples, then give me 3 practice problems.',
+    }
+  },
+  logs: {
+    searches: {
+      1: ['logarithm rules product quotient power tutorial', 'log base definition b to y equals x', 'natural log ln tutorial'],
+      2: ['expanding logarithms tutorial step by step', 'condensing log expressions into one log', 'change of base formula logarithm'],
+      3: ['solving logarithmic equations algebra', 'exponential equations solve using logarithms', 'log equations precalculus tutorial'],
+    },
+    prompts: {
+      1: 'I am learning the fundamental logarithm rules: log(ab)=log(a)+log(b), log(a/b)=log(a)−log(b), log(a^n)=n·log(a), and the definition logb(x)=y ↔ b^y=x. Teach each rule with 2 examples, then give me 3 practice problems.',
+      2: 'I am learning to expand and condense logarithmic expressions using log properties. Show me both directions — expanding a single log into sum/difference and condensing a sum/difference into a single log — with 2 examples each, then give me 3 practice problems.',
+      3: 'I am learning to solve logarithmic and exponential equations by converting between log and exponential form and isolating the variable. Walk me through 2 solved examples step by step, then give me 3 practice problems.',
+    }
+  },
+  composition: {
+    searches: {
+      1: ['function composition f of g of x tutorial', 'composite functions how to compute', 'f(g(x)) step by step algebra'],
+      2: ['evaluating composite functions at a value', 'domain of composite function', 'decompose function into f and g'],
+      3: ['composition with trig log exponential functions', 'inverse function composition verify', 'advanced function composition precalculus'],
+    },
+    prompts: {
+      1: 'I am learning function composition: how to compute f(g(x)) and g(f(x)) and why the order matters. Explain the substitution process with 2 examples showing both f∘g and g∘f, then give me 3 practice problems.',
+      2: 'I am learning to evaluate composite functions at specific values (like f(g(3))) and to find the domain of a composite function. Show 2 examples of each type, then give me 3 practice problems.',
+      3: 'I am learning to compose functions involving trig, logarithmic, and exponential functions, and how to decompose a given composite into its component functions. Walk me through 2 examples, then give me 3 practice problems.',
+    }
+  },
+  limits: {
+    searches: {
+      1: ['limits calculus introduction what is a limit', 'direct substitution limits tutorial', 'evaluating limits by substitution'],
+      2: ['limits by factoring 0 over 0 indeterminate form', 'conjugate method limits square root', 'algebraic manipulation to evaluate limits'],
+      3: ['limits at infinity horizontal asymptotes', 'divide by highest power limits at infinity', 'squeeze theorem limits calculus'],
+      4: ['one-sided limits piecewise functions calculus', 'left and right hand limits', 'limit laws and limit rules calculus'],
+    },
+    prompts: {
+      1: 'I am learning the concept of limits in calculus and how to evaluate limits using direct substitution. Explain intuitively what a limit means and when direct substitution works, with 2 examples, then give me 3 practice problems.',
+      2: 'I am learning to evaluate limits that give the indeterminate form 0/0 by factoring and canceling or using the conjugate method. Walk me through each technique with 2 full examples, then give me 3 practice problems.',
+      3: 'I am learning to evaluate limits as x→∞ or x→−∞ by dividing through by the highest power of x to find horizontal asymptotes. Explain the strategy with 2 examples, then give me 3 practice problems.',
+      4: 'I am learning one-sided limits (left-hand and right-hand) and how to use them to determine whether a limit exists for piecewise functions. Explain the concept with 2 examples, then give me 3 practice problems.',
+    }
+  },
+  derivatives: {
+    searches: {
+      1: ['power rule derivatives tutorial calculus', 'derivative of polynomial function', 'basic differentiation rules constants sum'],
+      2: ['product rule differentiation tutorial with examples', 'quotient rule calculus tutorial', 'when to use product vs quotient rule'],
+      3: ['chain rule calculus tutorial step by step', 'chain rule with trig functions examples', 'outside inside rule chain rule'],
+      4: ['implicit differentiation tutorial calculus', 'derivatives of ln x and e^x', 'logarithmic differentiation technique'],
+      5: ['product rule quotient rule chain rule combined', 'higher order derivatives calculus', 'advanced differentiation techniques'],
+    },
+    prompts: {
+      1: 'I am learning the power rule for differentiation: d/dx[x^n] = nx^(n-1), along with the constant rule and sum/difference rule. Explain each clearly with 2 worked examples including polynomials with multiple terms, then give me 3 practice problems.',
+      2: 'I am learning the product rule and quotient rule for differentiation. State each formula, show 2 worked examples for each, and explain how to decide which to use, then give me 3 practice problems mixing both rules.',
+      3: 'I am learning the chain rule for differentiating composite functions. Explain the outside-inside rule with 2 full examples including trig functions, then give me 3 practice problems.',
+      4: 'I am learning implicit differentiation and differentiation of exponential and logarithmic functions (d/dx[ln x] = 1/x, d/dx[e^x] = e^x). Walk me through 2 examples of each type, then give me 3 practice problems.',
+      5: 'I am learning to differentiate complex functions that require combining the product rule, quotient rule, and chain rule in a single problem. Walk me through 2 multi-rule examples completely, identifying each rule used at each step, then give me 3 challenging problems.',
+    }
+  },
+  integration: {
+    searches: {
+      1: ['antiderivative rules calculus power rule integral', 'indefinite integral tutorial calculus', 'basic integration formulas list'],
+      2: ['u-substitution integration tutorial step by step', 'how to choose u in u-substitution', 'u-sub integration calculus examples'],
+      3: ['integrating trig functions sin cos tutorial', 'definite integral evaluation calculus', 'integration techniques calculus overview'],
+    },
+    prompts: {
+      1: 'I am learning basic antiderivative rules for integration: the power rule ∫x^n dx = x^(n+1)/(n+1)+C, the constant multiple rule, and the sum rule. Explain each rule with 2 examples and clarify the +C, then give me 3 practice problems.',
+      2: 'I am learning u-substitution for integration. Teach me how to choose u, compute du, rewrite the integral, integrate, and back-substitute, walking through 2 complete examples. Then give me 3 practice problems.',
+      3: 'I am learning to integrate trigonometric functions (sin x, cos x, sec²x, etc.) and evaluate definite integrals. Walk me through 2 examples of trig integration and 1 definite integral, then give me 3 practice problems.',
+    }
+  },
+  adv_integration: {
+    searches: {
+      1: ['integration by parts tutorial LIATE rule', 'int u dv formula derivation calculus', 'integration by parts step by step examples'],
+      2: ['trig substitution integration when to use', 'partial fractions integration tutorial setup', 'calculus 2 integration techniques overview'],
+      3: ['repeated integration by parts tabular method', 'partial fraction decomposition full examples', 'advanced integration by parts calculus 2'],
+      4: ['improper integrals convergence divergence', 'powers of sin cos integral reduction', 'trig integral sin^m cos^n strategy'],
+      5: ['calculus 2 integration strategy which method to use', 'tabular integration by parts shortcut', 'complete integration techniques review calculus 2'],
+    },
+    prompts: {
+      1: 'I am learning integration by parts using ∫u dv = uv − ∫v du and the LIATE rule for choosing u. Explain the method thoroughly with 2 fully worked examples, then give me 3 practice problems.',
+      2: 'I am learning trig substitution and partial fraction decomposition as integration techniques. Explain when each method applies, show 1 example each, then give me 3 practice problems.',
+      3: 'I am learning advanced integration by parts including repeated application and the tabular (repeated IBP) shortcut. Walk me through 2 complex examples, then give me 3 challenging practice problems.',
+      4: 'I am learning to evaluate improper integrals using limits and to integrate powers of trig functions like ∫sin^m(x)cos^n(x)dx. Explain the strategy for each type with 2 examples, then give me 3 practice problems.',
+      5: 'I want a comprehensive review of all calculus 2 integration techniques: u-substitution, integration by parts, trig sub, partial fractions, and trig integrals. For each, give me the key identification signal and 1 example, then give me 5 mixed problems where I must identify which technique to use.',
+    }
+  }
+};
+
+const TOP_CHANNELS = [
+  { name: 'Professor Leonard', search: 'Professor Leonard calculus', desc: 'Full college-length lectures — most thorough on YouTube' },
+  { name: 'The Organic Chemistry Tutor', search: 'Organic Chemistry Tutor calculus', desc: 'Hundreds of worked examples, covers every topic' },
+  { name: 'PatrickJMT', search: 'PatrickJMT math', desc: 'Short focused examples, great for quick concept review' },
+  { name: 'blackpenredpen', search: 'blackpenredpen calculus', desc: 'College-level problems, fun style, challenging content' },
+  { name: '3Blue1Brown', search: '3Blue1Brown essence of calculus', desc: 'Visual intuition — understand the deep "why"' },
+  { name: 'Khan Academy', search: 'Khan Academy precalculus calculus', desc: 'Comprehensive coverage of all levels, free and beginner-friendly' },
+  { name: 'Math with Professor V', search: 'Math with Professor V precalculus', desc: 'Clear precalc and calculus instruction, very approachable' },
+];
+
+let _studyChannelsRendered = false;
+
+function getStudyModule(){
+  if(state.currentProblem && state.currentProblem.module) return state.currentProblem.module;
+  if(state.module && state.module !== 'all') return state.module;
+  return null;
+}
+
+function getStudyDiff(){
+  if(state.currentProblem && state.currentProblem.difficulty) return Math.max(1,Math.min(5,parseInt(state.currentProblem.difficulty)||1));
+  if(state.difficulty && state.difficulty !== 'auto') return Math.max(1,Math.min(5,parseInt(state.difficulty)||1));
+  return 1;
+}
+
+function updateStudyResources(){
+  const mod = getStudyModule();
+  const diff = getStudyDiff();
+  const data = mod ? STUDY_DATA[mod] : null;
+
+  const searchEl = $('study-search-terms');
+  searchEl.innerHTML = '';
+  const searches = data ? (data.searches[diff] || data.searches[1] || []) : [];
+  searches.forEach(term => {
+    const tag = document.createElement('div');
+    tag.className = 'study-tag';
+    const ytUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(term);
+    const link = document.createElement('a');
+    link.href = ytUrl; link.target = '_blank'; link.rel = 'noopener noreferrer';
+    link.textContent = '▶ YouTube';
+    const label = document.createElement('span');
+    label.textContent = term;
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'study-tag-copy';
+    copyBtn.title = 'Copy search term';
+    copyBtn.textContent = '⎘';
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(term).then(() => {
+        copyBtn.textContent = '✓';
+        setTimeout(() => { copyBtn.textContent = '⎘'; }, 1200);
+      });
+    };
+    tag.appendChild(label);
+    tag.appendChild(link);
+    tag.appendChild(copyBtn);
+    searchEl.appendChild(tag);
+  });
+
+  if (!_studyChannelsRendered) {
+    _studyChannelsRendered = true;
+    const chanEl = $('study-channels');
+    TOP_CHANNELS.forEach(ch => {
+      const card = document.createElement('div');
+      card.className = 'study-channel';
+      const ytUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(ch.search);
+      card.innerHTML = '<div class="study-channel-name"><a href="' + ytUrl + '" target="_blank" rel="noopener noreferrer">' + ch.name + '</a></div><div class="study-channel-desc">' + ch.desc + '</div>';
+      chanEl.appendChild(card);
+    });
+  }
+
+  const prompt = data ? (data.prompts[diff] || data.prompts[1] || '') : 'Select a module to see a tailored AI teaching prompt.';
+  $('study-prompt-text').textContent = prompt;
+}
+
+$('study-toggle').addEventListener('click', () => {
+  const panel = $('study-panel');
+  const btn = $('study-toggle');
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open', opening);
+  btn.classList.toggle('open', opening);
+  btn.innerHTML = opening ? '&#128218; Study Resources &#x2715;' : '&#128218; Study Resources';
+  if (opening) updateStudyResources();
+});
+
+$('study-copy-prompt').addEventListener('click', () => {
+  const text = $('study-prompt-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = $('study-copy-prompt');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Prompt'; btn.classList.remove('copied'); }, 2000);
+  });
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────────────────────────────────────
 
+initXp();
+$('auto-btn').classList.add('active');
 ensureKatex(()=>{
   _prevUnlocked=getUnlockedModules();
   updateUnlockBar();

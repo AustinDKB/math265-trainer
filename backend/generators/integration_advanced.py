@@ -5,10 +5,8 @@ Techniques: by-parts, trig identities, partial fractions, trig substitution, imp
 import random
 import math
 from fractions import Fraction
-from math_utils import R, pick
-
-def _plus_C(tex):
-    return tex + " + C"
+from math_utils import R, pick, plus_C
+from problem_builder import problem, step
 
 # ── diff 1: Integration by parts basics, half-angle identities ────────────────
 
@@ -24,12 +22,12 @@ def _byparts_x_exp():
         ans = rf"e^{{{a}x}}\!\left(\dfrac{{x}}{{{a}}} - \dfrac{{1}}{{{a**2}}}\right)"
         ans_norm = f"e^({a}x)*(x/{a}-1/{a**2})"
     steps = [
-        {"label": "Choose u and dv", "math": r"u = x,\quad dv = e^{" + (str(a) if a>1 else "") + r"x}\,dx"},
-        {"label": "Compute du and v", "math": r"du = dx,\quad v = \dfrac{e^{" + (str(a) if a>1 else "") + r"x}}{" + str(a) + r"}"},
-        {"label": "Apply formula ∫u dv = uv − ∫v du", "math": rf"= \dfrac{{xe^{{{a}x}}}}{{{a}}} - \dfrac{{1}}{{{a}}}\int e^{{{a}x}}\,dx"},
-        {"label": "Integrate remaining", "math": rf"= \dfrac{{xe^{{{a}x}}}}{{{a}}} - \dfrac{{e^{{{a}x}}}}{{{a**2}}} + C"},
+        step("Choose u and dv", r"u = x,\quad dv = e^{" + (str(a) if a>1 else "") + r"x}\,dx"),
+        step("Compute du and v", r"du = dx,\quad v = \dfrac{e^{" + (str(a) if a>1 else "") + r"x}}{" + str(a) + r"}"),
+        step("Apply formula ∫u dv = uv − ∫v du", rf"= \dfrac{{xe^{{{a}x}}}}{{{a}}} - \dfrac{{1}}{{{a}}}\int e^{{{a}x}}\,dx"),
+        step("Integrate remaining", rf"= \dfrac{{xe^{{{a}x}}}}{{{a}}} - \dfrac{{e^{{{a}x}}}}{{{a**2}}} + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _byparts_x_sin():
@@ -44,12 +42,12 @@ def _byparts_x_sin():
         ans = rf"-\dfrac{{x\cos({a}x)}}{{{a}}} + \dfrac{{\sin({a}x)}}{{{a**2}}}"
         ans_norm = f"-x*cos({a}x)/{a}+sin({a}x)/{a**2}"
     steps = [
-        {"label": "IBP: u=x, dv=sin(ax)dx", "math": r"u=x,\;dv=\sin(" + str(a) + r"x)\,dx"},
-        {"label": "du=dx, v=−cos(ax)/a", "math": rf"du=dx,\;v=-\dfrac{{\cos({a}x)}}{{{a}}}"},
-        {"label": "uv−∫v du", "math": rf"-\dfrac{{x\cos({a}x)}}{{{a}}} + \dfrac{{1}}{{{a}}}\int\cos({a}x)\,dx"},
-        {"label": "Final", "math": rf"-\dfrac{{x\cos({a}x)}}{{{a}}} + \dfrac{{\sin({a}x)}}{{{a**2}}} + C"},
+        step("Integration by parts: u=x, dv=sin(ax)dx", r"u=x,\;dv=\sin(" + str(a) + r"x)\,dx"),
+        step("du=dx, v=−cos(ax)/a", rf"du=dx,\;v=-\dfrac{{\cos({a}x)}}{{{a}}}"),
+        step("Apply formula: uv minus integral of v du", rf"-\dfrac{{x\cos({a}x)}}{{{a}}} + \dfrac{{1}}{{{a}}}\int\cos({a}x)\,dx"),
+        step("Final", rf"-\dfrac{{x\cos({a}x)}}{{{a}}} + \dfrac{{\sin({a}x)}}{{{a**2}}} + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _half_angle_sin2():
@@ -64,11 +62,11 @@ def _half_angle_sin2():
         ans = rf"\dfrac{{x}}{{2}} - \dfrac{{\sin({2*a}x)}}{{{4*a}}}"
         ans_norm = f"x/2-sin({2*a}x)/{4*a}"
     steps = [
-        {"label": "Half-angle identity", "math": r"\sin^2(u) = \dfrac{1-\cos(2u)}{2}"},
-        {"label": "Rewrite integrand", "math": rf"\dfrac{{1-\cos({2*a}x)}}{{2}}"},
-        {"label": "Integrate term by term", "math": ans + " + C"},
+        step("Half-angle identity", r"\sin^2(u) = \dfrac{1-\cos(2u)}{2}"),
+        step("Rewrite integrand", rf"\dfrac{{1-\cos({2*a}x)}}{{2}}"),
+        step("Integrate term by term", ans + " + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _half_angle_cos2():
@@ -77,10 +75,10 @@ def _half_angle_cos2():
     ans = r"\dfrac{x}{2} + \dfrac{\sin(2x)}{4}"
     ans_norm = "x/2+sin(2x)/4"
     steps = [
-        {"label": "Half-angle identity", "math": r"\cos^2(x) = \dfrac{1+\cos(2x)}{2}"},
-        {"label": "Integrate", "math": r"\dfrac{x}{2} + \dfrac{\sin(2x)}{4} + C"},
+        step("Half-angle identity", r"\cos^2(x) = \dfrac{1+\cos(2x)}{2}"),
+        step("Integrate", r"\dfrac{x}{2} + \dfrac{\sin(2x)}{4} + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 diff1 = [_byparts_x_exp, _byparts_x_sin, _half_angle_sin2, _half_angle_cos2]
@@ -94,12 +92,12 @@ def _byparts_x2_exp():
     ans = r"e^x(x^2 - 2x + 2)"
     ans_norm = "e^x*(x^2-2x+2)"
     steps = [
-        {"label": "IBP twice", "math": r"u=x^2,\;dv=e^x\,dx \Rightarrow \text{apply twice}"},
-        {"label": "First application", "math": r"x^2 e^x - 2\int xe^x\,dx"},
-        {"label": "Second application", "math": r"x^2 e^x - 2(xe^x - e^x)"},
-        {"label": "Simplify", "math": r"e^x(x^2-2x+2)+C"},
+        step("Integration by parts twice", r"u=x^2,\;dv=e^x\,dx \Rightarrow \text{apply twice}"),
+        step("First application", r"x^2 e^x - 2\int xe^x\,dx"),
+        step("Second application", r"x^2 e^x - 2(xe^x - e^x)"),
+        step("Simplify", r"e^x(x^2-2x+2)+C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _byparts_x_cos():
@@ -108,12 +106,12 @@ def _byparts_x_cos():
     ans = r"x\sin(x) + \cos(x)"
     ans_norm = "x*sin(x)+cos(x)"
     steps = [
-        {"label": "IBP: u=x, dv=cos(x)dx", "math": r"u=x,\;dv=\cos(x)\,dx"},
-        {"label": "du=dx, v=sin(x)", "math": r"du=dx,\;v=\sin(x)"},
-        {"label": "Apply formula", "math": r"x\sin(x) - \int\sin(x)\,dx"},
-        {"label": "Final", "math": r"x\sin(x) + \cos(x) + C"},
+        step("Integration by parts: u=x, dv=cos(x)dx", r"u=x,\;dv=\cos(x)\,dx"),
+        step("du=dx, v=sin(x)", r"du=dx,\;v=\sin(x)"),
+        step("Apply formula", r"x\sin(x) - \int\sin(x)\,dx"),
+        step("Final", r"x\sin(x) + \cos(x) + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _trig_power_sin3():
@@ -122,11 +120,11 @@ def _trig_power_sin3():
     ans = r"-\cos(x) + \dfrac{\cos^3(x)}{3}"
     ans_norm = "-cos(x)+cos^3(x)/3"
     steps = [
-        {"label": "Split off one factor", "math": r"\sin^2(x)\cdot\sin(x) = (1-\cos^2 x)\sin(x)"},
-        {"label": "u-sub: u=cos(x), du=-sin(x)dx", "math": r"-\int(1-u^2)\,du"},
-        {"label": "Integrate", "math": r"-(u - \tfrac{u^3}{3}) = -\cos(x)+\tfrac{\cos^3(x)}{3}+C"},
+        step("Split off one factor", r"\sin^2(x)\cdot\sin(x) = (1-\cos^2 x)\sin(x)"),
+        step("u-substitution: u=cos(x), du=-sin(x)dx", r"-\int(1-u^2)\,du"),
+        step("Integrate", r"-(u - \tfrac{u^3}{3}) = -\cos(x)+\tfrac{\cos^3(x)}{3}+C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _partial_fractions_distinct():
@@ -144,22 +142,20 @@ def _partial_fractions_distinct():
         pf_step = r"\dfrac{1}{x(x+2)} = \dfrac{1/2}{x} - \dfrac{1/2}{x+2}"
     elif a == 1 and b == 3:
         prob = r"\int \dfrac{1}{(x-1)(x-3)}\,dx"
-        ans = r"\dfrac{1}{2}\ln|x-1| - \dfrac{1}{2}\ln|x-3|"
-        ans_norm = "(1/2)*ln|x-1|-(1/2)*ln|x-3|"
-        pf_step = r"\dfrac{1}{(x-1)(x-3)} = \dfrac{-1/2}{x-1} + \dfrac{1/2}{x-3}"
         ans = r"-\dfrac{1}{2}\ln|x-1| + \dfrac{1}{2}\ln|x-3|"
         ans_norm = "-(1/2)*ln|x-1|+(1/2)*ln|x-3|"
+        pf_step = r"\dfrac{1}{(x-1)(x-3)} = \dfrac{-1/2}{x-1} + \dfrac{1/2}{x-3}"
     else:
         prob = r"\int \dfrac{1}{x(x+3)}\,dx"
         ans = r"\dfrac{1}{3}\ln|x| - \dfrac{1}{3}\ln|x+3|"
         ans_norm = "(1/3)*ln|x|-(1/3)*ln|x+3|"
         pf_step = r"\dfrac{1}{x(x+3)} = \dfrac{1/3}{x} - \dfrac{1/3}{x+3}"
     steps = [
-        {"label": "Partial fraction decomposition", "math": pf_step},
-        {"label": "Integrate each term", "math": r"\int \dfrac{A}{x+a}\,dx = A\ln|x+a|"},
-        {"label": "Final answer", "math": ans + " + C"},
+        step("Partial fraction decomposition", pf_step),
+        step("Integrate each term", r"\int \dfrac{A}{x+a}\,dx = A\ln|x+a|"),
+        step("Final answer", ans + " + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 diff2 = [_byparts_x2_exp, _byparts_x_cos, _trig_power_sin3, _partial_fractions_distinct]
@@ -175,22 +171,22 @@ def _byparts_circular():
         ans = r"\dfrac{e^x(\cos(x)+\sin(x))}{2}"
         ans_norm = "e^x*(cos(x)+sin(x))/2"
         steps = [
-            {"label": "IBP: u=e^x, dv=cos(x)dx", "math": r"I = e^x\sin(x) - \int e^x\sin(x)\,dx"},
-            {"label": "IBP again on remainder", "math": r"I = e^x\sin(x) + e^x\cos(x) - I"},
-            {"label": "Solve for I", "math": r"2I = e^x(\sin(x)+\cos(x))"},
-            {"label": "Final", "math": ans + " + C"},
+            step("Integration by parts: u=e^x, dv=cos(x)dx", r"I = e^x\sin(x) - \int e^x\sin(x)\,dx"),
+            step("Integration by parts again on remainder", r"I = e^x\sin(x) + e^x\cos(x) - I"),
+            step("Solve for I", r"2I = e^x(\sin(x)+\cos(x))"),
+            step("Final", ans + " + C"),
         ]
     else:
         prob = r"\int e^x \sin(x)\,dx"
         ans = r"\dfrac{e^x(\sin(x)-\cos(x))}{2}"
         ans_norm = "e^x*(sin(x)-cos(x))/2"
         steps = [
-            {"label": "IBP: u=e^x, dv=sin(x)dx", "math": r"I = -e^x\cos(x) + \int e^x\cos(x)\,dx"},
-            {"label": "IBP again on remainder", "math": r"I = -e^x\cos(x) + e^x\sin(x) - I"},
-            {"label": "Solve for I", "math": r"2I = e^x(\sin(x)-\cos(x))"},
-            {"label": "Final", "math": ans + " + C"},
+            step("Integration by parts: u=e^x, dv=sin(x)dx", r"I = -e^x\cos(x) + \int e^x\cos(x)\,dx"),
+            step("Integration by parts again on remainder", r"I = -e^x\cos(x) + e^x\sin(x) - I"),
+            step("Solve for I", r"2I = e^x(\sin(x)-\cos(x))"),
+            step("Final", ans + " + C"),
         ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _partial_fractions_arctan():
@@ -205,10 +201,10 @@ def _partial_fractions_arctan():
         ans = rf"\dfrac{{1}}{{{a}}}\arctan\!\left(\dfrac{{x}}{{{a}}}\right)"
         ans_norm = f"(1/{a})*arctan(x/{a})"
     steps = [
-        {"label": "Standard form", "math": rf"\int\dfrac{{1}}{{x^2+a^2}}\,dx = \dfrac{{1}}{{a}}\arctan\!\left(\dfrac{{x}}{{a}}\right)"},
-        {"label": f"Here a={a}", "math": ans + " + C"},
+        step("Standard form", rf"\int\dfrac{{1}}{{x^2+a^2}}\,dx = \dfrac{{1}}{{a}}\arctan\!\left(\dfrac{{x}}{{a}}\right)"),
+        step(f"Here a={a}", ans + " + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _trig_sub_sqrt():
@@ -219,9 +215,9 @@ def _trig_sub_sqrt():
         ans = r"\dfrac{x}{2}\sqrt{1-x^2} + \dfrac{1}{2}\arcsin(x)"
         ans_norm = "(x/2)*sqrt(1-x^2)+(1/2)*arcsin(x)"
         steps = [
-            {"label": "Trig sub: x=sin(θ)", "math": r"dx=\cos\theta\,d\theta,\;\sqrt{1-x^2}=\cos\theta"},
-            {"label": "Integral becomes", "math": r"\int\cos^2\theta\,d\theta = \dfrac{\theta}{2}+\dfrac{\sin(2\theta)}{4}"},
-            {"label": "Back-substitute", "math": ans + " + C"},
+            step("Trig sub: x=sin(θ)", r"dx=\cos\theta\,d\theta,\;\sqrt{1-x^2}=\cos\theta"),
+            step("Integral becomes", r"\int\cos^2\theta\,d\theta = \dfrac{\theta}{2}+\dfrac{\sin(2\theta)}{4}"),
+            step("Back-substitute", ans + " + C"),
         ]
     else:
         # ∫ 1/sqrt(1-x²) dx = arcsin(x)
@@ -229,9 +225,9 @@ def _trig_sub_sqrt():
         ans = r"\arcsin(x)"
         ans_norm = "arcsin(x)"
         steps = [
-            {"label": "Standard form", "math": r"\int\dfrac{dx}{\sqrt{1-x^2}} = \arcsin(x)+C"},
+            step("Standard form", r"\int\dfrac{dx}{\sqrt{1-x^2}} = \arcsin(x)+C"),
         ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _combo_usub_byparts():
@@ -240,10 +236,10 @@ def _combo_usub_byparts():
     ans = r"\dfrac{1}{2}e^{x^2}"
     ans_norm = "(1/2)*e^(x^2)"
     steps = [
-        {"label": "u-sub: u=x², du=2x dx", "math": r"\dfrac{1}{2}\int e^u\,du"},
-        {"label": "Integrate", "math": r"\dfrac{1}{2}e^u = \dfrac{1}{2}e^{x^2} + C"},
+        step("u-substitution: u=x², du=2x dx", r"\dfrac{1}{2}\int e^u\,du"),
+        step("Integrate", r"\dfrac{1}{2}e^u = \dfrac{1}{2}e^{x^2} + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 diff3 = [_byparts_circular, _partial_fractions_arctan, _trig_sub_sqrt, _combo_usub_byparts]
@@ -258,11 +254,11 @@ def _long_div_then_pf():
     ans = r"x + \dfrac{1}{2}\ln\!\left|\dfrac{x-1}{x+1}\right|"
     ans_norm = "x+(1/2)*ln|(x-1)/(x+1)|"
     steps = [
-        {"label": "Long division: x²/(x²-1) = 1 + 1/(x²-1)", "math": r"= 1 + \dfrac{1}{(x-1)(x+1)}"},
-        {"label": "PF: 1/((x-1)(x+1)) = (1/2)·[1/(x-1) − 1/(x+1)]", "math": r"\dfrac{1}{2}\cdot\dfrac{1}{x-1} - \dfrac{1}{2}\cdot\dfrac{1}{x+1}"},
-        {"label": "Integrate", "math": ans + " + C"},
+        step("Long division: x²/(x²-1) = 1 + 1/(x²-1)", r"= 1 + \dfrac{1}{(x-1)(x+1)}"),
+        step("Partial fractions: 1/((x-1)(x+1)) = (1/2)·[1/(x-1) − 1/(x+1)]", r"\dfrac{1}{2}\cdot\dfrac{1}{x-1} - \dfrac{1}{2}\cdot\dfrac{1}{x+1}"),
+        step("Integrate", ans + " + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _complete_square_trig_sub():
@@ -271,11 +267,11 @@ def _complete_square_trig_sub():
     ans = r"\dfrac{1}{2}\arctan\!\left(\dfrac{x+1}{2}\right)"
     ans_norm = "(1/2)*arctan((x+1)/2)"
     steps = [
-        {"label": "Complete the square", "math": r"x^2+2x+5 = (x+1)^2+4"},
-        {"label": "Standard arctan form with a=2", "math": r"\int\dfrac{du}{u^2+4} = \dfrac{1}{2}\arctan\!\left(\dfrac{u}{2}\right)"},
-        {"label": "Substitute back u=x+1", "math": ans + " + C"},
+        step("Complete the square", r"x^2+2x+5 = (x+1)^2+4"),
+        step("Standard arctan form with a=2", r"\int\dfrac{du}{u^2+4} = \dfrac{1}{2}\arctan\!\left(\dfrac{u}{2}\right)"),
+        step("Substitute back u=x+1", ans + " + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _byparts_ln():
@@ -284,11 +280,11 @@ def _byparts_ln():
     ans = r"x\ln(x) - x"
     ans_norm = "x*ln(x)-x"
     steps = [
-        {"label": "IBP: u=ln(x), dv=dx", "math": r"du=\dfrac{1}{x}dx,\;v=x"},
-        {"label": "Apply formula", "math": r"x\ln(x) - \int x\cdot\dfrac{1}{x}\,dx"},
-        {"label": "Simplify", "math": r"x\ln(x) - x + C"},
+        step("Integration by parts: u=ln(x), dv=dx", r"du=\dfrac{1}{x}dx,\;v=x"),
+        step("Apply formula", r"x\ln(x) - \int x\cdot\dfrac{1}{x}\,dx"),
+        step("Simplify", r"x\ln(x) - x + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _trig_power_reduction():
@@ -297,12 +293,12 @@ def _trig_power_reduction():
     ans = r"\dfrac{3x}{8} + \dfrac{\sin(2x)}{4} + \dfrac{\sin(4x)}{32}"
     ans_norm = "3x/8+sin(2x)/4+sin(4x)/32"
     steps = [
-        {"label": "Apply cos²=½(1+cos2x) twice", "math": r"\cos^4(x) = \left(\dfrac{1+\cos(2x)}{2}\right)^2"},
-        {"label": "Expand", "math": r"\dfrac{1}{4}(1 + 2\cos(2x) + \cos^2(2x))"},
-        {"label": "Apply half-angle to cos²(2x)", "math": r"\dfrac{1}{4}\left(\dfrac{3}{2} + 2\cos(2x) + \dfrac{\cos(4x)}{2}\right)"},
-        {"label": "Integrate", "math": ans + " + C"},
+        step("Apply cos²=½(1+cos2x) twice", r"\cos^4(x) = \left(\dfrac{1+\cos(2x)}{2}\right)^2"),
+        step("Expand", r"\dfrac{1}{4}(1 + 2\cos(2x) + \cos^2(2x))"),
+        step("Apply half-angle to cos²(2x)", r"\dfrac{1}{4}\left(\dfrac{3}{2} + 2\cos(2x) + \dfrac{\cos(4x)}{2}\right)"),
+        step("Integrate", ans + " + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 diff4 = [_long_div_then_pf, _complete_square_trig_sub, _byparts_ln, _trig_power_reduction]
@@ -317,9 +313,9 @@ def _improper_convergent():
             "ans": "1",
             "ans_norm": "1",
             "steps": [
-                {"label": "Limit form", "math": r"\lim_{b\to\infty}\int_1^b x^{-2}\,dx"},
-                {"label": "Antiderivative", "math": r"\lim_{b\to\infty}\left[-\dfrac{1}{x}\right]_1^b"},
-                {"label": "Evaluate", "math": r"\lim_{b\to\infty}\left(-\dfrac{1}{b}+1\right) = 1"},
+                step("Limit form", r"\lim_{b\to\infty}\int_1^b x^{-2}\,dx"),
+                step("Antiderivative", r"\lim_{b\to\infty}\left[-\dfrac{1}{x}\right]_1^b"),
+                step("Evaluate", r"\lim_{b\to\infty}\left(-\dfrac{1}{b}+1\right) = 1"),
             ]
         },
         {
@@ -327,9 +323,9 @@ def _improper_convergent():
             "ans": "1",
             "ans_norm": "1",
             "steps": [
-                {"label": "Limit form", "math": r"\lim_{b\to\infty}\int_0^b e^{-x}\,dx"},
-                {"label": "Antiderivative", "math": r"\lim_{b\to\infty}\left[-e^{-x}\right]_0^b"},
-                {"label": "Evaluate", "math": r"\lim_{b\to\infty}(-e^{-b}+1) = 1"},
+                step("Limit form", r"\lim_{b\to\infty}\int_0^b e^{-x}\,dx"),
+                step("Antiderivative", r"\lim_{b\to\infty}\left[-e^{-x}\right]_0^b"),
+                step("Evaluate", r"\lim_{b\to\infty}(-e^{-b}+1) = 1"),
             ]
         },
         {
@@ -337,13 +333,13 @@ def _improper_convergent():
             "ans": r"\dfrac{1}{2}",
             "ans_norm": "1/2",
             "steps": [
-                {"label": "Limit form", "math": r"\lim_{b\to\infty}\left[-\dfrac{1}{2x^2}\right]_1^b"},
-                {"label": "Evaluate", "math": r"\lim_{b\to\infty}\left(-\dfrac{1}{2b^2}+\dfrac{1}{2}\right) = \dfrac{1}{2}"},
+                step("Limit form", r"\lim_{b\to\infty}\left[-\dfrac{1}{2x^2}\right]_1^b"),
+                step("Evaluate", r"\lim_{b\to\infty}\left(-\dfrac{1}{2b^2}+\dfrac{1}{2}\right) = \dfrac{1}{2}"),
             ]
         },
     ]
     case = pick(cases)
-    return {"problemTex": case["prob"], "answerTex": case["ans"], "answerNorm": case["ans_norm"], "steps": case["steps"]}
+    return problem(problem_tex=case["prob"], answer_tex=case["ans"], answer_norm=case["ans_norm"], steps=case["steps"])
 
 
 def _improper_divergent():
@@ -353,8 +349,8 @@ def _improper_divergent():
             "ans": "diverges",
             "ans_norm": "diverges",
             "steps": [
-                {"label": "Limit form", "math": r"\lim_{b\to\infty}[\ln x]_1^b = \lim_{b\to\infty}\ln b"},
-                {"label": "Conclusion", "math": r"\ln b \to \infty \Rightarrow \text{diverges}"},
+                step("Limit form", r"\lim_{b\to\infty}[\ln x]_1^b = \lim_{b\to\infty}\ln b"),
+                step("Conclusion", r"\ln b \to \infty \Rightarrow \text{diverges}"),
             ]
         },
         {
@@ -362,14 +358,14 @@ def _improper_divergent():
             "ans": "2",
             "ans_norm": "2",
             "steps": [
-                {"label": "Improper at x=0", "math": r"\lim_{a\to 0^+}\int_a^1 x^{-1/2}\,dx"},
-                {"label": "Antiderivative", "math": r"\lim_{a\to 0^+}\left[2\sqrt{x}\right]_a^1"},
-                {"label": "Evaluate", "math": r"2 - 2\sqrt{a}\to 2"},
+                step("Improper at x=0", r"\lim_{a\to 0^+}\int_a^1 x^{-1/2}\,dx"),
+                step("Antiderivative", r"\lim_{a\to 0^+}\left[2\sqrt{x}\right]_a^1"),
+                step("Evaluate", r"2 - 2\sqrt{a}\to 2"),
             ]
         },
     ]
     case = pick(cases)
-    return {"problemTex": case["prob"], "answerTex": case["ans"], "answerNorm": case["ans_norm"], "steps": case["steps"]}
+    return problem(problem_tex=case["prob"], answer_tex=case["ans"], answer_norm=case["ans_norm"], steps=case["steps"])
 
 
 def _three_technique_combo():
@@ -378,11 +374,11 @@ def _three_technique_combo():
     ans = r"\dfrac{x^2}{2}\ln(x) - \dfrac{x^2}{4}"
     ans_norm = "(x^2/2)*ln(x)-x^2/4"
     steps = [
-        {"label": "IBP: u=ln(x), dv=x dx", "math": r"du=\dfrac{dx}{x},\;v=\dfrac{x^2}{2}"},
-        {"label": "uv−∫v du", "math": r"\dfrac{x^2\ln(x)}{2} - \int\dfrac{x}{2}\,dx"},
-        {"label": "Final", "math": ans + " + C"},
+        step("Integration by parts: u=ln(x), dv=x dx", r"du=\dfrac{dx}{x},\;v=\dfrac{x^2}{2}"),
+        step("Apply formula: uv minus integral of v du", r"\dfrac{x^2\ln(x)}{2} - \int\dfrac{x}{2}\,dx"),
+        step("Final", ans + " + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 def _trig_sub_sqrt_x2_plus():
@@ -391,11 +387,11 @@ def _trig_sub_sqrt_x2_plus():
     ans = r"\ln\!\left|x + \sqrt{x^2+1}\right|"
     ans_norm = "ln|x+sqrt(x^2+1)|"
     steps = [
-        {"label": "Trig sub: x=tan(θ)", "math": r"dx=\sec^2\theta\,d\theta,\;\sqrt{x^2+1}=\sec\theta"},
-        {"label": "Integral becomes", "math": r"\int\sec\theta\,d\theta = \ln|\sec\theta+\tan\theta|"},
-        {"label": "Back-substitute", "math": ans + " + C"},
+        step("Trig sub: x=tan(θ)", r"dx=\sec^2\theta\,d\theta,\;\sqrt{x^2+1}=\sec\theta"),
+        step("Integral becomes", r"\int\sec\theta\,d\theta = \ln|\sec\theta+\tan\theta|"),
+        step("Back-substitute", ans + " + C"),
     ]
-    return {"problemTex": prob, "answerTex": _plus_C(ans), "answerNorm": ans_norm + "+C", "steps": steps}
+    return problem(problem_tex=prob, answer_tex=plus_C(ans), answer_norm=ans_norm + "+C", steps=steps)
 
 
 diff5 = [_improper_convergent, _improper_divergent, _three_technique_combo, _trig_sub_sqrt_x2_plus]

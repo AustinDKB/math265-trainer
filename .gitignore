@@ -11,6 +11,22 @@ __pycache__/
 
 # Claude local settings
 .claude/
+.opencode/
 
 # Debug screenshots
 bug*.png
+*.png
+
+# Planning/notes
+EXPANSION_PLAN.md
+MASTER_BUILD_PLAN.md
+LINEAR 123 CALC 123.md
+DOCUMENT_COMPARISON.md
+ENGAGEMENT_ALGORITHMS.md
+PROBLEM_GENERATOR_METHODOLOGY.md
+check implemented.md
+NOTES AND RESEARCH REGARDING THE NEW PROBLEM TYPES from Gemini.txt
+problem types to add/
+
+# Test cache
+.pytest_cache/

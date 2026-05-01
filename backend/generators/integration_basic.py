@@ -1,8 +1,7 @@
 import random
 from fractions import Fraction
-from math_utils import R, pick, sign_str
-
-def _plus_C(tex): return tex + " + C"
+from math_utils import R, pick, sign_str, plus_C
+from problem_builder import problem, step
 
 # ── diff1 — basic antiderivatives ─────────────────────────────────────────────
 
@@ -23,23 +22,23 @@ def _power_rule():
     else:
         ans_tex = f"{coeff_tex}x^{{{exp}}}"
     expr_tex = f"{a}x^{{{n}}}" if n not in [1,-1] else (f"{a}x" if n==1 else f"{a}/x")
-    return {
-        "problemTex": f"\\displaystyle\\int {expr_tex}\\,dx",
-        "answerTex": _plus_C(ans_tex),
-        "answerNorm": f"{num}/{den}*x^({exp})+C",
-        "steps": [
-            {"label": "Power rule: ∫xⁿ dx = xⁿ⁺¹/(n+1)+C", "math": f"\\dfrac{{{a}}}{{{{n+1}}}}x^{{{exp}}}+C = {ans_tex}+C", "note": ""},
+    return problem(
+        problem_tex=f"\\displaystyle\\int {expr_tex}\\,dx",
+        answer_tex=plus_C(ans_tex),
+        answer_norm=f"{num}/{den}*x^({exp})+C",
+        steps=[
+            step("Power rule: ∫xⁿ dx = xⁿ⁺¹/(n+1)+C", f"\\dfrac{{{a}}}{{{{n+1}}}}x^{{{exp}}}+C = {ans_tex}+C"),
         ],
-    }
+    )
 
 
 def _one_over_x():
-    return {
-        "problemTex": "\\displaystyle\\int \\dfrac{1}{x}\\,dx",
-        "answerTex": _plus_C("\\ln|x|"),
-        "answerNorm": "ln|x|+C",
-        "steps": [{"label": "Special case n=−1", "math": "\\ln|x|+C", "note": "undefined at x=0; absolute value needed"}],
-    }
+    return problem(
+        problem_tex="\\displaystyle\\int \\dfrac{1}{x}\\,dx",
+        answer_tex=plus_C("\\ln|x|"),
+        answer_norm="ln|x|+C",
+        steps=[step("Special case n=−1", "\\ln|x|+C", "undefined at x=0; absolute value needed")],
+    )
 
 
 def _exp_rule():
@@ -48,14 +47,14 @@ def _exp_rule():
     ans_tex = f"e^{{{a_tex}x}}" if a > 1 else "e^x"
     ans_full = ans_tex if a == 1 else f"\\dfrac{{1}}{{{a}}}e^{{{a}x}}"
     ans_norm = f"e^({a}*x)/{a}+C"
-    return {
-        "problemTex": f"\\displaystyle\\int e^{{{a_tex}x}}\\,dx",
-        "answerTex": _plus_C(ans_full),
-        "answerNorm": ans_norm,
-        "steps": [
-            {"label": "∫e^(ax) dx = e^(ax)/a + C", "math": _plus_C(ans_full), "note": ""},
+    return problem(
+        problem_tex=f"\\displaystyle\\int e^{{{a_tex}x}}\\,dx",
+        answer_tex=plus_C(ans_full),
+        answer_norm=ans_norm,
+        steps=[
+            step("∫e^(ax) dx = e^(ax)/a + C", plus_C(ans_full)),
         ],
-    }
+    )
 
 
 def _basic_trig():
@@ -68,12 +67,12 @@ def _basic_trig():
         ("\\csc x\\cot x","-\\csc x",        "-csc(x)+C"),
     ]
     f_tex, ans_tex, ans_norm = pick(cases)
-    return {
-        "problemTex": f"\\displaystyle\\int {f_tex}\\,dx",
-        "answerTex": _plus_C(ans_tex),
-        "answerNorm": ans_norm,
-        "steps": [{"label": "Standard trig antiderivative", "math": _plus_C(ans_tex), "note": "memorize"}],
-    }
+    return problem(
+        problem_tex=f"\\displaystyle\\int {f_tex}\\,dx",
+        answer_tex=plus_C(ans_tex),
+        answer_norm=ans_norm,
+        steps=[step("Standard trig antiderivative", plus_C(ans_tex), "memorize")],
+    )
 
 
 def _sum_diff():
@@ -89,12 +88,22 @@ def _sum_diff():
     a2_tex = f"{c2}x^{{{m+1}}}" if m+1 > 1 else f"{c2}x"
     prob = f"({t1_tex}{'+' if sign=='+' else '-'}{t2_tex})"
     ans = f"{a1_tex}{'+' if sign=='+' else '-'}{a2_tex}"
-    return {
-        "problemTex": f"\\displaystyle\\int {prob}\\,dx",
-        "answerTex": _plus_C(ans),
-        "answerNorm": ans.replace("{","").replace("}","") + "+C",
-        "steps": [{"label": "Integrate term by term", "math": _plus_C(ans), "note": ""}],
-    }
+    # Build evaluatable norm (no LaTeX dfrac — uses a/b*x^n form)
+    def _coeff_norm(f):
+        return str(f.numerator) if f.denominator == 1 else f"{f.numerator}/{f.denominator}"
+    def _term_norm(coeff_n, exp):
+        if exp == 0: return coeff_n
+        base = f"x^{exp}" if exp > 1 else "x"
+        return base if coeff_n == "1" else f"{coeff_n}*{base}"
+    t1_n = _term_norm(_coeff_norm(f1), n + 1)
+    t2_n = _term_norm(_coeff_norm(f2), m + 1)
+    sep = "+" if sign == "+" else "-"
+    return problem(
+        problem_tex=f"\\displaystyle\\int {prob}\\,dx",
+        answer_tex=plus_C(ans),
+        answer_norm=f"{t1_n}{sep}{t2_n}+C",
+        steps=[step("Integrate term by term", plus_C(ans))],
+    )
 
 
 diff1 = [_power_rule, _power_rule, _one_over_x, _exp_rule, _basic_trig, _sum_diff]
@@ -111,17 +120,17 @@ def _usub_linear():
     num_tex = f"({{a}}x{sign_str(b)})^{{{n+1}}}"
     prob_tex = f"({a}x{sign_str(b)})^{n}"
     ans_tex = f"\\dfrac{{({a}x{sign_str(b)})^{{{n+1}}}}}{{{denom}}}" + " + C"
-    return {
-        "problemTex": f"\\displaystyle\\int {prob_tex}\\,dx",
-        "answerTex": ans_tex,
-        "answerNorm": f"({a}x+{b})^({n+1})/{denom}+C",
-        "steps": [
-            {"label": "u = inner linear", "math": f"u={a}x{sign_str(b)},\\; du={a}\\,dx", "note": ""},
-            {"label": "Rewrite", "math": f"\\dfrac{{1}}{{{a}}}\\int u^{n}\\,du", "note": ""},
-            {"label": "Integrate", "math": f"\\dfrac{{1}}{{{a}}} \\cdot \\dfrac{{u^{{{n+1}}}}}{{{n+1}}}+C", "note": ""},
-            {"label": "Substitute back", "math": ans_tex, "note": ""},
+    return problem(
+        problem_tex=f"\\displaystyle\\int {prob_tex}\\,dx",
+        answer_tex=ans_tex,
+        answer_norm=f"({a}x+{b})^({n+1})/{denom}+C",
+        steps=[
+            step("u = inner linear", f"u={a}x{sign_str(b)},\\; du={a}\\,dx"),
+            step("Rewrite", f"\\dfrac{{1}}{{{a}}}\\int u^{n}\\,du"),
+            step("Integrate", f"\\dfrac{{1}}{{{a}}} \\cdot \\dfrac{{u^{{{n+1}}}}}{{{n+1}}}+C"),
+            step("Substitute back", ans_tex),
         ],
-    }
+    )
 
 
 def _usub_polynomial():
@@ -135,17 +144,17 @@ def _usub_polynomial():
          "u=x^2+4", "du=2x\\,dx", "\\frac{1}{2}\\int \\frac{1}{u}\\,du"),
     ]
     prob, ans, norm, u_sub, du, integral = pick(cases)
-    return {
-        "problemTex": f"\\displaystyle\\int {prob}\\,dx",
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "Identify u", "math": u_sub, "note": ""},
-            {"label": "Compute du", "math": du, "note": ""},
-            {"label": "Rewrite integral", "math": integral, "note": ""},
-            {"label": "Integrate and back-substitute", "math": ans, "note": ""},
+    return problem(
+        problem_tex=f"\\displaystyle\\int {prob}\\,dx",
+        answer_tex=ans,
+        answer_norm=norm,
+        steps=[
+            step("Identify u", u_sub),
+            step("Compute du", du),
+            step("Rewrite integral", integral),
+            step("Integrate and back-substitute", ans),
         ],
-    }
+    )
 
 
 def _usub_trig():
@@ -155,16 +164,16 @@ def _usub_trig():
         ("\\tan x \\sec^2 x",  "\\dfrac{\\tan^2 x}{2}+C", "tan^2(x)/2+C", "u=\\tan x","du=\\sec^2 x\\,dx"),
     ]
     prob, ans, norm, u_sub, du = pick(cases)
-    return {
-        "problemTex": f"\\displaystyle\\int {prob}\\,dx",
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "u-substitution", "math": u_sub, "note": ""},
-            {"label": "du", "math": du, "note": ""},
-            {"label": "Result", "math": ans, "note": ""},
+    return problem(
+        problem_tex=f"\\displaystyle\\int {prob}\\,dx",
+        answer_tex=ans,
+        answer_norm=norm,
+        steps=[
+            step("u-substitution", u_sub),
+            step("du", du),
+            step("Result", ans),
         ],
-    }
+    )
 
 
 def _rewrite_then_integrate():
@@ -177,16 +186,16 @@ def _rewrite_then_integrate():
          "x^{-1/2}", "\\int x^{-1/2}\\,dx = \\dfrac{x^{1/2}}{1/2}=2x^{1/2}"),
     ]
     prob, ans, norm, rewrite, integral = pick(cases)
-    return {
-        "problemTex": f"\\displaystyle\\int {prob}\\,dx",
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "Rewrite as power", "math": rewrite, "note": ""},
-            {"label": "Apply power rule", "math": integral, "note": ""},
-            {"label": "Simplify", "math": ans, "note": ""},
+    return problem(
+        problem_tex=f"\\displaystyle\\int {prob}\\,dx",
+        answer_tex=ans,
+        answer_norm=norm,
+        steps=[
+            step("Rewrite as power", rewrite),
+            step("Apply power rule", integral),
+            step("Simplify", ans),
         ],
-    }
+    )
 
 
 diff2 = [_usub_linear, _usub_linear, _usub_polynomial, _usub_trig, _rewrite_then_integrate]
@@ -199,15 +208,15 @@ def _definite_integral():
     # ∫[0,b] x^n dx = b^(n+1)/(n+1)
     f = Fraction(b**(n+1), n+1)
     ans = str(int(f)) if f.denominator == 1 else f"\\dfrac{{{f.numerator}}}{{{f.denominator}}}"
-    return {
-        "problemTex": f"\\displaystyle\\int_0^{b} x^{n}\\,dx",
-        "answerTex": ans,
-        "answerNorm": f"{f.numerator}/{f.denominator}",
-        "steps": [
-            {"label": "Antiderivative", "math": f"\\left[\\dfrac{{x^{{{n+1}}}}}{{{n+1}}}\\right]_0^{b}", "note": ""},
-            {"label": "Evaluate", "math": f"\\dfrac{{{b}^{{{n+1}}}}}{{{n+1}}} - 0 = {ans}", "note": ""},
+    return problem(
+        problem_tex=f"\\displaystyle\\int_0^{b} x^{n}\\,dx",
+        answer_tex=ans,
+        answer_norm=f"{f.numerator}/{f.denominator}",
+        steps=[
+            step("Antiderivative", f"\\left[\\dfrac{{x^{{{n+1}}}}}{{{n+1}}}\\right]_0^{b}"),
+            step("Evaluate", f"\\dfrac{{{b}^{{{n+1}}}}}{{{n+1}}} - 0 = {ans}"),
         ],
-    }
+    )
 
 
 def _initial_value_problem():
@@ -221,17 +230,17 @@ def _initial_value_problem():
     C = Fraction(k) - f_a
     C_tex = str(int(C)) if C.denominator == 1 else f"\\dfrac{{{C.numerator}}}{{{C.denominator}}}"
     C_sign = sign_str(int(C) if C.denominator == 1 else C.numerator / C.denominator)
-    return {
-        "problemTex": f"f'(x)=x^{{{n}}},\\; f({a_val})={k}.\\quad \\text{{Find }}f(x).",
-        "answerTex": f"\\dfrac{{x^{{{n+1}}}}}{{{denom}}}{C_sign if C != 0 else ''}",
-        "answerNorm": f"x^({n+1})/{denom}+{float(C):.4f}",
-        "steps": [
-            {"label": "Antiderivative", "math": f"f(x)=\\dfrac{{x^{{{n+1}}}}}{{{denom}}}+C", "note": ""},
-            {"label": "Apply initial condition", "math": f"f({a_val})=\\dfrac{{{a_val}^{{{n+1}}}}}{{{denom}}}+C={k}", "note": ""},
-            {"label": "Solve for C", "math": f"C={C_tex}", "note": ""},
-            {"label": "Final answer", "math": f"f(x)=\\dfrac{{x^{{{n+1}}}}}{{{denom}}}+{C_tex}", "note": ""},
+    return problem(
+        problem_tex=f"f'(x)=x^{{{n}}},\\; f({a_val})={k}.\\quad \\text{{Find }}f(x).",
+        answer_tex=f"\\dfrac{{x^{{{n+1}}}}}{{{denom}}}{C_sign if C != 0 else ''}",
+        answer_norm=f"x^({n+1})/{denom}+{float(C):.4f}",
+        steps=[
+            step("Antiderivative", f"f(x)=\\dfrac{{x^{{{n+1}}}}}{{{denom}}}+C"),
+            step("Apply initial condition", f"f({a_val})=\\dfrac{{{a_val}^{{{n+1}}}}}{{{denom}}}+C={k}"),
+            step("Solve for C", f"C={C_tex}"),
+            step("Final answer", f"f(x)=\\dfrac{{x^{{{n+1}}}}}{{{denom}}}+{C_tex}"),
         ],
-    }
+    )
 
 
 diff3 = [_definite_integral, _definite_integral, _initial_value_problem]
@@ -245,8 +254,8 @@ def _definite_usub():
             "\\dfrac{e-1}{2}",
             "(e-1)/2",
             [
-                {"label": "u = x², du = 2x dx", "math": "\\dfrac{1}{2}\\int_0^1 e^u\\,du", "note": "bounds: u(0)=0, u(1)=1"},
-                {"label": "Evaluate", "math": "\\dfrac{1}{2}[e^u]_0^1=\\dfrac{e-1}{2}", "note": ""},
+                step("u = x², du = 2x dx", "\\dfrac{1}{2}\\int_0^1 e^u\\,du", "bounds: u(0)=0, u(1)=1"),
+                step("Evaluate", "\\dfrac{1}{2}[e^u]_0^1=\\dfrac{e-1}{2}"),
             ],
         ),
         (
@@ -254,46 +263,46 @@ def _definite_usub():
             "\\dfrac{1}{2}",
             "1/2",
             [
-                {"label": "u = sin x, du = cos x dx", "math": "\\int_0^1 u\\,du", "note": "bounds: u(0)=0, u(π/2)=1"},
-                {"label": "Evaluate", "math": "\\left[\\dfrac{u^2}{2}\\right]_0^1 = \\dfrac{1}{2}", "note": ""},
+                step("u = sin x, du = cos x dx", "\\int_0^1 u\\,du", "bounds: u(0)=0, u(π/2)=1"),
+                step("Evaluate", "\\left[\\dfrac{u^2}{2}\\right]_0^1 = \\dfrac{1}{2}"),
             ],
         ),
     ]
     prob = pick(cases)
-    return {
-        "problemTex": prob[0],
-        "answerTex": prob[1],
-        "answerNorm": prob[2],
-        "steps": prob[3],
-    }
+    return problem(
+        problem_tex=prob[0],
+        answer_tex=prob[1],
+        answer_norm=prob[2],
+        steps=prob[3],
+    )
 
 
 def _usub_algebra():
     # ∫ x/sqrt(x+1) dx — complete algebra to isolate du
-    return {
-        "problemTex": "\\displaystyle\\int \\dfrac{x}{\\sqrt{x+1}}\\,dx",
-        "answerTex": "\\dfrac{2}{3}(x+1)^{3/2} - 2\\sqrt{x+1} + C",
-        "answerNorm": "2*(x+1)^(3/2)/3-2*sqrt(x+1)+C",
-        "steps": [
-            {"label": "u = x+1, x = u−1, du = dx", "math": "\\int\\dfrac{u-1}{\\sqrt{u}}\\,du = \\int(u^{1/2}-u^{-1/2})\\,du", "note": ""},
-            {"label": "Integrate", "math": "\\dfrac{2}{3}u^{3/2} - 2u^{1/2}+C", "note": ""},
-            {"label": "Back-substitute", "math": "\\dfrac{2}{3}(x+1)^{3/2}-2\\sqrt{x+1}+C", "note": ""},
+    return problem(
+        problem_tex="\\displaystyle\\int \\dfrac{x}{\\sqrt{x+1}}\\,dx",
+        answer_tex="\\dfrac{2}{3}(x+1)^{3/2} - 2\\sqrt{x+1} + C",
+        answer_norm="2*(x+1)^(3/2)/3-2*sqrt(x+1)+C",
+        steps=[
+            step("u = x+1, x = u−1, du = dx", "\\int\\dfrac{u-1}{\\sqrt{u}}\\,du = \\int(u^{1/2}-u^{-1/2})\\,du"),
+            step("Integrate", "\\dfrac{2}{3}u^{3/2} - 2u^{1/2}+C"),
+            step("Back-substitute", "\\dfrac{2}{3}(x+1)^{3/2}-2\\sqrt{x+1}+C"),
         ],
-    }
+    )
 
 
 def _split_interval():
-    return {
-        "problemTex": "\\displaystyle\\int_{-2}^{3} |x|\\,dx",
-        "answerTex": "\\dfrac{4}{2}+\\dfrac{9}{2} = \\dfrac{13}{2}",
-        "answerNorm": "13/2",
-        "steps": [
-            {"label": "Split at x=0 (where |x| changes)", "math": "\\int_{-2}^0(-x)\\,dx + \\int_0^3 x\\,dx", "note": ""},
-            {"label": "Evaluate first", "math": "\\left[-\\dfrac{x^2}{2}\\right]_{-2}^0 = 0-(-2)=2", "note": ""},
-            {"label": "Evaluate second", "math": "\\left[\\dfrac{x^2}{2}\\right]_0^3 = \\dfrac{9}{2}", "note": ""},
-            {"label": "Sum", "math": "2+\\dfrac{9}{2}=\\dfrac{13}{2}", "note": ""},
+    return problem(
+        problem_tex="\\displaystyle\\int_{-2}^{3} |x|\\,dx",
+        answer_tex="\\dfrac{4}{2}+\\dfrac{9}{2} = \\dfrac{13}{2}",
+        answer_norm="13/2",
+        steps=[
+            step("Split at x=0 (where |x| changes)", "\\int_{-2}^0(-x)\\,dx + \\int_0^3 x\\,dx"),
+            step("Evaluate first", "\\left[-\\dfrac{x^2}{2}\\right]_{-2}^0 = 0-(-2)=2"),
+            step("Evaluate second", "\\left[\\dfrac{x^2}{2}\\right]_0^3 = \\dfrac{9}{2}"),
+            step("Sum", "2+\\dfrac{9}{2}=\\dfrac{13}{2}"),
         ],
-    }
+    )
 
 
 diff4 = [_definite_usub, _definite_usub, _usub_algebra, _split_interval]
@@ -301,17 +310,17 @@ diff4 = [_definite_usub, _definite_usub, _usub_algebra, _split_interval]
 # ── diff5 — second antiderivative, disguised u-sub ───────────────────────────
 
 def _second_antiderivative():
-    return {
-        "problemTex": "f''(x)=6x,\\; f'(0)=1,\\; f(0)=2.\\quad \\text{Find }f(x).",
-        "answerTex": "x^3+x+2",
-        "answerNorm": "x^3+x+2",
-        "steps": [
-            {"label": "Integrate f'' to get f'", "math": "f'(x)=3x^2+C_1", "note": ""},
-            {"label": "Apply f'(0)=1", "math": "3(0)^2+C_1=1 \\Rightarrow C_1=1,\\; f'(x)=3x^2+1", "note": ""},
-            {"label": "Integrate f' to get f", "math": "f(x)=x^3+x+C_2", "note": ""},
-            {"label": "Apply f(0)=2", "math": "C_2=2,\\; f(x)=x^3+x+2", "note": ""},
+    return problem(
+        problem_tex="f''(x)=6x,\\; f'(0)=1,\\; f(0)=2.\\quad \\text{{Find }}f(x).",
+        answer_tex="x^3+x+2",
+        answer_norm="x^3+x+2",
+        steps=[
+            step("Integrate f'' to get f'", "f'(x)=3x^2+C_1"),
+            step("Apply f'(0)=1", "3(0)^2+C_1=1 \\Rightarrow C_1=1,\\; f'(x)=3x^2+1"),
+            step("Integrate f' to get f", "f(x)=x^3+x+C_2"),
+            step("Apply f(0)=2", "C_2=2,\\; f(x)=x^3+x+2"),
         ],
-    }
+    )
 
 
 def _disguised_usub():
@@ -324,29 +333,29 @@ def _disguised_usub():
          "\\int\\dfrac{1}{u}\\,du = \\ln|u|+C"),
     ]
     prob, ans, norm, rewrite, u_sub, integral = pick(cases)
-    return {
-        "problemTex": f"\\displaystyle\\int {prob}\\,dx",
-        "answerTex": ans,
-        "answerNorm": norm,
-        "steps": [
-            {"label": "Rewrite", "math": rewrite, "note": "not obvious — write as fraction"},
-            {"label": "u-substitution", "math": u_sub, "note": ""},
-            {"label": "Integrate", "math": integral, "note": ""},
-            {"label": "Back-substitute", "math": ans, "note": ""},
+    return problem(
+        problem_tex=f"\\displaystyle\\int {prob}\\,dx",
+        answer_tex=ans,
+        answer_norm=norm,
+        steps=[
+            step("Rewrite", rewrite, "not obvious — write as fraction"),
+            step("u-substitution", u_sub),
+            step("Integrate", integral),
+            step("Back-substitute", ans),
         ],
-    }
+    )
 
 
 def _definite_usub_trig():
-    return {
-        "problemTex": "\\displaystyle\\int_0^{\\pi/2} \\sin x \\cos^2 x\\,dx",
-        "answerTex": "\\dfrac{1}{3}",
-        "answerNorm": "1/3",
-        "steps": [
-            {"label": "u = cos x, du = −sin x dx", "math": "-\\int_1^0 u^2\\,du = \\int_0^1 u^2\\,du", "note": "bounds flip"},
-            {"label": "Evaluate", "math": "\\left[\\dfrac{u^3}{3}\\right]_0^1 = \\dfrac{1}{3}", "note": ""},
+    return problem(
+        problem_tex="\\displaystyle\\int_0^{\\pi/2} \\sin x \\cos^2 x\\,dx",
+        answer_tex="\\dfrac{1}{3}",
+        answer_norm="1/3",
+        steps=[
+            step("u = cos x, du = −sin x dx", "-\\int_1^0 u^2\\,du = \\int_0^1 u^2\\,du", "bounds flip"),
+            step("Evaluate", "\\left[\\dfrac{u^3}{3}\\right]_0^1 = \\dfrac{1}{3}"),
         ],
-    }
+    )
 
 
 diff5 = [_second_antiderivative, _disguised_usub, _disguised_usub, _definite_usub_trig]

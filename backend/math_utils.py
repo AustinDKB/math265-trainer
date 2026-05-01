@@ -34,6 +34,16 @@ def sign_str(n):
     return f"+{n}" if n >= 0 else str(n)
 
 
+def plus_C(tex):
+    return tex + " + C"
+
+
+def interval_tex(a, b, left_open=False, right_open=False):
+    l = "(" if left_open else "["
+    r = ")" if right_open else "]"
+    return f"{l}{a}, {b}{r}"
+
+
 def frac_to_tex(sn, sd):
     return str(sn) if sd == 1 else f"\\frac{{{sn}}}{{{sd}}}"
 
@@ -132,12 +142,9 @@ class _Parser:
 
     def parse_term(self):
         left = self.parse_power()
-        while self.peek() == '*':
-            self.consume('*')
-            right = self.parse_power()
-            left = poly_mul(left, right)
-        # implicit multiplication: (...)(...) or digit(...)
-        while self.peek() == '(':
+        while self.peek() in ('*', '('):
+            if self.peek() == '*':
+                self.consume('*')
             right = self.parse_power()
             left = poly_mul(left, right)
         return left
@@ -190,6 +197,7 @@ def expand_expression(expr):
     # Add * between )(  and between digit and (
     s = re.sub(r'\)\s*\(', ')*(', s)
     s = re.sub(r'(\d)\s*\(', r'\1*(', s)
+    s = re.sub(r'(\d)(x)', r'\1*\2', s)   # 18x → 18*x
     parser = _Parser(s)
     result = parser.parse_expr()
     return normalize_poly(result)
@@ -207,6 +215,7 @@ def polys_equal(a, b, tol=0.001):
 
 def user_input_to_norm(s):
     s = s.strip().lower().replace(' ', '')
+    s = re.sub(r'\\d?frac\{([^}]*)\}\{([^}]*)\}', r'(\1)/(\2)', s)  # \frac{A}{B} → (A)/(B)
     s = re.sub(r'x\^\{([^}]*)\}', r'x^(\1)', s)          # x^{3} → x^(3)
     s = re.sub(r'x\^(-?\d+(?:/\d+)?)(?!\))', r'x^(\1)', s)  # x^-3/2 → x^(-3/2)
     return s
