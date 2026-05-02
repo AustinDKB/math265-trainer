@@ -11,8 +11,9 @@ from generators import (
 )
 from generators import ALL_MODULES
 from module_config import UNLOCK_TIERS
-from checker import check_answer, check_dual_answer
+from checker import check_answer, check_dual_answer, check_norm_answer
 from checker_registry import get_checker
+import jsonl_engine
 from db import (
     init_db, record_attempt, dispute_attempt,
     stats_overview, stats_trend, stats_problem, stats_weak,
@@ -335,6 +336,71 @@ def get_unlock_status():
         "unlockedTiers": unlocked_tiers,
         "nextLockedTier": UNLOCK_TIERS[len(unlocked_tiers)] if len(unlocked_tiers) < len(UNLOCK_TIERS) else None,
     })
+
+
+# ── JSONL / Word Problem Endpoints ──
+
+@app.get("/api/problem/jsonl")
+def get_jsonl_problem():
+    course = request.args.get("course", "calc1")
+    topic = request.args.get("topic")
+    difficulty = request.args.get("difficulty", type=int)
+    prob = jsonl_engine.get_next_problem(
+        course=course,
+        topic=topic,
+        difficulty=difficulty,
+    )
+    if prob is None:
+        return jsonify({"error": "no templates available"}), 404
+    return jsonify(prob)
+
+
+@app.post("/api/check/mode")
+def check_mode_answer():
+    """Check answers for mode-specific problems (justify, backwards, break, derive).
+
+    v1 strategy:
+      - justify / backwards / derive: accept any non-empty input, show model answer.
+      - break: check error-type match + optional fix against answerNorm.
+    """
+    data = request.get_json(force=True) or {}
+    mode = data.get("mode", "solve")
+    user_input = data.get("userInput", "")
+    problem = data.get("problem", {})
+
+    if mode in ("justify", "backwards", "derive"):
+        correct = bool(user_input and str(user_input).strip())
+        return jsonify({
+            "result": "correct" if correct else "wrong",
+            "modelAnswer": problem.get("answerTex", problem.get("answerNorm", "")),
+            "reason": None if correct else "empty_input",
+        })
+
+    if mode == "break":
+        selected_error = data.get("selectedError", "")
+        mode_data = problem.get("modeData", {})
+        expected_error = mode_data.get("error", {}).get("type", "")
+        error_correct = selected_error == expected_error if expected_error else True
+
+        user_fix = data.get("userFix", "")
+        fix_check = None
+        if user_fix and problem.get("answerNorm"):
+            fix_check = check_norm_answer(problem, user_fix)
+
+        if error_correct and (fix_check is None or fix_check.get("result") == "correct"):
+            return jsonify({
+                "result": "correct",
+                "modelAnswer": problem.get("answerTex", problem.get("answerNorm", "")),
+                "reason": None,
+            })
+        return jsonify({
+            "result": "wrong",
+            "modelAnswer": problem.get("answerTex", problem.get("answerNorm", "")),
+            "reason": "error_type_mismatch" if not error_correct else "fix_incorrect",
+        })
+
+    # Fallback to standard checker for solve mode
+    return jsonify(check_answer(problem, user_input))
 
 
 if __name__ == "__main__":

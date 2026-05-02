@@ -507,7 +507,112 @@ def _y_prime_and_double_prime():
     )
 
 
-diff3 = [_chain_nested, _product_chain, _quotient_chain, _implicit_differentiation, _log_differentiation, _higher_order, _y_prime_and_double_prime]
+def _classify_derivative_behavior():
+    """Given f'(x) expression and a point x=a, classify behavior: horizontal tangent, vertical tangent, cusp, or undefined."""
+    cases = [
+        {
+            "prob": "f'(x) = 3x^2 - 12x + 9, \\quad x = 1",
+            "ans": "\\text{horizontal tangent}",
+            "norm": "horizontal_tangent",
+            "steps": [
+                step("Evaluate f'(1)", "f'(1) = 3(1)^2 - 12(1) + 9 = 3 - 12 + 9 = 0"),
+                step("Interpret: f'(1) = 0", "\\text{When } f'(a) = 0, \\text{ the function has a horizontal tangent at } x=a"),
+                step("Answer", "\\text{horizontal tangent}"),
+            ],
+        },
+        {
+            "prob": "f'(x) = \\dfrac{1}{2\\sqrt{x}}, \\quad x = 0",
+            "ans": "\\text{vertical tangent}",
+            "norm": "vertical_tangent",
+            "steps": [
+                step("Evaluate f'(0)", "f'(0) = \\dfrac{1}{2\\sqrt{0}} = \\dfrac{1}{0} \\rightarrow \\infty"),
+                step("Interpret: f'(0) is undefined (denominator = 0)", "\\text{When } f'(a) \\rightarrow \\infty \\text{ and the function is continuous at } a, \\text{ there is a vertical tangent}"),
+                step("Answer", "\\text{vertical tangent}"),
+            ],
+        },
+        {
+            "prob": "f(x) = |x-2|, \\quad x = 2",
+            "ans": "\\text{cusp}",
+            "norm": "cusp",
+            "steps": [
+                step("Analyze left and right derivatives", "f'(x) = \\begin{cases} -1 & x < 2 \\\\ 1 & x > 2 \\end{cases}"),
+                step("Left derivative at x=2", "f'_-(2) = -1"),
+                step("Right derivative at x=2", "f'_+(2) = 1"),
+                step("Interpret: left ≠ right derivative", "\\text{When left and right derivatives exist but are unequal, there is a cusp (corner)}"),
+                step("Answer", "\\text{cusp}"),
+            ],
+        },
+        {
+            "prob": "f'(x) = \\dfrac{x+1}{x-3}, \\quad x = 3",
+            "ans": "\\text{undefined}",
+            "norm": "undefined",
+            "steps": [
+                step("Evaluate f'(3)", "f'(3) = \\dfrac{3+1}{3-3} = \\dfrac{4}{0}"),
+                step("Interpret: division by zero", "\\text{When f'(a) involves division by zero and the function is not continuous at } a, \\text{ the derivative is undefined}"),
+                step("Answer", "\\text{undefined}"),
+            ],
+        },
+    ]
+    c = pick(cases)
+    return problem(
+        problem_tex=f"\\text{{Given }} {c['prob']}. \\text{{ Classify the behavior at this point: horizontal tangent, vertical tangent, cusp, or undefined.}}",
+        answer_tex=c["ans"],
+        answer_norm=c["norm"],
+        steps=c["steps"],
+    )
+
+
+def _implicit_tangent_line():
+    """Find the equation of the tangent line to an implicit curve at a given point."""
+    cases = [
+        {
+            "prob": "x^2 + y^2 = 25 \\text{ at } (3, 4)",
+            "ans": "y = -\\dfrac{3}{4}x + \\dfrac{25}{4}",
+            "norm": "y=-3/4*x+25/4",
+            "steps": [
+                step("Differentiate implicitly", "2x + 2y\\dfrac{dy}{dx} = 0"),
+                step("Solve for dy/dx", "\\dfrac{dy}{dx} = -\\dfrac{x}{y}"),
+                step("Evaluate slope at (3,4)", "m = \\dfrac{dy}{dx}\\bigg|_{(3,4)} = -\\dfrac{3}{4}"),
+                step("Point-slope form: y - y₁ = m(x - x₁)", "y - 4 = -\\dfrac{3}{4}(x - 3)"),
+                step("Simplify to slope-intercept form", "y = -\\dfrac{3}{4}x + \\dfrac{9}{4} + 4 = -\\dfrac{3}{4}x + \\dfrac{25}{4}"),
+            ],
+        },
+        {
+            "prob": "xy + y^2 = 6 \\text{ at } (1, 2)",
+            "ans": "y = -\\dfrac{2}{5}x + \\dfrac{12}{5}",
+            "norm": "y=-2/5*x+12/5",
+            "steps": [
+                step("Differentiate implicitly", "y + x\\dfrac{dy}{dx} + 2y\\dfrac{dy}{dx} = 0"),
+                step("Group dy/dx terms", "(x + 2y)\\dfrac{dy}{dx} = -y"),
+                step("Solve for dy/dx", "\\dfrac{dy}{dx} = -\\dfrac{y}{x + 2y}"),
+                step("Evaluate slope at (1,2)", "m = -\\dfrac{2}{1 + 4} = -\\dfrac{2}{5}"),
+                step("Point-slope form", "y - 2 = -\\dfrac{2}{5}(x - 1)"),
+                step("Simplify", "y = -\\dfrac{2}{5}x + \\dfrac{2}{5} + 2 = -\\dfrac{2}{5}x + \\dfrac{12}{5}"),
+            ],
+        },
+        {
+            "prob": "x^3 + y^3 = 9 \\text{ at } (1, 2)",
+            "ans": "y = -\\dfrac{1}{4}x + \\dfrac{9}{4}",
+            "norm": "y=-1/4*x+9/4",
+            "steps": [
+                step("Differentiate implicitly", "3x^2 + 3y^2\\dfrac{dy}{dx} = 0"),
+                step("Solve for dy/dx", "\\dfrac{dy}{dx} = -\\dfrac{x^2}{y^2}"),
+                step("Evaluate slope at (1,2)", "m = -\\dfrac{1}{4}"),
+                step("Point-slope form", "y - 2 = -\\dfrac{1}{4}(x - 1)"),
+                step("Simplify", "y = -\\dfrac{1}{4}x + \\dfrac{1}{4} + 2 = -\\dfrac{1}{4}x + \\dfrac{9}{4}"),
+            ],
+        },
+    ]
+    c = pick(cases)
+    return problem(
+        problem_tex=f"\\text{{Find the equation of the tangent line to }} {c['prob']}",
+        answer_tex=c["ans"],
+        answer_norm=c["norm"],
+        steps=c["steps"],
+    )
+
+
+diff3 = [_chain_nested, _product_chain, _quotient_chain, _implicit_differentiation, _log_differentiation, _higher_order, _y_prime_and_double_prime, _classify_derivative_behavior]
 
 # ── diff4 — multi-rule combos ─────────────────────────────────────────────────
 
@@ -573,7 +678,7 @@ def _log_diff_complex():
     )
 
 
-diff4 = [_all_three_rules, _all_three_rules, _implicit_second_order, _log_diff_complex]
+diff4 = [_all_three_rules, _all_three_rules, _implicit_second_order, _log_diff_complex, _implicit_tangent_line]
 
 # ── diff5 — parametric, inverse trig ─────────────────────────────────────────
 

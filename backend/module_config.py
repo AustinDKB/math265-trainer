@@ -1,14 +1,21 @@
 MODULES = {
-    "factoring":       {"tier": 0, "label": "Factoring"},
-    "exponents":       {"tier": 0, "label": "Exponents"},
-    "fractions":       {"tier": 0, "label": "Fractions"},
-    "trig":            {"tier": 1, "label": "Trig & Unit Circle"},
-    "logs":            {"tier": 2, "label": "Logarithms"},
-    "composition":     {"tier": 3, "label": "Function Composition"},
-    "limits":          {"tier": 4, "label": "Limits"},
-    "derivatives":     {"tier": 5, "label": "Derivatives (Calc 1)"},
-    "integration":     {"tier": 6, "label": "Integration (Calc 1)"},
-    "adv_integration": {"tier": 7, "label": "Advanced Integration (Calc 2)"},
+    # ── Algebra ──
+    "factoring":       {"tier": 0, "label": "Factoring",                "group": "algebra"},
+    "exponents":       {"tier": 0, "label": "Exponents",                "group": "algebra"},
+    "fractions":       {"tier": 0, "label": "Fractions",                "group": "algebra"},
+
+    # ── Precalculus ──
+    "trig":            {"tier": 1, "label": "Trig & Unit Circle",       "group": "precalc"},
+    "logs":            {"tier": 2, "label": "Logarithms",               "group": "precalc"},
+    "composition":     {"tier": 3, "label": "Function Composition",     "group": "precalc"},
+
+    # ── Calculus 1 ──
+    "limits":          {"tier": 4, "label": "Limits",                   "group": "calc1"},
+    "derivatives":     {"tier": 5, "label": "Derivatives (Calc 1)",     "group": "calc1"},
+    "integration":     {"tier": 6, "label": "Integration (Calc 1)",     "group": "calc1"},
+
+    # ── Calculus 2 ──
+    "adv_integration": {"tier": 7, "label": "Advanced Integration (Calc 2)", "group": "calc2"},
 }
 
 UNLOCK_TIERS = [

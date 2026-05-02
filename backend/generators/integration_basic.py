@@ -198,7 +198,188 @@ def _rewrite_then_integrate():
     )
 
 
-diff2 = [_usub_linear, _usub_linear, _usub_polynomial, _usub_trig, _rewrite_then_integrate]
+def _expand_then_integrate():
+    """Multiply polynomials first, then integrate term by term."""
+    m = R(3, 6)
+    n = R(2, m - 1)
+    a = R(1, 5)
+    b = R(1, 5)
+    # (x^m + a)(x^n + b) = x^(m+n) + b*x^m + a*x^n + ab
+    # ∫ = x^(m+n+1)/(m+n+1) + b*x^(m+1)/(m+1) + a*x^(n+1)/(n+1) + ab*x + C
+    
+    from fractions import Fraction
+    
+    terms_tex = []
+    terms_norm = []
+    for exp, coeff in [(m+n+1, 1), (m+1, b), (n+1, a), (1, a*b)]:
+        f = Fraction(coeff, exp)
+        num, den = f.numerator, f.denominator
+        if exp == 1:
+            if den == 1:
+                terms_tex.append(f"{num}x")
+                terms_norm.append(f"{num}*x")
+            else:
+                terms_tex.append(f"\\dfrac{{{num}}}{{{den}}}x")
+                terms_norm.append(f"{num}/{den}*x")
+        else:
+            if den == 1:
+                terms_tex.append(f"{num}x^{{{exp}}}")
+                terms_norm.append(f"{num}*x^({exp})")
+            else:
+                terms_tex.append(f"\\dfrac{{{num}}}{{{den}}}x^{{{exp}}}")
+                terms_norm.append(f"{num}/{den}*x^({exp})")
+    
+    ans_tex = "+".join(terms_tex)
+    ans_norm = "+".join(terms_norm) + "+C"
+    
+    return problem(
+        problem_tex=f"\\displaystyle\\int (x^{{{m}}} + {a})(x^{{{n}}} + {b}) \\, dx",
+        answer_tex=plus_C(ans_tex),
+        answer_norm=ans_norm,
+        steps=[
+            step("Expand the product", f"(x^{{{m}}} + {a})(x^{{{n}}} + {b}) = x^{{{m+n}}} + {b}x^{{{m}}} + {a}x^{{{n}}} + {a*b}"),
+            step("Integrate term by term", f"\\int x^{{{m+n}}}\\,dx + {b}\\int x^{{{m}}}\\,dx + {a}\\int x^{{{n}}}\\,dx + {a*b}\\int 1\\,dx"),
+            step("Apply power rule to each", ans_tex),
+        ],
+    )
+
+
+def _constant_acceleration_distance():
+    """Car decelerating at constant rate — find stopping distance."""
+    v0 = pick([20, 25, 30, 35, 40, 45, 50, 55, 60])  # initial velocity in m/s
+    a = pick([2, 4, 6, 8])     # deceleration in m/s²
+    
+    # v(t) = v0 - a*t, stops when v(t)=0 → t = v0/a
+    # distance = ∫₀^(v0/a) (v0 - a*t) dt = v0²/(2a)
+    from fractions import Fraction
+    dist = Fraction(v0 * v0, 2 * a)
+    num, den = dist.numerator, dist.denominator
+    
+    t_stop = Fraction(v0, a)
+    
+    return problem(
+        problem_tex=f"\\text{{A car traveling at }} {v0} \\text{{ m/s decelerates at }} {a} \\text{{ m/s². Find the stopping distance.}}",
+        answer_tex=plus_C(f"\\dfrac{{{num}}}{{{den}}}" if den != 1 else str(num)),
+        answer_norm=f"{num}/{den}" if den != 1 else str(num),
+        steps=[
+            step("Velocity function", f"v(t) = {v0} - {a}t"),
+            step("Find stopping time", f"v(t) = 0 \\implies {v0} - {a}t = 0 \\implies t = \\dfrac{{{v0}}}{{{a}}} = {t_stop} \\text{{ s}}"),
+            step("Distance = integral of velocity", f"d = \\int_0^{{{t_stop}}} ({v0} - {a}t) \\, dt"),
+            step("Integrate", f"d = \\left[{v0}t - \\dfrac{{{a}}}{2}t^2\\right]_0^{{{t_stop}}}"),
+            step("Evaluate", f"d = {v0}\\cdot\\dfrac{{{v0}}}{{{a}}} - \\dfrac{{{a}}}{2}\\cdot\\dfrac{{{v0}^2}}{{{a}^2}} = \\dfrac{{{v0}^2}}{{2{a}}} = \\dfrac{{{num}}}{{{den}}} \\text{{ m}}"),
+        ],
+    )
+
+
+def _usub_nested_trig():
+    """Nested trig u-sub: ∫cos(x)·sin(sin(x))dx → u=sin(x)."""
+    cases = [
+        {
+            "integrand": "\\cos(x) \\sin(\\sin(x))",
+            "u": "\\sin(x)",
+            "du": "\\cos(x)\\,dx",
+            "integral_u": "\\int \\sin(u) \\, du",
+            "ans_u": "-\\cos(u)+C",
+            "ans": "-\\cos(\\sin(x))+C",
+            "norm": "-cos(sin(x))+C",
+        },
+        {
+            "integrand": "\\sin(x) \\cos(\\cos(x))",
+            "u": "\\cos(x)",
+            "du": "-\\sin(x)\\,dx",
+            "integral_u": "-\\int \\cos(u) \\, du",
+            "ans_u": "-\\sin(u)+C",
+            "ans": "-\\sin(\\cos(x))+C",
+            "norm": "-sin(cos(x))+C",
+        },
+        {
+            "integrand": "e^x \\cos(e^x)",
+            "u": "e^x",
+            "du": "e^x\\,dx",
+            "integral_u": "\\int \\cos(u) \\, du",
+            "ans_u": "\\sin(u)+C",
+            "ans": "\\sin(e^x)+C",
+            "norm": "sin(e^x)+C",
+        },
+    ]
+    c = pick(cases)
+    return problem(
+        problem_tex=f"\\displaystyle\\int {c['integrand']} \\, dx",
+        answer_tex=plus_C(c["ans"]),
+        answer_norm=c["norm"],
+        steps=[
+            step("Identify nested structure", f"\\text{{outer function composed with inner function}}"),
+            step("u-substitution", f"u = {c['u']}"),
+            step("Compute du", f"du = {c['du']}"),
+            step("Rewrite integral", c["integral_u"]),
+            step("Integrate", c["ans_u"]),
+            step("Back-substitute", c["ans"]),
+        ],
+    )
+
+
+def _usub_parameterized():
+    """Parameterized u-sub: ∫(a+bx⁷)/√(8ax+bx⁸)dx → u=8ax+bx⁸."""
+    a = R(1, 5)
+    b = R(1, 5)
+    # u = 8ax + bx⁸, du = (8a + 8bx⁷)dx = 8(a + bx⁷)dx
+    # (a+bx⁷)dx = du/8
+    # ∫(1/8)·u^(-1/2) du = (1/4)·√u + C
+    
+    return problem(
+        problem_tex=f"\\displaystyle\\int \\frac{{{a} + {b}x^7}}{{\\sqrt{{{8*a}x + {b}x^8}}}} \\, dx",
+        answer_tex=plus_C(f"\\dfrac{{1}}{{4}}\\sqrt{{{8*a}x + {b}x^8}}"),
+        answer_norm=f"1/4*sqrt({8*a}*x+{b}*x^8)+C",
+        steps=[
+            step("Identify u", f"u = {8*a}x + {b}x^8"),
+            step("Compute du", f"du = ({8*a} + {8*b}x^7)\\,dx = 8({a} + {b}x^7)\\,dx"),
+            step("Solve for (a+bx⁷)dx", f"({a} + {b}x^7)\\,dx = \\dfrac{{1}}{{8}}\\,du"),
+            step("Rewrite integral", f"\\displaystyle\\int \\frac{{1}}{{\\sqrt{{u}}}} \\cdot \\dfrac{{1}}{{8}} \\, du = \\dfrac{{1}}{{8}}\\int u^{{-1/2}} \\, du"),
+            step("Integrate", f"\\dfrac{{1}}{{8}} \\cdot \\dfrac{{u^{{1/2}}}}{{1/2}} = \\dfrac{{1}}{{4}}\\sqrt{{u}}"),
+            step("Back-substitute", f"\\dfrac{{1}}{{4}}\\sqrt{{{8*a}x + {b}x^8}}"),
+        ],
+    )
+
+
+def _speeding_up_slowing_down():
+    """Particle motion: given s(t), find when speeding up (v·a > 0) vs slowing down (v·a < 0)."""
+    # s(t) = t³ - 6t² + 9t on [0, 5]
+    # v(t) = 3t² - 12t + 9 = 3(t-1)(t-3)
+    # a(t) = 6t - 12 = 6(t-2)
+    # Speeding up: (0,1) ∪ (3,5); Slowing down: (1,3)
+    
+    from problem_builder import dual_problem
+    
+    c = {
+        "s": "t^3 - 6t^2 + 9t",
+        "interval": "[0, 5]",
+        "v": "3t^2 - 12t + 9 = 3(t-1)(t-3)",
+        "a": "6t - 12 = 6(t-2)",
+        "speeding_up": "(0, 1) \\cup (3, 5)",
+        "slowing_down": "(1, 3)",
+        "norm1": "(0,1)U(3,5)",
+        "norm2": "(1,3)",
+    }
+    steps = [
+        step("Find velocity", "v(t) = s'(t) = 3t^2 - 12t + 9 = 3(t-1)(t-3)"),
+        step("Find acceleration", "a(t) = v'(t) = 6t - 12 = 6(t-2)"),
+        step("Find critical points", "v(t) = 0 \\text{ at } t=1, 3; \\quad a(t) = 0 \\text{ at } t=2"),
+        step("Sign chart for v(t)", "v > 0 \\text{ on } (0,1) \\cup (3,5); \\quad v < 0 \\text{ on } (1,3)"),
+        step("Sign chart for a(t)", "a < 0 \\text{ on } (0,2); \\quad a > 0 \\text{ on } (2,5)"),
+        step("Speeding up (same sign)", "v \\cdot a > 0 \\text{ on } (0,1) \\text{ (both +)} \\text{ and } (3,5) \\text{ (both +)}"),
+        step("Slowing down (opposite sign)", "v \\cdot a < 0 \\text{ on } (1,3) \\text{ (v negative, a changes at 2)}"),
+    ]
+    return dual_problem(
+        problem_tex=f"s(t) = {c['s']} \\text{{ on }} {c['interval']}. \\text{{ Find when the particle is speeding up and when it is slowing down.}}",
+        answer1_tex=f"\\text{{Speeding up: }} {c['speeding_up']}",
+        answer1_norm=c["norm1"],
+        answer2_tex=f"\\text{{Slowing down: }} {c['slowing_down']}",
+        answer2_norm=c["norm2"],
+        steps=steps,
+    )
+
+
+diff2 = [_usub_linear, _usub_linear, _usub_polynomial, _usub_trig, _rewrite_then_integrate, _expand_then_integrate]
 
 # ── diff3 — definite integrals, initial value ─────────────────────────────────
 
@@ -243,7 +424,7 @@ def _initial_value_problem():
     )
 
 
-diff3 = [_definite_integral, _definite_integral, _initial_value_problem]
+diff3 = [_definite_integral, _definite_integral, _initial_value_problem, _constant_acceleration_distance, _usub_nested_trig, _speeding_up_slowing_down]
 
 # ── diff4 — definite u-sub, split intervals ───────────────────────────────────
 
@@ -305,7 +486,7 @@ def _split_interval():
     )
 
 
-diff4 = [_definite_usub, _definite_usub, _usub_algebra, _split_interval]
+diff4 = [_definite_usub, _definite_usub, _usub_algebra, _split_interval, _usub_parameterized]
 
 # ── diff5 — second antiderivative, disguised u-sub ───────────────────────────
 
