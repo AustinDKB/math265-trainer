@@ -8,6 +8,12 @@ from generators import (
     factoring, exponents, fractions,
     trig_circle, logs, composition,
     limits, derivatives, integration_basic, integration_advanced,
+    asymptotes, increasing_decreasing, extrema, mvt,
+    numerical_methods, indeterminate_forms, epsilon_delta,
+    hyperbolic_apps, center_of_mass, function_construction,
+    linear_equations, quadratic, polynomials, rational_expressions,
+    systems, absolute_value, radicals, inequalities,
+    sequences, probability,
 )
 from generators import ALL_MODULES
 from module_config import UNLOCK_TIERS
@@ -42,6 +48,26 @@ GENERATORS = {
     "derivatives": derivatives.POOLS,
     "integration": integration_basic.POOLS,
     "adv_integration": integration_advanced.POOLS,
+    "asymptotes": asymptotes.POOLS,
+    "increasing_decreasing": increasing_decreasing.POOLS,
+    "extrema": extrema.POOLS,
+    "mvt": mvt.POOLS,
+    "numerical_methods": numerical_methods.POOLS,
+    "indeterminate_forms": indeterminate_forms.POOLS,
+    "epsilon_delta": epsilon_delta.POOLS,
+    "hyperbolic_apps": hyperbolic_apps.POOLS,
+    "center_of_mass": center_of_mass.POOLS,
+    "function_construction": function_construction.POOLS,
+    "linear_equations": linear_equations.POOLS,
+    "quadratic": quadratic.POOLS,
+    "polynomials": polynomials.POOLS,
+    "rational_expressions": rational_expressions.POOLS,
+    "systems": systems.POOLS,
+    "absolute_value": absolute_value.POOLS,
+    "radicals": radicals.POOLS,
+    "inequalities": inequalities.POOLS,
+    "sequences": sequences.POOLS,
+    "probability": probability.POOLS,
 }
 
 
@@ -345,8 +371,9 @@ def get_jsonl_problem():
     course = request.args.get("course", "calc1")
     topic = request.args.get("topic")
     difficulty = request.args.get("difficulty", type=int)
+    actual_course = None if course == "all" else course
     prob = jsonl_engine.get_next_problem(
-        course=course,
+        course=actual_course,
         topic=topic,
         difficulty=difficulty,
     )

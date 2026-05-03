@@ -27,19 +27,22 @@ _SAFE_MATH = {
 
 
 def safe_eval(expr, variables):
-    """Evaluate an answer_fn expression with a sandboxed namespace."""
+    """Evaluate an answer_fn expression with a sandboxed namespace.
+
+    If evaluation fails due to undefined names (symbolic expression), returns the
+    expression as a string so callers can handle it as a symbolic answer.
+    """
     if not expr or not isinstance(expr, str):
         return None
-    # Disallow anything that looks like a name outside our safe set
-    # Allow: numbers, operators, parentheses, dots, math names, variable names
-    allowed_names = set(_SAFE_MATH.keys()) | set(variables.keys())
-    # Quick safety check: reject double underscores and attribute access
     if "__" in expr or any(bad in expr for bad in ["import", "eval", "exec", "compile", "open"]):
         raise ValueError(f"Unsafe expression: {expr}")
     ns = dict(_SAFE_MATH)
     ns.update(variables)
     try:
         return eval(expr, {"__builtins__": {}}, ns)
+    except NameError:
+        # Undefined name — treat as symbolic expression, return as string
+        return expr
     except Exception as exc:
         raise ValueError(f"Error evaluating '{expr}': {exc}")
 
@@ -52,8 +55,9 @@ TEMPLATE_DIR = Path(__file__).parent / "jsonl_templates"
 def load_templates(course=None, path=None):
     """Load all .jsonl files from the template directory.
 
-    If *course* is given, only files whose stem starts with that course prefix
-    are returned (e.g. course='calc1' loads calc1_*.jsonl).
+    If *course* is given, files are first selected by name prefix (e.g. 'calc1_' matches
+    calc1_*.jsonl). Additionally, templates from mixed files (e.g. calc2_and_precalc.jsonl)
+    are included if their 'course' field matches.
     If *path* is given, load a single file directly.
     """
     templates = []
@@ -73,14 +77,38 @@ def load_templates(course=None, path=None):
     for f in sorted(TEMPLATE_DIR.iterdir()):
         if f.suffix != ".jsonl":
             continue
-        if course and not f.stem.startswith(f"{course}_"):
-            continue
+        if course:
+            # Check if filename matches course prefix
+            if f.stem.startswith(f"{course}_"):
+                file_match = True
+            else:
+                # Check if any template in file has matching course
+                file_match = False
+                try:
+                    with f.open("r", encoding="utf-8") as fh:
+                        for line in fh:
+                            line = line.strip()
+                            if not line:
+                                continue
+                            try:
+                                tmpl = json.loads(line)
+                                if tmpl.get("course") == course:
+                                    file_match = True
+                                    break
+                            except Exception:
+                                continue
+                except Exception:
+                    continue
+            if not file_match:
+                continue
         with f.open("r", encoding="utf-8") as fh:
             for line in fh:
                 line = line.strip()
                 if not line:
                     continue
-                templates.append(json.loads(line))
+                tmpl = json.loads(line)
+                if not course or tmpl.get("course") == course:
+                    templates.append(tmpl)
     return templates
 
 
@@ -102,6 +130,8 @@ def _sample_variable(spec):
         n_steps = int((hi - lo) / step)
         return round(lo + random.randint(0, n_steps) * step, 6)
     if vtype == "pick":
+        return random.choice(spec["values"])
+    if vtype == "str":
         return random.choice(spec["values"])
     raise ValueError(f"Unknown variable type: {vtype}")
 
@@ -133,12 +163,18 @@ def fill_template(template, max_retries=20):
             # All computed values succeeded
             params.update(derived)
 
-            # 3. Evaluate answer
+            # 3. Evaluate answer — allow fallback below on failure
             try:
                 answer_val = safe_eval(answer_fn, params) if answer_fn else None
                 answer_val2 = safe_eval(answer_fn2, params) if answer_fn2 else None
             except ValueError:
-                continue
+                answer_val = None
+                answer_val2 = None
+
+            # 4. Fall back: if answer_fn didn't produce a usable numeric value
+            # but template has answerNorm, prefer answerNorm so the LaTeX answer is used.
+            if (answer_val is None or isinstance(answer_val, str)) and template.get("answerNorm"):
+                answer_val = None
 
             # 4. Build substituted strings
             def sub(text):
@@ -223,7 +259,7 @@ def apply_skin(filled, skin_name=None, skins_data=None):
         params = filled.get("_params", {})
         try:
             filled["problemTex"] = narrative.format(**params)
-        except KeyError:
+        except (KeyError, ValueError):
             pass
         filled["skin"] = ctx.get("skin", "general")
         return filled
@@ -235,7 +271,7 @@ def apply_skin(filled, skin_name=None, skins_data=None):
         params = filled.get("_params", {})
         try:
             filled["problemTex"] = narrative.format(**params)
-        except KeyError:
+        except (KeyError, ValueError):
             pass
         filled["skin"] = skin_name
         return filled

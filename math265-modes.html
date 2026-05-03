@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MATH 265 · Word Problem Modes</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="math265-shared.css">
+<style>
+/* Mode-specific overrides */
+#mode-badge { display: none; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; padding: 3px 10px; border-radius: 4px; margin: 4px auto 0; width: fit-content; }
+#mode-badge.solve { display: block; background: rgba(88,166,255,0.15); color: var(--blue); border: 1px solid rgba(88,166,255,0.35); }
+#mode-badge.justify { display: block; background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid rgba(74,222,128,0.3); }
+#mode-badge.backwards { display: block; background: rgba(251,191,36,0.12); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); }
+#mode-badge.break { display: block; background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+#mode-badge.derive { display: block; background: rgba(167,139,250,0.12); color: var(--purple); border: 1px solid rgba(167,139,250,0.3); }
+.mode-mode-btns { margin-left: auto; display: flex; gap: 6px; }
+.course-label { font-size: 12px; color: var(--muted); margin-right: 4px; }
+#break-ui { display: none; margin-top: 8px; padding: 10px; background: var(--bg2); border-radius: var(--radius); border: 1px solid var(--border); }
+#break-ui.visible { display: block; }
+#break-ui h4 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.error-options { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.error-chip { padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg3); color: var(--muted); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.error-chip:hover { border-color: var(--red); color: var(--text); }
+.error-chip.selected { background: rgba(248,113,113,0.15); border-color: var(--red); color: var(--red); }
+#model-answer-area { display: none; margin-top: 10px; padding: 10px 12px; background: rgba(74,222,128,0.07); border: 1px solid rgba(74,222,128,0.25); border-radius: var(--radius); }
+#model-answer-area.visible { display: block; }
+#model-answer-area .model-label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--green); margin-bottom: 6px; }
+#model-answer-area .model-math .katex { font-size: 1.3rem; }
+#backwards-hint { display: none; font-size: 12px; color: var(--yellow); background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); border-radius: 5px; padding: 6px 10px; margin-top: 6px; }
+#backwards-hint.visible { display: block; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>MATH 265 · Word Problem Modes</h1>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <button id="dash-btn" class="mode-btn" style="margin:0;">Stats</button>
+      <span id="timer">—</span>
+    </div>
+  </div>
+
+  <div id="tabs">
+    <button class="tab" data-course="calc1">Calc 1</button>
+    <button class="tab" data-course="precalc">Precalc</button>
+    <button class="tab" data-course="algebra">Algebra</button>
+    <button class="tab active" data-course="all">All</button>
+  </div>
+
+  <div id="subbar">
+    <label class="course-label">Course:</label>
+    <div id="mode-btns">
+      <button class="mode-btn active" data-mode="solve">Solve</button>
+      <button class="mode-btn" data-mode="justify">Justify</button>
+      <button class="mode-btn" data-mode="backwards">Backwards</button>
+      <button class="mode-btn" data-mode="break">Break</button>
+      <button class="mode-btn" data-mode="derive">Derive</button>
+    </div>
+  </div>
+
+  <canvas id="xp-confetti-canvas"></canvas>
+  <div id="main">
+    <div id="problem-type"></div>
+    <div id="mode-badge"></div>
+    <div id="problem-display"><span style="color:var(--muted);font-size:14px;">Loading...</span></div>
+    <div id="input-area">
+      <div id="input-row">
+        <input id="answer-input" type="text" placeholder="type answer here" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button id="check-btn">Check</button>
+      </div>
+      <div id="backwards-hint">Answer shown above — reconstruct the problem setup</div>
+      <div id="live-preview"></div>
+      <div id="parse-error"></div>
+      <div id="feedback"></div>
+      <div id="break-ui">
+        <h4>Identify the Error Type</h4>
+        <div class="error-options" id="error-options"></div>
+        <div id="break-fix-row" style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+          <input id="break-fix-input" type="text" placeholder="corrected answer" autocomplete="off" style="flex:1;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-mono);font-size:14px;outline:none;">
+          <button id="break-check-btn" style="padding:8px 14px;background:var(--accent);border:1px solid #2ea043;border-radius:6px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Check Fix</button>
+        </div>
+      </div>
+      <div id="model-answer-area">
+        <div class="model-label">Model Answer</div>
+        <div class="model-math" id="model-answer-display"></div>
+      </div>
+    </div>
+    <div id="bug-report-area">
+      <button id="bug-report-link">Report bug</button>
+      <div id="bug-report-form">
+        <textarea id="bug-note" placeholder="Describe the issue (optional)"></textarea>
+        <div id="bug-report-actions">
+          <button id="bug-submit-btn">Submit</button>
+          <button id="bug-cancel-btn">Cancel</button>
+          <span id="bug-status"></span>
+        </div>
+      </div>
+    </div>
+    <div id="steps-area">
+      <div id="steps-controls">
+        <button id="reveal-step-btn" disabled>Reveal step 1</button>
+        <button id="skip-btn">Skip →</button>
+      </div>
+      <div id="steps-list"></div>
+    </div>
+    <div id="study-resources-area">
+      <button id="study-toggle">&#128218; Study Resources</button>
+      <div id="study-panel">
+        <div class="study-section">
+          <div class="study-section-title">YouTube Search Terms</div>
+          <div id="study-search-terms" class="study-search-tags"></div>
+        </div>
+        <div class="study-section">
+          <div class="study-section-title">Top Channels for This Subject</div>
+          <div id="study-channels" class="study-channels"></div>
+        </div>
+        <div class="study-section">
+          <div class="study-section-title">Ask an AI to Teach You This Concept</div>
+          <div id="study-prompt-text"></div>
+          <button id="study-copy-prompt">Copy Prompt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="stats-bar">
+    <div id="stats-row">
+      <span>Session: <strong id="stat-correct">0</strong>/<strong id="stat-total">0</strong></span>
+      <div id="progress-bar-wrap"><div id="progress-bar-fill" style="width:0%"></div></div>
+      <span id="streak-display">Streak: <strong id="stat-streak">0</strong></span>
+      <span>Best: <strong id="stat-best">0</strong></span>
+    </div>
+    <div id="xp-bar-row">
+      <span id="xp-level-badge">LVL 1</span>
+      <div id="xp-bar-track"><div id="xp-bar-fill"></div></div>
+      <span id="xp-bar-label">— XP</span>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard-overlay">
+  <div id="dash-inner">
+    <button class="dash-close" id="dash-close-btn">✕ Close</button>
+    <h2>Progress Dashboard</h2>
+    <div class="dash-section">
+      <h3>Session Accuracy (last 10)</h3>
+      <div class="spark-chart" id="spark-chart"></div>
+    </div>
+    <div class="dash-section">
+      <h3>Totals</h3>
+      <div id="dash-totals" style="font-size:13px;line-height:2;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'http://127.0.0.1:5000';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILITY
+// ─────────────────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const R = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const pick = arr => arr[R(0,arr.length-1)];
+
+function ensureKatex(fn){
+  if(typeof katex !== 'undefined'){ fn(); return; }
+  const iv = setInterval(()=>{ if(typeof katex !== 'undefined'){ clearInterval(iv); fn(); } }, 50);
+  setTimeout(()=>{ clearInterval(iv); fn(); }, 5000);
+}
+
+function renderKaTeX(tex, el, display=false){
+  try {
+    if(typeof katex==='undefined'){ el.textContent=tex; return; }
+    katex.render(tex, el, { displayMode: display, throwOnError: false, trust: true });
+  } catch(e){ el.textContent = tex; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STORAGE
+// ─────────────────────────────────────────────────────────────────────────────
+const STORE_KEY = 'math265_modes_v1';
+function loadStore(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const p = JSON.parse(raw);
+      if(!p.sessions) p.sessions=[];
+      if(!p.badges) p.badges={};
+      return p;
+    }
+  } catch(e){}
+  return { sessions:[], badges:{}, totalCorrect:0, totalAttempts:0 };
+}
+function saveStore(){ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+let store = loadStore();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SESSION STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let state = {
+  course: 'all',
+  mode: 'solve',         // solve, justify, backwards, break, derive
+  currentProblem: null,
+  stepsRevealed: 0,
+  answered: false,
+  sessionCorrect: 0,
+  sessionTotal: 0,
+  sessionStreak: 0,
+  sessionBestStreak: 0,
+  sessionXp: 0,
+  timerSeconds: 0,
+  timerInterval: null,
+  problemTimer: 0,
+  problemTimerInterval: null,
+  recentProblems: [],
+  lastUserAnswer: '',
+  lastAttemptId: null,
+  selectedError: '',
+  lastAttemptSnapshot: null,
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INPUT PARSER / LIVE PREVIEW
+// ─────────────────────────────────────────────────────────────────────────────
+function userInputToTex(input){
+  let s = input.trim();
+  if(!s) return '';
+  s = s.replace(/\bsin\^2\s*x\b/g,'\\sin^2 x');
+  s = s.replace(/\bcos\^2\s*x\b/g,'\\cos^2 x');
+  s = s.replace(/\btan\^2\s*x\b/g,'\\tan^2 x');
+  s = s.replace(/\bsin\s*x\b/g,'\\sin x');
+  s = s.replace(/\bcos\s*x\b/g,'\\cos x');
+  s = s.replace(/\btan\s*x\b/g,'\\tan x');
+  s = s.replace(/x\^\((-?\d+)\/(\d+)\)/g, (m,n,d)=>`x^{${n}/${d}}`);
+  s = s.replace(/x\^(-?\d+)\/(\d+)/g, (m,n,d)=>`x^{${n}/${d}}`);
+  s = s.replace(/x\^\{(\d+)\/(\d+)\}/g, (m,n,d)=>`x^{${n}/${d}}`);
+  s = s.replace(/sqrt\(([^)]+)\)/g,'\\sqrt{$1}');
+  s = s.replace(/cbrt\(([^)]+)\)/g,'\\sqrt[3]{$1}');
+  s = s.replace(/\btan\^(-?\d+)\s*x\b/g,'\\tan^{$1} x');
+  s = s.replace(/ln\(([^)]+)\)/g,'\\ln($1)');
+  s = s.replace(/log_(\d+)\(([^)]+)\)/g,'\\log_{$1}($2)');
+  s = s.replace(/log\(([^)]+)\)/g,'\\log($1)');
+  s = s.replace(/e\^(-?\w+)/g,'e^{$1}');
+  s = s.replace(/\bpi\b/g,'\\pi');
+  s = s.replace(/([0-9])([a-zA-Z])/g,'$1\\cdot $2');
+  s = s.replace(/\)\(/g,')\\cdot (');
+  return s;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// XP
+// ─────────────────────────────────────────────────────────────────────────────
+function computeXp(diff){ return 10 * diff; }
+
+function initXp(){
+  const raw = localStorage.getItem('math265_xp') || '{}';
+  try {
+    const xp = JSON.parse(raw);
+    state.sessionXp = xp.current || 0;
+  } catch(e){ state.sessionXp = 0; }
+  updateXpBar();
+}
+
+function addXp(amount){
+  state.sessionXp += amount;
+  localStorage.setItem('math265_xp', JSON.stringify({current: state.sessionXp}));
+  updateXpBar();
+  if(amount > 0) spawnXpPop(amount);
+}
+
+function updateXpBar(){
+  const lvl = Math.floor(state.sessionXp / 500) + 1;
+  const pct = (state.sessionXp % 500) / 500 * 100;
+  $('xp-level-badge').textContent = `LVL ${lvl}`;
+  $('xp-bar-fill').style.width = pct + '%';
+  $('xp-bar-label').textContent = `${state.sessionXp % 500}/500 XP`;
+}
+
+function spawnXpPop(amount){
+  const pop = document.createElement('div');
+  pop.className = 'xp-pop';
+  pop.textContent = `+${amount}`;
+  document.body.appendChild(pop);
+  setTimeout(()=>pop.remove(), 1600);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TIMER
+// ─────────────────────────────────────────────────────────────────────────────
+function startTimer(){
+  clearInterval(state.timerInterval);
+  state.timerSeconds = 0;
+  state.timerInterval = setInterval(()=>{
+    state.timerSeconds++;
+    const m = Math.floor(state.timerSeconds / 60);
+    const s = state.timerSeconds % 60;
+    $('timer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if(state.timerSeconds % 60 === 0) $('timer').classList.add('warning');
+    else $('timer').classList.remove('warning');
+  }, 1000);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROBLEM FETCHING
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadNewProblem(){
+  const problem = await fetchJsonlProblem();
+  state.currentProblem = problem;
+  state.stepsRevealed = 0;
+  state.answered = false;
+  state.lastUserAnswer = '';
+  state.selectedError = '';
+  resetBugReport();
+
+  const input = $('answer-input');
+  input.value = '';
+  input.className = '';
+  input.disabled = false;
+
+  $('feedback').textContent = '';
+  $('feedback').className = '';
+  $('live-preview').innerHTML = '';
+  $('parse-error').textContent = '';
+  $('check-btn').disabled = false;
+  $('model-answer-area').classList.remove('visible');
+  $('backwards-hint').classList.remove('visible');
+  $('break-ui').classList.remove('visible');
+
+  renderProblem(problem);
+  renderSteps(problem, 0);
+  input.focus();
+
+  clearInterval(state.problemTimerInterval);
+  state.problemTimer = 0;
+  state.problemTimerInterval = setInterval(()=>state.problemTimer++, 1000);
+}
+
+async function fetchJsonlProblem(){
+  const seen = new Set(state.recentProblems);
+  const course = state.course === 'all' ? '' : state.course;
+  let problem;
+  for(let i = 0; i < 8; i++){
+    let url = `${API_BASE}/api/problem/jsonl`;
+    const params = [];
+    if(course) params.push(`course=${course}`);
+    if(params.length) url += '?' + params.join('&');
+    try {
+      const resp = await fetch(url);
+      problem = await resp.json();
+      if(!seen.has(problem.problemTex)) break;
+    } catch(e){
+      problem = { problemTex: 'Error loading problem', answerTex: '', answerNorm: '' };
+      break;
+    }
+  }
+  state.recentProblems.push(problem.problemTex);
+  if(state.recentProblems.length > 50) state.recentProblems.shift();
+  return problem;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDERING
+// ─────────────────────────────────────────────────────────────────────────────
+function renderProblem(problem){
+  const probType = problem.topic ? `${problem.topic} · ${problem.method}` : (problem.module || '');
+  $('problem-type').textContent = probType;
+
+  const badge = $('mode-badge');
+  const pm = problem.mode || 'solve';
+  badge.className = pm;
+  const modeLabels = { solve:'Solve', justify:'Justify', backwards:'Backwards', break:'Break an Error', derive:'Derive' };
+  badge.textContent = modeLabels[pm] || pm;
+
+  const display = $('problem-display');
+  display.innerHTML = '';
+  const span = document.createElement('span');
+  ensureKatex(()=>renderKaTeX(problem.problemTex, span));
+  display.appendChild(span);
+
+  if(pm === 'backwards'){
+    $('backwards-hint').classList.add('visible');
+    const ma = $('model-answer-area');
+    ma.classList.add('visible');
+    const mad = $('model-answer-display');
+    mad.innerHTML = '';
+    ensureKatex(()=>renderKaTeX(problem.answerTex || problem.answerNorm || '', mad, true));
+  }
+
+  if(pm === 'break'){
+    $('break-ui').classList.add('visible');
+    renderBreakErrors(problem);
+  }
+}
+
+function renderBreakErrors(problem){
+  const opts = $('error-options');
+  opts.innerHTML = '';
+  const modeData = problem.modeData || {};
+  const errors = modeData.errors || [];
+  const errorTypes = errors.length ? errors.map(e => e.type) : ['log_base_error','wrong_identity','quadrant_error','algebraic_error','rate_subtraction'];
+  const displayNames = {
+    log_base_error:'Wrong log base',
+    wrong_identity:'Wrong identity',
+    quadrant_error:'Quadrant error',
+    algebraic_error:'Algebraic error',
+    rate_subtraction:'Rate subtraction error',
+  };
+  errorTypes.forEach(type => {
+    const chip = document.createElement('button');
+    chip.className = 'error-chip';
+    chip.textContent = displayNames[type] || type;
+    chip.dataset.type = type;
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.error-chip').forEach(c=>c.classList.remove('selected'));
+      chip.classList.add('selected');
+      state.selectedError = type;
+    });
+    opts.appendChild(chip);
+  });
+}
+
+function renderSteps(problem, count){
+  const list = $('steps-list');
+  if(!problem.steps || !problem.steps.length){
+    list.innerHTML = '';
+    $('reveal-step-btn').disabled = true;
+    return;
+  }
+  const steps = problem.steps.slice(0, count);
+  list.innerHTML = '';
+  steps.forEach((step, i)=>{
+    const item = document.createElement('div');
+    item.className = 'step-item revealed';
+    item.innerHTML = `<div class="step-label">${step.label}</div><div class="step-math"></div><div class="step-note">${step.note||''}</div>`;
+    const mathEl = item.querySelector('.step-math');
+    ensureKatex(()=>renderKaTeX(step.math || '', mathEl));
+    list.appendChild(item);
+  });
+  $('reveal-step-btn').disabled = count >= problem.steps.length;
+  $('reveal-step-btn').textContent = count >= problem.steps.length ? 'All steps shown' : `Reveal step ${count+1}`;
+}
+
+function revealNextStep(){
+  if(!state.currentProblem || !state.currentProblem.steps) return;
+  if(state.stepsRevealed < state.currentProblem.steps.length){
+    state.stepsRevealed++;
+    renderSteps(state.currentProblem, state.stepsRevealed);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANSWER CHECKING
+// ─────────────────────────────────────────────────────────────────────────────
+async function submitAnswer(){
+  if(state.answered) return;
+  const input = $('answer-input');
+  const u = input.value.trim();
+  if(!u) return;
+
+  $('check-btn').disabled = true;
+  state.answered = true;
+  state.lastUserAnswer = u;
+  clearInterval(state.problemTimerInterval);
+
+  const prob = state.currentProblem;
+  const pm = prob.mode || 'solve';
+
+  if(pm === 'justify' || pm === 'backwards' || pm === 'derive'){
+    const correct = bool(u && u.trim());
+    handleAnswerResult(correct, prob, pm, u);
+  } else if(pm === 'break'){
+    const selected = state.selectedError;
+    const fix = $('break-fix-input').value.trim();
+    if(!selected){
+      $('feedback').textContent = 'Select an error type first';
+      $('feedback').className = 'wrong';
+      $('check-btn').disabled = false;
+      state.answered = false;
+      return;
+    }
+    await checkBreakAnswer(prob, selected, fix);
+  } else {
+    await checkSolveAnswer(prob, u);
+  }
+}
+
+async function checkSolveAnswer(problem, userAnswer){
+  try {
+    const resp = await fetch(`${API_BASE}/api/check`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({problem, input: userAnswer, timeSec: state.problemTimer, sessionStreak: state.sessionStreak})
+    });
+    const result = await resp.json();
+    handleAnswerResult(result.result === 'correct', problem, 'solve', userAnswer);
+  } catch(e){
+    $('feedback').textContent = 'Network error';
+    $('feedback').className = 'wrong';
+    $('check-btn').disabled = false;
+    state.answered = false;
+  }
+}
+
+async function checkBreakAnswer(problem, selectedError, userFix){
+  try {
+    const resp = await fetch(`${API_BASE}/api/check/mode`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        mode: 'break',
+        userInput: userFix,
+        problem,
+        selectedError,
+        userFix
+      })
+    });
+    const result = await resp.json();
+    if(result.result === 'correct'){
+      handleAnswerResult(true, problem, 'break', userFix);
+    } else {
+      $('feedback').textContent = result.reason === 'wrong_error' ? 'Wrong error type. Try again.' : 'Incorrect fix. Try again.';
+      $('feedback').className = 'wrong';
+      $('check-btn').disabled = false;
+      state.answered = false;
+    }
+  } catch(e){
+    $('feedback').textContent = 'Network error';
+    $('feedback').className = 'wrong';
+    $('check-btn').disabled = false;
+    state.answered = false;
+  }
+}
+
+function handleAnswerResult(correct, problem, mode, userAnswer){
+  const fb = $('feedback');
+  const input = $('answer-input');
+
+  if(correct){
+    input.className = 'correct';
+    fb.textContent = 'Correct!';
+    fb.className = 'correct';
+    flashMain('correct');
+    state.sessionCorrect++;
+    state.sessionStreak++;
+    if(state.sessionStreak > state.sessionBestStreak) state.sessionBestStreak = state.sessionStreak;
+    const xp = computeXp(problem.difficulty || 1);
+    addXp(xp);
+    spawnXpPop(xp);
+  } else {
+    input.className = 'wrong';
+    fb.textContent = 'Not quite — keep trying!';
+    fb.className = 'wrong';
+    flashMain('wrong');
+    state.sessionStreak = 0;
+  }
+
+  state.sessionTotal++;
+  updateStats();
+  saveStore();
+
+  if(mode !== 'solve'){
+    const ma = $('model-answer-area');
+    ma.classList.add('visible');
+    const mad = $('model-answer-display');
+    mad.innerHTML = '';
+    const answerTex = problem.answerTex || problem.answerNorm || '';
+    ensureKatex(()=>renderKaTeX(answerTex, mad, true));
+  }
+
+  if(state.sessionTotal > 0 && state.sessionTotal % 5 === 0){
+    setTimeout(loadNewProblem, 1800);
+  }
+}
+
+function flashMain(type){
+  const el = $('main');
+  el.classList.remove('flash-correct','flash-wrong');
+  void el.offsetWidth;
+  el.classList.add(type === 'correct' ? 'flash-correct' : 'flash-wrong');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATS
+// ─────────────────────────────────────────────────────────────────────────────
+function updateStats(){
+  $('stat-correct').textContent = state.sessionCorrect;
+  $('stat-total').textContent = state.sessionTotal;
+  $('stat-streak').textContent = state.sessionStreak;
+  $('stat-best').textContent = state.sessionBestStreak;
+  const pct = state.sessionTotal > 0 ? (state.sessionCorrect / state.sessionTotal * 100) : 0;
+  $('progress-bar-fill').style.width = pct + '%';
+  store.totalCorrect = (store.totalCorrect || 0) + (state.sessionCorrect > 0 ? 1 : 0);
+  store.totalAttempts = (store.totalAttempts || 0) + 1;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const total = store.totalAttempts || 0;
+  const correct = store.totalCorrect || 0;
+  const acc = total > 0 ? Math.round(correct / total * 100) : 0;
+  $('dash-totals').innerHTML = `
+    <div>Total problems: <strong>${total}</strong></div>
+    <div>Correct: <strong>${correct}</strong></div>
+    <div>Accuracy: <strong>${acc}%</strong></div>
+    <div>Current XP: <strong>${state.sessionXp}</strong></div>
+  `;
+  renderSparkChart();
+}
+
+function renderSparkChart(){
+  const chart = $('spark-chart');
+  chart.innerHTML = '';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUG REPORT
+// ─────────────────────────────────────────────────────────────────────────────
+function resetBugReport(){
+  $('bug-report-form').classList.remove('open');
+  $('bug-note').value = '';
+  $('bug-status').textContent = '';
+  state.lastAttemptSnapshot = null;
+  state.lastAttemptId = null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LIVE PREVIEW
+// ─────────────────────────────────────────────────────────────────────────────
+$('answer-input').addEventListener('input', ()=>{
+  const v = $('answer-input').value;
+  const lp = $('live-preview');
+  if(!v.trim()){
+    lp.innerHTML = '';
+    $('parse-error').textContent = '';
+    return;
+  }
+  try {
+    const tex = userInputToTex(v);
+    lp.innerHTML = '';
+    const span = document.createElement('span');
+    ensureKatex(()=>renderKaTeX(tex, span));
+    lp.appendChild(span);
+    $('parse-error').textContent = '';
+  } catch(e){
+    $('parse-error').textContent = 'Syntax error';
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EVENT WIRING
+// ─────────────────────────────────────────────────────────────────────────────
+$('check-btn').addEventListener('click', submitAnswer);
+$('reveal-step-btn').addEventListener('click', revealNextStep);
+$('skip-btn').addEventListener('click', ()=>loadNewProblem());
+
+$('dash-btn').addEventListener('click', ()=>{
+  renderDashboard();
+  $('dashboard-overlay').classList.add('visible');
+});
+$('dash-close-btn').addEventListener('click', ()=>$('dashboard-overlay').classList.remove('visible'));
+
+$('bug-report-link').addEventListener('click', ()=>{
+  $('bug-report-form').classList.toggle('open');
+  if($('bug-report-form').classList.contains('open')) $('bug-note').focus();
+});
+$('bug-cancel-btn').addEventListener('click', resetBugReport);
+
+$('bug-submit-btn').addEventListener('click', async ()=>{
+  if(!state.currentProblem) return;
+  const note = $('bug-note').value.trim();
+  $('bug-status').textContent = 'Sending…';
+  $('bug-submit-btn').disabled = true;
+  try {
+    const resp = await fetch(`${API_BASE}/api/report`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({problem: state.currentProblem, userAnswer: state.lastUserAnswer || '', note})
+    });
+    if(resp.ok){
+      $('bug-status').textContent = 'Reported. Thanks!';
+      setTimeout(resetBugReport, 1500);
+    } else {
+      $('bug-status').textContent = 'Error — try again';
+    }
+  } catch(e){
+    $('bug-status').textContent = 'Network error';
+  }
+  $('bug-submit-btn').disabled = false;
+});
+
+// Course tabs
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    state.course = tab.dataset.course;
+    loadNewProblem();
+  });
+});
+
+// Mode buttons
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  if(!btn.dataset.mode) return;
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode = btn.dataset.mode;
+  });
+});
+
+// Break check fix button
+$('break-check-btn').addEventListener('click', ()=>{
+  if(!state.selectedError){
+    $('feedback').textContent = 'Select an error type first';
+    $('feedback').className = 'wrong';
+    return;
+  }
+  const fix = $('break-fix-input').value.trim();
+  if(!fix) return;
+  checkBreakAnswer(state.currentProblem, state.selectedError, fix);
+});
+
+// Study resources
+const STUDY_RESOURCES = {
+  calc1: {
+    searches: [['calculus 1 introduction','limit calculus tutorial','derivative power rule']],
+    prompts: {1:'I am learning limits and derivatives in Calculus 1. Teach me the power rule for derivatives with 2 examples, then give me 3 practice problems.'}
+  },
+  precalc: {
+    searches: [['precalculus algebra review','functions precalculus','trigonometry introduction']],
+    prompts: {1:'I am reviewing Precalculus topics: functions, trigonometry, and logarithms. Teach me function composition with 2 examples, then give me 3 practice problems.'}
+  },
+  algebra: {
+    searches: [['algebra 1 review','linear equations','quadratic formula']],
+    prompts: {1:'I am reviewing Algebra topics: linear and quadratic equations. Teach me the quadratic formula with 2 examples, then give me 3 practice problems.'}
+  }
+};
+
+function updateStudyResources(){
+  const r = STUDY_RESOURCES[state.course] || STUDY_RESOURCES.calc1;
+  const terms = $('study-search-terms');
+  terms.innerHTML = '';
+  (r.searches[0] || []).forEach(q => {
+    const tag = document.createElement('div');
+    tag.className = 'study-tag';
+    tag.innerHTML = `<a href="https://www.youtube.com/results?search_query=${encodeURIComponent(q)}" target="_blank">${q}</a>`;
+    terms.appendChild(tag);
+  });
+  const pt = $('study-prompt-text');
+  pt.textContent = r.prompts[1] || '';
+}
+
+$('study-toggle').addEventListener('click', ()=>{
+  $('study-toggle').classList.toggle('open');
+  $('study-panel').classList.toggle('open');
+  if($('study-panel').classList.contains('open')) updateStudyResources();
+});
+
+$('study-copy-prompt').addEventListener('click', ()=>{
+  const text = $('study-prompt-text').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = $('study-copy-prompt');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent = 'Copy Prompt'; btn.classList.remove('copied'); }, 2000);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+initXp();
+ensureKatex(()=>{
+  startTimer();
+  startSession();
+});
+
+function startSession(){
+  state.sessionCorrect = 0;
+  state.sessionTotal = 0;
+  state.sessionStreak = 0;
+  state.sessionBestStreak = 0;
+  state.recentProblems = [];
+  updateStats();
+  loadNewProblem();
+}
+
+// Fallback
+setTimeout(()=>{ if(!state.currentProblem) startSession(); }, 3000);
+</script>
+</body>
+</html>
