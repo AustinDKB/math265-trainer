@@ -27,15 +27,19 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 #timer.warning { color: var(--yellow); }
 #timer.danger { color: var(--red); }
 
-/* ── TABS / CATEGORY LIST ── */
-#tabs { display: flex; flex-direction: column; gap: 3px; padding: 10px 0 0; flex-shrink: 0; }
-.cat-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg2); color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s; user-select: none; }
+/* ── LAYOUT: sidebar + problem area ── */
+#content { display: flex; flex-direction: row; gap: 16px; flex: 1; min-height: 0; }
+#tabs { display: flex; flex-direction: column; gap: 3px; padding: 10px 0 0; flex: 0 0 48%; overflow-y: auto; }
+#right-panel { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+/* ── CATEGORY LIST ── */
+.cat-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg2); color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s; user-select: none; text-align: left; }
 .cat-item:hover:not(.locked) { border-color: var(--blue); color: var(--text); }
 .cat-item.active { background: var(--blue); border-color: var(--blue); color: #0f1117; font-weight: 600; }
 .cat-item.active .cat-meta { color: #0f1117; }
 .cat-item.locked { cursor: default; opacity: 0.5; background: rgba(255,255,255,0.03); }
 .cat-item.locked .cat-meta { opacity: 0.7; }
-.cat-name { flex: 1; }
+.cat-name { flex: 1; text-align: left; }
 .cat-meta { font-size: 12px; font-weight: 600; margin-left: 8px; white-space: nowrap; }
 
 /* legacy tab styles (keep for safety) */
@@ -238,7 +242,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 #unlock-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
 /* mobile */
-@media (max-width: 600px) {
+@media (max-width: 800px) {
+  #content { flex-direction: column; }
+  #tabs { flex: 0 0 auto; width: 100%; max-height: 40vh; }
   #problem-display .katex { font-size: 1.6rem; }
   #answer-input { font-size: 13px; }
   #tabs { gap: 3px; }
