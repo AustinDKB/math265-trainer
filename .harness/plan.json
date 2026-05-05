@@ -1,0 +1,1379 @@
+{
+  "project_title": "Math265 Trainer - Vertical Category List with Mastery",
+  "project_goal": "Frontend displays all problem categories as vertical list sorted alphabetically by module name, each showing real-time mastery percentage (correct/total*100), replacing horizontal tabs, clicking starts module immediately.",
+  "phases": [
+    {
+      "phase_id": 1,
+      "title": "Analyze Existing Structure",
+      "goal": "Understand current tab implementation and stats data flow. Identify all modules and how mastery data is stored.",
+      "task_type": "Research - Human",
+      "complexity_lvl": 2,
+      "complexity_desc": "Need to trace stats storage, tab rendering, and module selection logic in single large HTML file.",
+      "inputs": [
+        "math265-trainer.html source code",
+        "Interview requirements (vertical list, alphabetical order, real-time updates, locked+unlocked modules)"
+      ],
+      "outputs": [
+        "Documented location of module list, stats structure, and tab click handlers",
+        "List of all module identifiers and their display names"
+      ],
+      "validation_criteria": "Can identify exact code sections for tab rendering, stats calculation, and module selection. Know where ALL_MODULES or equivalent is defined.",
+      "key_risk": "Single 2800-line file may have tightly coupled code making changes risky.",
+      "section_dependencies": null,
+      "estimated_subsections": 2,
+      "subsections": [
+        {
+          "subphase_id": 101,
+          "title": "Map Tab HTML Structure",
+          "goal": "Identify all tab button elements and their data-module attributes. Document exact line numbers and module identifiers. Goal achieved when all 10 current modules are listed with line references.",
+          "subphase_dependencies": null,
+          "task_type": "Research - Human",
+          "input_state": [
+            "math265-trainer.html source code"
+          ],
+          "output_state": [
+            "List of tab button line numbers (22-31)",
+            "List of module identifiers: factoring, exponents, fractions, trig, logs, composition, limits, derivatives, integration, adv_integration"
+          ],
+          "key_files_touched": null,
+          "integration_risk": "None - read-only analysis",
+          "test_strategy": null,
+          "estimated_tasks": 2,
+          "tasks": [
+            {
+              "task_id": 10101,
+              "title": "Locate Tab Buttons",
+              "description": "Search math265-trainer.html for all button elements with data-module attributes. Document exact line numbers where each tab button appears. Extract the module identifier value from each data-module attribute. This creates the baseline inventory of current navigation structure.",
+              "dependencies": null,
+              "input_files": [
+                "math265-trainer.html"
+              ],
+              "function_context": null,
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/tab-structure-mapping.md",
+                  "description": "Markdown document listing all tab buttons with line numbers and data-module values"
+                }
+              ],
+              "pattern_references": [
+                "DOM Element Inspection",
+                "Attribute Extraction Pattern"
+              ],
+              "constraints": [
+                "Document exact line numbers as they appear in source",
+                "Include full data-module attribute value for each button",
+                "Note any variations in button structure or attributes"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "No tab buttons documented or file not created",
+                "In Progress": "Some tab buttons documented but not all 10, or line numbers missing",
+                "Complete": "All 10 tab buttons documented with exact line numbers and data-module values"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify documented line numbers match actual button locations in source file",
+                  "input_data": "math265-trainer.html source code",
+                  "expected_output": "All 10 line numbers correctly reference button elements with data-module attributes"
+                }
+              ],
+              "notes": "Focus on buttons in navigation/tab area. May be around lines 22-31 or 1711 based on conflicting references."
+            },
+            {
+              "task_id": 10102,
+              "title": "Identify Missing Modules",
+              "description": "Compare documented tab modules against backend/generators/ directory problem types. List which generator categories lack corresponding tab buttons. This identifies gaps between available problem types and user-accessible modules.",
+              "dependencies": [
+                10101
+              ],
+              "input_files": [
+                "docs/tab-structure-mapping.md",
+                "backend/generators/"
+              ],
+              "function_context": null,
+              "output_files": [
+                {
+                  "action": "Edit",
+                  "path": "docs/tab-structure-mapping.md",
+                  "description": "Append section listing missing modules that exist in generators but not in tab structure"
+                }
+              ],
+              "pattern_references": [
+                "Gap Analysis Pattern",
+                "Cross-Reference Documentation"
+              ],
+              "constraints": [
+                "Only list modules that have generator files but no tab button",
+                "Include generator filename for each missing module",
+                "Do not modify existing tab documentation section"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "Missing modules section not added or comparison not performed",
+                "In Progress": "Some missing modules identified but generator directory not fully reviewed",
+                "Complete": "All missing modules documented with corresponding generator filenames"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify each listed missing module has a corresponding generator file and no tab button",
+                  "input_data": "backend/generators/ directory contents and tab-structure-mapping.md",
+                  "expected_output": "All missing modules confirmed to have generator files without tab buttons"
+                }
+              ],
+              "notes": "Expected existing modules: factoring, exponents, fractions, trig, logs, composition, limits, derivatives, integration, adv_integration"
+            }
+          ]
+        },
+        {
+          "subphase_id": 102,
+          "title": "Trace Stats Data Flow",
+          "goal": "Locate MODULE_LABELS definition, updateUnlockBar() function, and saveStore() calls. Document how mastery percentages are calculated and when updates trigger. Goal achieved when stats update mechanism ",
+          "subphase_dependencies": [
+            101
+          ],
+          "task_type": "Research - Human",
+          "input_state": [
+            "List of module identifiers from subphase 101",
+            "math265-trainer.html lines 1785-1915"
+          ],
+          "output_state": [
+            "Documented location of MODULE_LABELS (line 1905)",
+            "Documented updateUnlockBar() logic (line 1785)",
+            "Stats storage structure and update trigger points"
+          ],
+          "key_files_touched": null,
+          "integration_risk": "None - read-only analysis",
+          "test_strategy": null,
+          "estimated_tasks": 3,
+          "tasks": [
+            {
+              "task_id": 10201,
+              "title": "Locate MODULE_LABELS Definition",
+              "description": "Find MODULE_LABELS constant definition in math265-trainer.html. Document exact line number, variable structure, and how module IDs map to display labels. Identify data structure used for mastery stats storage (object keyed by module ID, array, or localStorage).",
+              "dependencies": null,
+              "input_files": [
+                "math265-trainer.html lines 1785-1915"
+              ],
+              "function_context": "MODULE_LABELS",
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/analysis/module-labels-structure.md",
+                  "description": "Document MODULE_LABELS location, structure, and mastery stats storage format"
+                }
+              ],
+              "pattern_references": [
+                "Constant definition pattern",
+                "Module metadata structure"
+              ],
+              "constraints": [
+                "Document exact line numbers",
+                "Include full variable declaration",
+                "Note any related constants or config objects"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "MODULE_LABELS location not identified",
+                "In Progress": "Location found but structure not fully documented",
+                "Complete": "Line number, structure, and storage format fully documented"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify MODULE_LABELS line number matches actual code location",
+                  "input_data": "math265-trainer.html source file",
+                  "expected_output": "Documented line number matches actual MODULE_LABELS definition"
+                }
+              ],
+              "notes": "Cross-reference with module identifiers from subphase 101"
+            },
+            {
+              "task_id": 10202,
+              "title": "Trace updateUnlockBar Logic",
+              "description": "Analyze updateUnlockBar() function starting at line 1785. Document how mastery percentages are calculated, what inputs it receives, and how it updates the UI. Map all intermediate function calls within this flow.",
+              "dependencies": [
+                10201
+              ],
+              "input_files": [
+                "math265-trainer.html lines 1785-1915"
+              ],
+              "function_context": "updateUnlockBar",
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/analysis/update-unlock-bar-flow.md",
+                  "description": "Document updateUnlockBar() logic, calculation method, and UI update mechanism"
+                }
+              ],
+              "pattern_references": [
+                "Progress bar update pattern",
+                "Mastery calculation algorithm"
+              ],
+              "constraints": [
+                "Document all intermediate function calls",
+                "Include mastery percentage formula",
+                "Note any DOM elements modified"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "updateUnlockBar() function not analyzed",
+                "In Progress": "Function logic partially documented",
+                "Complete": "Full calculation logic and UI update path documented"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify documented calculation matches actual code logic",
+                  "input_data": "updateUnlockBar() source code",
+                  "expected_output": "Documented formula produces same results as code"
+                }
+              ],
+              "notes": "Check for any helper functions called within updateUnlockBar"
+            },
+            {
+              "task_id": 10203,
+              "title": "Map saveStore Call Sites",
+              "description": "Find all saveStore() call locations in the codebase. Document each trigger point (problem submission, page load, module switch). Map full code path from problem submission through saveStore to updateUnlockBar to UI refresh.",
+              "dependencies": [
+                10202
+              ],
+              "input_files": [
+                "math265-trainer.html"
+              ],
+              "function_context": "saveStore",
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/analysis/stats-update-path.md",
+                  "description": "Document all saveStore() call sites and complete stats update code path"
+                }
+              ],
+              "pattern_references": [
+                "Event-driven update pattern",
+                "State persistence flow"
+              ],
+              "constraints": [
+                "Document all call sites with line numbers",
+                "Include full call stack for each trigger",
+                "Note timing of updates (sync vs async)"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "saveStore() call sites not identified",
+                "In Progress": "Some call sites documented but path incomplete",
+                "Complete": "All call sites and full update path documented"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify each documented call site exists at specified line",
+                  "input_data": "math265-trainer.html source file",
+                  "expected_output": "All documented saveStore() calls verified at correct locations"
+                }
+              ],
+              "notes": "Include any conditional logic that affects when saveStore is called"
+            }
+          ]
+        },
+        {
+          "subphase_id": 103,
+          "title": "Audit Backend Generators",
+          "goal": "Review backend/generators/ directory to identify all problem types. Compare against current module list to find missing categories. Goal achieved when complete module list including new problem types",
+          "subphase_dependencies": [
+            102
+          ],
+          "task_type": "Research - Human",
+          "input_state": [
+            "Current module list from subphase 101",
+            "backend/generators/ directory contents"
+          ],
+          "output_state": [
+            "Complete list of all backend generator modules",
+            "List of missing modules to add to frontend",
+            "Final comprehensive module identifier list"
+          ],
+          "key_files_touched": null,
+          "integration_risk": "None - read-only analysis",
+          "test_strategy": null,
+          "estimated_tasks": 4,
+          "tasks": [
+            {
+              "task_id": 10301,
+              "title": "Inventory Generator Files",
+              "description": "List all files in backend/generators/ directory. Record each filename, file path, and file size. This creates the baseline inventory of all available problem type generators. Match filenames to frontend modules by name.",
+              "dependencies": null,
+              "input_files": [
+                "backend/generators/"
+              ],
+              "function_context": null,
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/analysis/backend-generator-inventory.md",
+                  "description": "Markdown table listing all generator files with paths and sizes"
+                }
+              ],
+              "pattern_references": [
+                "Directory traversal pattern",
+                "File inventory documentation"
+              ],
+              "constraints": [
+                "Record exact filenames including extensions",
+                "Include relative path from project root",
+                "Note any nested subdirectory structure"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "Directory not fully scanned or inventory missing files",
+                "In Progress": "Inventory partially complete, some files documented",
+                "Complete": "All files in backend/generators/ listed with paths and sizes"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify inventory matches actual directory contents by cross-checking file count",
+                  "input_data": "backend/generators/ directory listing",
+                  "expected_output": "File count in inventory matches actual directory file count"
+                }
+              ],
+              "notes": "Use ls -la or equivalent to capture all files including hidden ones"
+            },
+            {
+              "task_id": 10302,
+              "title": "Extract Module Names",
+              "description": "Read each generator file to extract the module identifier. Match by filename as confirmed in interview. Record the base filename (without extension) as the module identifier for comparison.",
+              "dependencies": [
+                10301
+              ],
+              "input_files": [
+                "docs/analysis/backend-generator-inventory.md"
+              ],
+              "function_context": null,
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/analysis/generator-module-names.md",
+                  "description": "List of module identifiers extracted from generator filenames"
+                }
+              ],
+              "pattern_references": [
+                "Filename-to-identifier mapping",
+                "String extraction pattern"
+              ],
+              "constraints": [
+                "Use base filename without extension as module ID",
+                "Preserve exact casing from filenames",
+                "Do not modify or normalize names"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "Module names not extracted or extraction incomplete",
+                "In Progress": "Some module names extracted, process ongoing",
+                "Complete": "All generator files have corresponding module identifiers documented"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify each module name corresponds to an actual generator file",
+                  "input_data": "generator-module-names.md and backend-generator-inventory.md",
+                  "expected_output": "Every module name has a matching generator file in inventory"
+                }
+              ],
+              "notes": "Focus on filename only per interview guidance, no internal ID extraction needed"
+            },
+            {
+              "task_id": 10303,
+              "title": "Compare Module Lists",
+              "description": "Compare backend generator module names against frontend module list from Subphase 101. Identify modules present in backend but missing from frontend. Also note frontend modules without backend generators.",
+              "dependencies": [
+                10302,
+                10101
+              ],
+              "input_files": [
+                "docs/analysis/generator-module-names.md",
+                "docs/analysis/frontend-module-list.md"
+              ],
+              "function_context": null,
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/analysis/module-gap-analysis.md",
+                  "description": "Comparison report showing missing modules in each direction"
+                }
+              ],
+              "pattern_references": [
+                "Set comparison pattern",
+                "Gap analysis documentation"
+              ],
+              "constraints": [
+                "Use exact string matching for comparisons",
+                "Document both backend-missing and frontend-missing cases",
+                "Include count of gaps in each direction"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "Comparison not performed or results incomplete",
+                "In Progress": "Comparison partially complete, some gaps identified",
+                "Complete": "All modules compared, gaps documented with counts"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify gap analysis by spot-checking random modules from each list",
+                  "input_data": "Sample of 5 modules from each source list",
+                  "expected_output": "Spot-check results match gap analysis documentation"
+                }
+              ],
+              "notes": "Reference task 10101 from Subphase 101 for frontend module list"
+            },
+            {
+              "task_id": 10304,
+              "title": "Create Final Module List",
+              "description": "Produce comprehensive module identifier list combining frontend and backend sources. Mark each module with source (frontend-only, backend-only, or both). This list drives vertical category implementation.",
+              "dependencies": [
+                10303
+              ],
+              "input_files": [
+                "docs/analysis/module-gap-analysis.md"
+              ],
+              "function_context": null,
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/analysis/comprehensive-module-list.md",
+                  "description": "Final consolidated list of all modules with source indicators"
+                }
+              ],
+              "pattern_references": [
+                "Consolidation pattern",
+                "Source tagging pattern"
+              ],
+              "constraints": [
+                "Include source indicator for each module",
+                "Sort list alphabetically for readability",
+                "Include total count of modules"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "Final list not created or missing source indicators",
+                "In Progress": "List partially compiled, consolidation ongoing",
+                "Complete": "Comprehensive list complete with all modules and source tags"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify final list contains all modules from gap analysis",
+                  "input_data": "module-gap-analysis.md and comprehensive-module-list.md",
+                  "expected_output": "Total module count matches sum from gap analysis"
+                }
+              ],
+              "notes": "This list becomes the authoritative source for vertical category implementation"
+            }
+          ]
+        },
+        {
+          "subphase_id": 104,
+          "title": "Document Click Handlers",
+          "goal": "Locate tab click event handlers and module selection logic. Document how clicking a tab loads problems. Goal achieved when click handler flow is fully mapped.",
+          "subphase_dependencies": [
+            101
+          ],
+          "task_type": "Research - Human",
+          "input_state": [
+            "Tab HTML structure from subphase 101",
+            "math265-trainer.html source"
+          ],
+          "output_state": [
+            "Documented click handler location and logic",
+            "Module selection and problem loading flow diagram"
+          ],
+          "key_files_touched": null,
+          "integration_risk": "None - read-only analysis",
+          "test_strategy": null,
+          "estimated_tasks": 2,
+          "tasks": [
+            {
+              "task_id": 10401,
+              "title": "Locate Click Handlers",
+              "description": "Search math265-trainer.html for all tab click event listeners. Document line numbers, handler function names, and event binding methods (onclick attributes, addEventListener, or jQuery). Identify if handlers use event delegation or direct binding.",
+              "dependencies": null,
+              "input_files": [
+                "math265-trainer.html"
+              ],
+              "function_context": null,
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/click-handler-locations.md",
+                  "description": "Document all click handler locations with line numbers and binding methods"
+                }
+              ],
+              "pattern_references": [
+                "Event Delegation",
+                "Direct Event Binding"
+              ],
+              "constraints": [
+                "Document exact line numbers",
+                "Include all handler types (onclick, addEventListener, jQuery)",
+                "Note any conditional logic in handlers"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "No handler locations documented",
+                "In Progress": "Some handlers found but incomplete line numbers or missing handler types",
+                "Complete": "All click handlers documented with exact line numbers, function names, and binding methods"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify documented line numbers match actual click handler code in source file",
+                  "input_data": "math265-trainer.html source code",
+                  "expected_output": "All documented line numbers correctly point to click handler code"
+                }
+              ],
+              "notes": "Check for both direct tab button handlers and any parent container delegation"
+            },
+            {
+              "task_id": 10402,
+              "title": "Map Problem Loading Flow",
+              "description": "Trace function call sequence from tab click to problem display. Document state changes, function calls, and any locked module checks. Create flow diagram showing complete click-to-problem-loading path.",
+              "dependencies": [
+                10401
+              ],
+              "input_files": [
+                "math265-trainer.html",
+                "docs/click-handler-locations.md"
+              ],
+              "function_context": null,
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/module-selection-flow.md",
+                  "description": "Flow diagram and documentation of module selection and problem loading sequence"
+                }
+              ],
+              "pattern_references": [
+                "State Machine Pattern",
+                "Command Pattern"
+              ],
+              "constraints": [
+                "Include all function calls in sequence",
+                "Document any locked module prevention logic",
+                "Note async operations if present"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "No flow documentation created",
+                "In Progress": "Partial flow documented but missing function calls or state changes",
+                "Complete": "Complete flow diagram with all function calls, state changes, and locked module checks documented"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify flow documentation matches actual code execution path when clicking tabs",
+                  "input_data": "Browser console tracing of tab click events",
+                  "expected_output": "Documented flow matches observed function call sequence"
+                }
+              ],
+              "notes": "Pay special attention to locked module handling - is it visual-only or does click handler block interaction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": 2,
+      "title": "Implement Vertical Category List",
+      "goal": "Replace horizontal tab buttons with vertical list component showing all modules alphabetically with mastery percentages.",
+      "task_type": "Coding",
+      "complexity_lvl": 3,
+      "complexity_desc": "Must refactor HTML structure, add mastery calculation logic, implement alphabetical sorting, and确保点击",
+      "inputs": [
+        "Module list and stats structure from Phase 1",
+        "Requirements: vertical layout, alphabetical order, correct/total*100 formula, show locked+unlocked"
+      ],
+      "outputs": [
+        "New vertical category list UI component",
+        "Mastery percentage calculation function",
+        "Alphabetical sorting by module name",
+        "Click handlers that immediately start module"
+      ],
+      "validation_criteria": "Vertical list displays all modules in alphabetical order. Each shows current mastery percentage. Clicking starts serving questions from that module.",
+      "key_risk": "Breaking existing module selection flow or stats updates.",
+      "section_dependencies": null,
+      "estimated_subsections": 3,
+      "subsections": [
+        {
+          "subphase_id": 201,
+          "title": "Mastery Calculation Function",
+          "goal": "Create function that calculates mastery percentage from correct/total stats. Returns number for unlocked modules, lock indicator for locked modules.",
+          "subphase_dependencies": null,
+          "task_type": "Coding",
+          "input_state": [
+            "Module list and stats structure from Phase 1",
+            "Requirements: correct/total*100 formula, locked module detection"
+          ],
+          "output_state": [
+            "Mastery percentage calculation function",
+            "Locked module detection logic"
+          ],
+          "key_files_touched": [
+            "math265-trainer.html"
+          ],
+          "integration_risk": "Calculation may use wrong stats fields or misidentify locked modules, causing incorrect percentage display.",
+          "test_strategy": "Unit Tests",
+          "estimated_tasks": 2,
+          "tasks": [
+            {
+              "task_id": 20101,
+              "title": "Create Mastery Calculation Function",
+              "description": "Build calculateMastery function that computes percentage from correct/total stats. Handle edge cases: total=0 returns 0, missing stats returns 0, negative values treated as 0. Formula: (correct/total)*100 rounded to integer. This function enables accurate mastery display for unlocked modules.",
+              "dependencies": null,
+              "input_files": [
+                "math265-trainer.html"
+              ],
+              "function_context": "calculateMastery",
+              "output_files": [
+                {
+                  "action": "Edit",
+                  "path": "math265-trainer.html",
+                  "description": "Add calculateMastery function in script section with edge case handling for division by zero, missing stats, and negative values"
+                }
+              ],
+              "pattern_references": [
+                "Pure Function Pattern",
+                "Defensive Programming"
+              ],
+              "constraints": [
+                "Function must be pure with no side effects",
+                "Return integer percentage (0-100)",
+                "Handle all edge cases without throwing errors",
+                "Maximum 50 lines of code"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "Function skeleton exists but lacks edge case handling or calculation logic",
+                "In Progress": "Function calculates percentage correctly but missing some edge case handling",
+                "Complete": "Function handles all edge cases (total=0, missing stats, negative values) and returns correct integer percentage"
+              },
+              "tests": [
+                {
+                  "test_type": "Unit Test",
+                  "behavior_description": "Function returns correct percentage when given valid correct/total values",
+                  "input_data": "stats object with correct=8, total=10",
+                  "expected_output": "Returns 80"
+                },
+                {
+                  "test_type": "Unit Test",
+                  "behavior_description": "Function handles division by zero when total_attempts equals 0",
+                  "input_data": "stats object with correct=0, total=0",
+                  "expected_output": "Returns 0"
+                },
+                {
+                  "test_type": "Unit Test",
+                  "behavior_description": "Function handles missing stats object gracefully",
+                  "input_data": "null or undefined stats parameter",
+                  "expected_output": "Returns 0"
+                }
+              ],
+              "notes": "Function signature: calculateMastery(stats) where stats has correct_attempts and total_attempts fields"
+            },
+            {
+              "task_id": 20102,
+              "title": "Implement Locked Module Detection",
+              "description": "Build isModuleLocked function that detects if module should be locked. Check for locked flag in stats or missing completion data. Return boolean for lock state. Integrate with calculateMastery to return lock indicator instead of percentage for locked modules. Enables proper UI state for locked vs unlocked modules.",
+              "dependencies": [
+                20101
+              ],
+              "input_files": [
+                "math265-trainer.html"
+              ],
+              "function_context": "isModuleLocked, calculateMastery",
+              "output_files": [
+                {
+                  "action": "Edit",
+                  "path": "math265-trainer.html",
+                  "description": "Add isModuleLocked function and update calculateMastery to return lock indicator for locked modules"
+                }
+              ],
+              "pattern_references": [
+                "Guard Clause Pattern",
+                "Early Return Pattern"
+              ],
+              "constraints": [
+                "Function must be pure with no side effects",
+                "Locked modules return 'locked' string or null instead of percentage",
+                "Check for stats.locked flag or missing total_attempts",
+                "Maximum 50 lines of code"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "isModuleLocked function exists but not integrated with calculateMastery",
+                "In Progress": "isModuleLocked works but calculateMastery still returns percentage for locked modules",
+                "Complete": "calculateMastery returns lock indicator for locked modules and percentage for unlocked modules"
+              },
+              "tests": [
+                {
+                  "test_type": "Unit Test",
+                  "behavior_description": "Function detects locked module when stats.locked flag is true",
+                  "input_data": "stats object with locked=true",
+                  "expected_output": "Returns true for isModuleLocked, 'locked' for calculateMastery"
+                },
+                {
+                  "test_type": "Unit Test",
+                  "behavior_description": "Function detects unlocked module when stats.locked flag is false or missing",
+                  "input_data": "stats object with locked=false or no locked field, with valid attempts",
+                  "expected_output": "Returns false for isModuleLocked, percentage for calculateMastery"
+                },
+                {
+                  "test_type": "Integration Test",
+                  "behavior_description": "calculateMastery returns lock indicator for locked modules instead of percentage",
+                  "input_data": "stats object with locked=true and correct=5, total=10",
+                  "expected_output": "Returns 'locked' string instead of 50"
+                }
+              ],
+              "notes": "Lock indicator can be 'locked' string or null - choose based on how UI will consume the value"
+            }
+          ]
+        },
+        {
+          "subphase_id": 202,
+          "title": "Vertical List UI Component",
+          "goal": "Replace horizontal tab buttons with vertical list container. Modules sorted alphabetically by name. Each item shows module name and mastery percentage/lock on right.",
+          "subphase_dependencies": [
+            201
+          ],
+          "task_type": "Coding",
+          "input_state": [
+            "Mastery calculation function from 201",
+            "Existing tab button styling",
+            "Requirements: vertical layout, alphabetical order, left positioning"
+          ],
+          "output_state": [
+            "New vertical category list UI component",
+            "Alphabetical sorting by module name",
+            "Lock icon for locked modules"
+          ],
+          "key_files_touched": [
+            "math265-trainer.html"
+          ],
+          "integration_risk": "HTML structure changes may break existing CSS or JavaScript that references tab elements.",
+          "test_strategy": "Manual Testing",
+          "estimated_tasks": 3,
+          "tasks": [
+            {
+              "task_id": 20201,
+              "title": "Convert Tab Container to Vertical Layout",
+              "description": "Modify existing tab button container CSS to display vertically instead of horizontally. Change flex-direction or display property to stack buttons. Maintain existing button styling while enabling vertical list appearance. This enables alphabetical module listing requirement.",
+              "dependencies": [
+                20101
+              ],
+              "input_files": [
+                "math265-trainer.html"
+              ],
+              "function_context": null,
+              "output_files": [
+                {
+                  "action": "Edit",
+                  "path": "math265-trainer.html",
+                  "description": "Update CSS for tab container to use flex-direction column or equivalent vertical layout styling"
+                }
+              ],
+              "pattern_references": [
+                "Flexbox Layout",
+                "CSS Display Properties"
+              ],
+              "constraints": [
+                "Modify existing elements only, do not replace HTML markup",
+                "Maintain backward compatibility with existing JavaScript selectors",
+                "Keep changes under 50 lines of code"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "Tab buttons still display horizontally",
+                "In Progress": "CSS changes applied but layout not verified",
+                "Complete": "Tab buttons display vertically in stacked list format"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify tab buttons render in vertical stacked arrangement instead of horizontal row",
+                  "input_data": "Open math265-trainer.html in browser",
+                  "expected_output": "Module buttons appear in vertical list with proper spacing"
+                }
+              ],
+              "notes": "Existing JavaScript selectors must continue working after CSS changes"
+            },
+            {
+              "task_id": 20202,
+              "title": "Implement Alphabetical Module Sorting",
+              "description": "Add sorting logic to arrange modules alphabetically by name before rendering. Integrate with mastery calculation function from subphase 201. Sort order applies to vertical list display. Business rule ensures consistent module ordering for users.",
+              "dependencies": [
+                20201
+              ],
+              "input_files": [
+                "math265-trainer.html"
+              ],
+              "function_context": "calculateMastery",
+              "output_files": [
+                {
+                  "action": "Edit",
+                  "path": "math265-trainer.html",
+                  "description": "Add JavaScript sorting function to order modules alphabetically by name property"
+                }
+              ],
+              "pattern_references": [
+                "Array Sort Method",
+                "Comparator Function"
+              ],
+              "constraints": [
+                "Use native JavaScript sort() method",
+                "Sort by module name string, case-insensitive",
+                "Keep changes under 50 lines of code"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "Modules display in original unsorted order",
+                "In Progress": "Sorting logic added but not integrated with render",
+                "Complete": "Modules display in alphabetical order A-Z in vertical list"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify modules appear in alphabetical order by name in the vertical list",
+                  "input_data": "Open math265-trainer.html with multiple modules present",
+                  "expected_output": "Module names sorted alphabetically from top to bottom"
+                }
+              ],
+              "notes": "Sorting must occur before mastery calculation is applied to each module"
+            },
+            {
+              "task_id": 20203,
+              "title": "Add Mastery Display and Lock Icon",
+              "description": "Display mastery percentage on right side of each module list item for unlocked modules. Show Unicode lock character for locked modules. Use calculateMastery function output to determine display. Visual indicator shows module availability status to users.",
+              "dependencies": [
+                20202
+              ],
+              "input_files": [
+                "math265-trainer.html"
+              ],
+              "function_context": "calculateMastery",
+              "output_files": [
+                {
+                  "action": "Edit",
+                  "path": "math265-trainer.html",
+                  "description": "Add mastery percentage text or Unicode lock icon to right side of each module list item"
+                }
+              ],
+              "pattern_references": [
+                "Conditional Rendering",
+                "Flexbox Justify Content Space Between"
+              ],
+              "constraints": [
+                "Use Unicode lock character for locked modules",
+                "Display percentage as whole number with percent sign",
+                "Right-align mastery/lock indicator using flexbox",
+                "Keep changes under 50 lines of code"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "No mastery percentage or lock icon visible on list items",
+                "In Progress": "Mastery display added but lock icon not implemented",
+                "Complete": "Unlocked modules show mastery percentage, locked modules show lock icon on right side"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify unlocked modules display mastery percentage and locked modules display lock icon",
+                  "input_data": "Open math265-trainer.html with mix of locked and unlocked modules",
+                  "expected_output": "Right side shows percentage for unlocked, lock symbol for locked modules"
+                }
+              ],
+              "notes": "Lock icon should be Unicode character, not image or SVG"
+            }
+          ]
+        },
+        {
+          "subphase_id": 203,
+          "title": "Click Handlers and Module Start",
+          "goal": "Implement click handlers for list items. Unlocked modules start immediately when clicked. Locked modules are not clickable.",
+          "subphase_dependencies": [
+            202
+          ],
+          "task_type": "Coding",
+          "input_state": [
+            "Vertical list UI component from 202",
+            "Existing module start logic from Phase 1",
+            "Requirements: immediate module start, locked modules disabled"
+          ],
+          "output_state": [
+            "Click handlers that immediately start module",
+            "Locked module click prevention"
+          ],
+          "key_files_touched": [
+            "math265-trainer.html"
+          ],
+          "integration_risk": "Click handlers may not properly trigger module start or may allow clicking locked modules.",
+          "test_strategy": "Manual Testing",
+          "estimated_tasks": 2,
+          "tasks": [
+            {
+              "task_id": 20301,
+              "title": "Add Click Handlers",
+              "description": "Implement click event listeners on vertical list items. Unlocked modules call existing module start function from Phase 1 when clicked. Handler extracts module ID from list item data attribute and triggers immediate module launch.",
+              "dependencies": [
+                20201,
+                20202
+              ],
+              "input_files": [
+                "math265-trainer.html"
+              ],
+              "function_context": "startModule",
+              "output_files": [
+                {
+                  "action": "Edit",
+                  "path": "math265-trainer.html",
+                  "description": "Add click event listeners to vertical list items that call startModule function"
+                }
+              ],
+              "pattern_references": [
+                "Event Delegation",
+                "Data Attribute Pattern"
+              ],
+              "constraints": [
+                "Use existing startModule function from line 2605",
+                "Keep handler under 50 lines",
+                "Extract module ID from data-module-id attribute"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "Click handlers not attached to list items",
+                "In Progress": "Click handlers attached but module start not triggered",
+                "Complete": "Clicking unlocked list item immediately starts module"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Click unlocked module in vertical list and verify module starts immediately",
+                  "input_data": "Vertical list with at least one unlocked module",
+                  "expected_output": "Module loads and displays content"
+                }
+              ],
+              "notes": "Reference existing tab click handler at line 2605 for exact implementation pattern"
+            },
+            {
+              "task_id": 20302,
+              "title": "Prevent Locked Clicks",
+              "description": "Disable click events on locked module list items. Add CSS class for visual disabled state. Click handler checks module lock status before calling startModule. Locked items show no interaction feedback.",
+              "dependencies": [
+                20301
+              ],
+              "input_files": [
+                "math265-trainer.html"
+              ],
+              "function_context": "startModule",
+              "output_files": [
+                {
+                  "action": "Edit",
+                  "path": "math265-trainer.html",
+                  "description": "Add lock status check in click handler and disabled CSS class for locked items"
+                }
+              ],
+              "pattern_references": [
+                "Guard Clause Pattern",
+                "CSS State Classes"
+              ],
+              "constraints": [
+                "Locked modules must not be clickable",
+                "Add disabled CSS class to locked items",
+                "No event propagation for locked items"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "Locked modules still clickable",
+                "In Progress": "Lock check added but visual state missing",
+                "Complete": "Locked modules not clickable and show disabled visual state"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Click locked module in vertical list and verify no action occurs",
+                  "input_data": "Vertical list with at least one locked module",
+                  "expected_output": "No module starts, no visual feedback on click"
+                }
+              ],
+              "notes": "Mastery calculation from Subphase 201 determines lock status"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": 3,
+      "title": "Enable Real-Time Updates",
+      "goal": "Ensure mastery percentages update immediately when user solves problems without requiring page refresh.",
+      "task_type": "Coding",
+      "complexity_lvl": 2,
+      "complexity_desc": "Need to hook into existing stats update flow and trigger UI refresh after each problem submission.",
+      "inputs": [
+        "Working vertical list from Phase 2",
+        "Existing updateStats() function and call sites"
+      ],
+      "outputs": [
+        "Real-time mastery percentage updates on category list",
+        "Verified update flow from problem submission to UI refresh"
+      ],
+      "validation_criteria": "Solving a problem immediately updates the mastery percentage shown in the category list without page reload.",
+      "key_risk": "Missing update call sites causing stale percentages.",
+      "section_dependencies": null,
+      "estimated_subsections": 2,
+      "subsections": [
+        {
+          "subphase_id": 301,
+          "title": "Explore Update Flow",
+          "goal": "Identify all problem submission handlers and current updateStats() call sites. Document DOM selectors for category list mastery elements.",
+          "subphase_dependencies": null,
+          "task_type": "Research - Human",
+          "input_state": [
+            "Working vertical list from Phase 2",
+            "Existing updateStats() function and call sites"
+          ],
+          "output_state": [
+            "Documented submission handler locations",
+            "DOM selector map for mastery elements",
+            "Update flow analysis"
+          ],
+          "key_files_touched": null,
+          "integration_risk": "Missing submission handlers or incorrect DOM selectors causes update failures",
+          "test_strategy": "Manual Testing",
+          "estimated_tasks": 3,
+          "tasks": [
+            {
+              "task_id": 30101,
+              "title": "Locate Submission Handlers",
+              "description": "Search codebase for all problem submission event handlers. Identify click handlers, form submissions, and AJAX calls that process user answers. Document file paths and function names for each handler found.",
+              "dependencies": null,
+              "input_files": [
+                "src/"
+              ],
+              "function_context": "submitProblem, handleSubmit, onAnswerSubmit",
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/submission-handlers.md",
+                  "description": "Document all submission handler locations with file paths and function signatures"
+                }
+              ],
+              "pattern_references": [
+                "Event Handler Pattern",
+                "DOM Event Delegation"
+              ],
+              "constraints": [
+                "Document exact line numbers",
+                "Include both direct and delegated handlers",
+                "Note any async/await patterns"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "No handlers documented",
+                "In Progress": "Some handlers found but incomplete",
+                "Complete": "All submission handlers documented with locations"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify documented handlers trigger on problem submission",
+                  "input_data": "Submit test problem in browser",
+                  "expected_output": "Handler executes and logs to console"
+                }
+              ],
+              "notes": "Check both vanilla JS and any framework-specific handlers"
+            },
+            {
+              "task_id": 30102,
+              "title": "Map updateStats Calls",
+              "description": "Find all current call sites of updateStats() function. Document when it fires relative to submission flow. Note any timing issues or missing calls that should trigger after answer validation.",
+              "dependencies": [
+                30101
+              ],
+              "input_files": [
+                "src/"
+              ],
+              "function_context": "updateStats",
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/updatestats-call-sites.md",
+                  "description": "Map of all updateStats() invocations with context and timing"
+                }
+              ],
+              "pattern_references": [
+                "Function Call Tracking",
+                "Execution Flow Analysis"
+              ],
+              "constraints": [
+                "Note execution order",
+                "Identify gaps in update coverage",
+                "Document any conditional calls"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "No call sites mapped",
+                "In Progress": "Partial mapping incomplete",
+                "Complete": "All call sites documented with execution context"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify updateStats() fires at documented points",
+                  "input_data": "Trigger each documented call site",
+                  "expected_output": "updateStats() executes as documented"
+                }
+              ],
+              "notes": "Pay attention to async timing and promise chains"
+            },
+            {
+              "task_id": 30103,
+              "title": "Document DOM Selectors",
+              "description": "Identify all DOM elements in vertical category list that display mastery percentages. Document CSS selectors, data attributes, and current update mechanism. Map element hierarchy from category container to individual mastery displays.",
+              "dependencies": null,
+              "input_files": [
+                "src/index.html",
+                "src/styles/"
+              ],
+              "function_context": "querySelector, querySelectorAll",
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "docs/dom-selectors-mastery.md",
+                  "description": "Complete selector map for mastery percentage elements in category list"
+                }
+              ],
+              "pattern_references": [
+                "CSS Selector Best Practices",
+                "DOM Traversal Patterns"
+              ],
+              "constraints": [
+                "Use most specific selectors possible",
+                "Include data-attribute selectors",
+                "Document parent-child relationships"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "No selectors documented",
+                "In Progress": "Some selectors found",
+                "Complete": "All mastery elements mapped with working selectors"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Verify selectors correctly target mastery elements",
+                  "input_data": "Run selectors in browser console",
+                  "expected_output": "Selectors return correct DOM nodes"
+                }
+              ],
+              "notes": "Test selectors against both locked and unlocked category states"
+            }
+          ]
+        },
+        {
+          "subphase_id": 302,
+          "title": "Hook Real-Time Updates",
+          "goal": "Add updateStats() calls to submission handlers. Implement DOM update for mastery percentages. Verify end-to-end flow.",
+          "subphase_dependencies": [
+            301
+          ],
+          "task_type": "Coding",
+          "input_state": [
+            "Documented submission handler locations",
+            "DOM selector map for mastery elements",
+            "Update flow analysis"
+          ],
+          "output_state": [
+            "Real-time mastery percentage updates on category list",
+            "Verified update flow from problem submission to UI refresh"
+          ],
+          "key_files_touched": [
+            "problem submission handler files",
+            "vertical list component"
+          ],
+          "integration_risk": "Stale percentages if update call missed or DOM selector wrong",
+          "test_strategy": "Manual Testing",
+          "estimated_tasks": 4,
+          "tasks": [
+            {
+              "task_id": 30201,
+              "title": "Modify Submission Handlers",
+              "description": "Add updateStats() calls to all problem submission handlers. This ensures mastery data refreshes after each problem attempt. Business rule: UI must reflect current mastery state immediately after submission.",
+              "dependencies": null,
+              "input_files": [
+                "src/handlers/problemSubmission.js",
+                "src/handlers/answerHandler.js"
+              ],
+              "function_context": "updateStats",
+              "output_files": [
+                {
+                  "action": "Edit",
+                  "path": "src/handlers/problemSubmission.js",
+                  "description": "Add updateStats() call after successful problem submission"
+                },
+                {
+                  "action": "Edit",
+                  "path": "src/handlers/answerHandler.js",
+                  "description": "Add updateStats() call after answer validation completes"
+                }
+              ],
+              "pattern_references": [
+                "Observer Pattern",
+                "Event-Driven Architecture"
+              ],
+              "constraints": [
+                "Do not block submission flow with update call",
+                "Call updateStats() only on successful submission",
+                "Keep handler response time under 200ms"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "updateStats() not called in submission handlers",
+                "In Progress": "updateStats() added but not tested",
+                "Complete": "updateStats() called after all successful submissions"
+              },
+              "tests": [
+                {
+                  "test_type": "Integration Test",
+                  "behavior_description": "Verify updateStats() fires after problem submission success",
+                  "input_data": "Valid problem answer submission",
+                  "expected_output": "updateStats() called once per successful submission"
+                }
+              ],
+              "notes": "Check for multiple submission entry points across the codebase"
+            },
+            {
+              "task_id": 30202,
+              "title": "Create Category List Updater",
+              "description": "Build updateCategoryList() function to refresh mastery percentages in vertical list DOM. Uses data-module attributes on div elements within list container. Business rule: Each category item shows current mastery percentage.",
+              "dependencies": [
+                30101
+              ],
+              "input_files": [
+                "src/components/VerticalCategoryList.js",
+                "src/utils/domSelectors.js"
+              ],
+              "function_context": "updateCategoryList, getMasteryData",
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "src/utils/categoryListUpdater.js",
+                  "description": "New module with updateCategoryList() function and DOM selector constants"
+                }
+              ],
+              "pattern_references": [
+                "Module Pattern",
+                "Separation of Concerns"
+              ],
+              "constraints": [
+                "Function must be under 50 lines",
+                "Use data-module attribute for selectors",
+                "Handle missing DOM elements gracefully",
+                "No direct DOM manipulation outside this module"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "updateCategoryList() function not created",
+                "In Progress": "Function exists but selectors untested",
+                "Complete": "Function updates all category mastery percentages correctly"
+              },
+              "tests": [
+                {
+                  "test_type": "Unit Test",
+                  "behavior_description": "Verify updateCategoryList() finds and updates category elements",
+                  "input_data": "Mock DOM with 3 category items, mastery data object",
+                  "expected_output": "All 3 category items show updated percentages"
+                },
+                {
+                  "test_type": "Unit Test",
+                  "behavior_description": "Verify graceful handling when category element missing",
+                  "input_data": "Mock DOM with 1 category item, mastery data for 3 categories",
+                  "expected_output": "No errors, existing item updated"
+                }
+              ],
+              "notes": "DOM structure: div[data-module] containing span.mastery-percent"
+            },
+            {
+              "task_id": 30203,
+              "title": "Integrate Update Flow",
+              "description": "Connect updateStats() to call updateCategoryList() after stats refresh. This completes the real-time update chain from submission to UI. Business rule: Category list reflects mastery changes within 100ms of submission.",
+              "dependencies": [
+                30201,
+                30202
+              ],
+              "input_files": [
+                "src/utils/statsUpdater.js",
+                "src/utils/categoryListUpdater.js"
+              ],
+              "function_context": "updateStats, updateCategoryList",
+              "output_files": [
+                {
+                  "action": "Edit",
+                  "path": "src/utils/statsUpdater.js",
+                  "description": "Add updateCategoryList() call at end of updateStats() function"
+                }
+              ],
+              "pattern_references": [
+                "Chain of Responsibility",
+                "Pub/Sub Pattern"
+              ],
+              "constraints": [
+                "Maintain updateStats() existing API",
+                "Call updateCategoryList() after stats fetch completes",
+                "Handle updateCategoryList() failures without breaking stats update"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "updateStats() and updateCategoryList() not connected",
+                "In Progress": "Integration code written but not verified",
+                "Complete": "Submission triggers stats update then category list refresh"
+              },
+              "tests": [
+                {
+                  "test_type": "Integration Test",
+                  "behavior_description": "Verify full chain: submission → updateStats → updateCategoryList",
+                  "input_data": "Problem submission with mastery change",
+                  "expected_output": "Category list percentages update after submission"
+                }
+              ],
+              "notes": "Ensure async/await handling if updateStats is asynchronous"
+            },
+            {
+              "task_id": 30204,
+              "title": "Verify End-to-End Flow",
+              "description": "Test complete update flow from problem submission through UI refresh. Validate no stale percentages and correct DOM updates. Business rule: User sees accurate mastery immediately after each problem.",
+              "dependencies": [
+                30203
+              ],
+              "input_files": [
+                "tests/e2e/masteryUpdate.spec.js"
+              ],
+              "function_context": "updateStats, updateCategoryList",
+              "output_files": [
+                {
+                  "action": "Create",
+                  "path": "tests/e2e/masteryUpdate.spec.js",
+                  "description": "End-to-end test suite for real-time mastery updates"
+                }
+              ],
+              "pattern_references": [
+                "End-to-End Testing",
+                "Test Pyramid"
+              ],
+              "constraints": [
+                "Test must run in under 5 seconds",
+                "Cover at least 3 different category scenarios",
+                "Verify no console errors during update flow"
+              ],
+              "acceptance_criteria": {
+                "Incomplete": "No end-to-end tests for update flow",
+                "In Progress": "Tests written but failing or incomplete",
+                "Complete": "All e2e tests pass, flow verified end-to-end"
+              },
+              "tests": [
+                {
+                  "test_type": "Manual Test",
+                  "behavior_description": "Submit problems in different categories and verify percentage updates",
+                  "input_data": "Multiple problem submissions across categories",
+                  "expected_output": "Category list shows correct mastery percentages after each submission"
+                },
+                {
+                  "test_type": "Integration Test",
+                  "behavior_description": "Verify no stale data when rapid submissions occur",
+                  "input_data": "5 rapid problem submissions in same category",
+                  "expected_output": "Final percentage reflects all 5 submissions accurately"
+                }
+              ],
+              "notes": "Test edge cases: first submission, 100% mastery, category with no problems"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

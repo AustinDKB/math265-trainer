@@ -19,17 +19,7 @@
   </div>
 
   <div id="tabs">
-    <button class="tab" data-module="factoring">Factoring</button>
-    <button class="tab" data-module="exponents">Exponents</button>
-    <button class="tab" data-module="fractions">Fractions</button>
-    <button class="tab" data-module="trig">Trig</button>
-    <button class="tab" data-module="logs">Logs</button>
-    <button class="tab" data-module="composition">Composition</button>
-    <button class="tab" data-module="limits">Limits</button>
-    <button class="tab" data-module="derivatives">Derivatives</button>
-    <button class="tab" data-module="integration">Integration</button>
-    <button class="tab" data-module="adv_integration">Adv Integration</button>
-    <button class="tab active" data-module="all">All</button>
+    <!-- Category list rendered by renderCategoryList() -->
   </div>
 
   <div id="subbar">
@@ -1834,6 +1824,53 @@ function showUnlockToast(label){
   _toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
 }
 
+function renderCategoryList(){
+  const container=$('tabs');
+  container.innerHTML='';
+  const unlocked=getUnlockedModules();
+
+  // Build list: 'all' first, then modules sorted alphabetically by label
+  const items=[{id:'all',label:'Mixed Practice'}];
+  ALL_MODULES.slice().sort((a,b)=>{
+    const la=(MODULE_LABELS[a]||a).toLowerCase();
+    const lb=(MODULE_LABELS[b]||b).toLowerCase();
+    return la.localeCompare(lb);
+  }).forEach(m=>items.push({id:m,label:MODULE_LABELS[m]||m}));
+
+  items.forEach(item=>{
+    const isAll=item.id==='all';
+    const isUnlocked=isAll||unlocked.includes(item.id);
+    const el=document.createElement('div');
+    el.className='cat-item'+(state.module===item.id?' active':'')+(isUnlocked?'':' locked');
+    el.dataset.module=item.id;
+
+    const nameSpan=document.createElement('span');
+    nameSpan.className='cat-name';
+    nameSpan.textContent=item.label;
+    el.appendChild(nameSpan);
+
+    const metaSpan=document.createElement('span');
+    metaSpan.className='cat-meta';
+    if(!isUnlocked){
+      metaSpan.textContent='🔒';
+    } else if(!isAll){
+      const acc=getModuleAccuracy(item.id);
+      metaSpan.textContent=acc!==null?Math.round(acc*100)+'%':'—';
+    }
+    el.appendChild(metaSpan);
+
+    if(isUnlocked){
+      el.addEventListener('click',()=>{
+        state.module=item.id;
+        renderCategoryList();
+        updateUnlockBar();
+        loadNewProblem();
+      });
+    }
+    container.appendChild(el);
+  });
+}
+
 function pickModule(){
   if(state.module==='all') return pickWeightedModule();
   return state.module;
@@ -1999,7 +2036,7 @@ async function skipProblem(){
   state.sessionTotal++;
   if(rec){ rec.attempts++; rec.streak=0; }
   updateAdaptiveDiff(mod, diff, false);
-  updateStats(); saveStore(); updateUnlockBar();
+  updateStats(); saveStore(); updateUnlockBar(); renderCategoryList();
   flashMain('wrong');
   setTimeout(()=>loadNewProblem(), 400);
 }
@@ -2175,6 +2212,7 @@ async function submitAnswer(){
   updateStats();
   saveStore();
   updateUnlockBar();
+  renderCategoryList();
 }
 
 function revealNextStep(){
@@ -2600,16 +2638,7 @@ $('dash-close-btn').addEventListener('click',()=>$('dashboard-overlay').classLis
   });
 })();
 
-// Module tabs
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    tab.classList.add('active');
-    state.module=tab.dataset.module;
-    updateUnlockBar();
-    loadNewProblem();
-  });
-});
+// Category list rendered dynamically; click handlers attached in renderCategoryList()
 
 // Difficulty buttons
 document.querySelectorAll('.diff-btn').forEach(btn=>{
@@ -2691,6 +2720,8 @@ $('bug-submit-btn').addEventListener('click', async ()=>{
         }
         updateStats();
         saveStore();
+        updateUnlockBar();
+        renderCategoryList();
       }
       setTimeout(resetBugReport, 1500);
     } else {
@@ -3025,13 +3056,14 @@ $('study-copy-prompt').addEventListener('click', () => {
 // INIT
 // ─────────────────────────────────────────────────────────────────────────────
 
-initXp();
-$('auto-btn').classList.add('active');
-ensureKatex(()=>{
-  _prevUnlocked=getUnlockedModules();
-  updateUnlockBar();
-  startSession();
-});
+  initXp();
+  $('auto-btn').classList.add('active');
+  ensureKatex(()=>{
+    _prevUnlocked=getUnlockedModules();
+    renderCategoryList();
+    updateUnlockBar();
+    startSession();
+  });
 
 // Fallback: if KaTeX takes too long, try anyway
 setTimeout(()=>{

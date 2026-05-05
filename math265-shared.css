@@ -27,8 +27,18 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 #timer.warning { color: var(--yellow); }
 #timer.danger { color: var(--red); }
 
-/* ── TABS ── */
-#tabs { display: flex; gap: 4px; padding: 10px 0 0; flex-shrink: 0; flex-wrap: wrap; }
+/* ── TABS / CATEGORY LIST ── */
+#tabs { display: flex; flex-direction: column; gap: 3px; padding: 10px 0 0; flex-shrink: 0; }
+.cat-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg2); color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s; user-select: none; }
+.cat-item:hover:not(.locked) { border-color: var(--blue); color: var(--text); }
+.cat-item.active { background: var(--blue); border-color: var(--blue); color: #0f1117; font-weight: 600; }
+.cat-item.active .cat-meta { color: #0f1117; }
+.cat-item.locked { cursor: default; opacity: 0.5; background: rgba(255,255,255,0.03); }
+.cat-item.locked .cat-meta { opacity: 0.7; }
+.cat-name { flex: 1; }
+.cat-meta { font-size: 12px; font-weight: 600; margin-left: 8px; white-space: nowrap; }
+
+/* legacy tab styles (keep for safety) */
 .tab { padding: 6px 14px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg2); color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s; user-select: none; }
 .tab:hover { border-color: var(--blue); color: var(--text); }
 .tab.active { background: var(--blue); border-color: var(--blue); color: #0f1117; font-weight: 600; }
@@ -233,6 +243,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   #answer-input { font-size: 13px; }
   #tabs { gap: 3px; }
   .tab { padding: 5px 10px; font-size: 12px; }
+  .cat-item { padding: 6px 10px; font-size: 12px; }
 }
 
 /* ── STUDY RESOURCES ── */
