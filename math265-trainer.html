@@ -40,10 +40,6 @@
     </div>
   </div>
 
-  <div id="unlock-bar">
-    <div class="unlock-modules" id="unlock-modules-list"></div>
-    <div class="unlock-next" id="unlock-next-text"></div>
-  </div>
   <div id="unlock-toast"></div>
 
   <canvas id="xp-confetti-canvas"></canvas>
@@ -1776,47 +1772,13 @@ function pickWeightedModule(){
 }
 
 let _prevUnlocked=null;
-function updateUnlockBar(){
-  const bar=$('unlock-bar');
-  if(state.module!=='all'){ bar.classList.remove('visible'); return; }
-  bar.classList.add('visible');
-
+function checkNewUnlocks(){
   const unlocked=getUnlockedModules();
-
-  // detect new unlock — show toast
   if(_prevUnlocked && unlocked.length>_prevUnlocked.length){
     const newMods=unlocked.filter(m=>!_prevUnlocked.includes(m));
     newMods.forEach(m=>showUnlockToast(MODULE_LABELS[m]||m));
   }
   _prevUnlocked=[...unlocked];
-
-  // render module pills
-  const list=$('unlock-modules-list');
-  list.innerHTML='';
-  ALL_MODULES.forEach(m=>{
-    const isUnlocked=unlocked.includes(m);
-    const acc=isUnlocked?getModuleAccuracy(m):null;
-    const isNew=isUnlocked&&acc===null;
-    const pill=document.createElement('span');
-    pill.className='umod '+(isUnlocked?(isNew?'new':'active'):'locked');
-    const pct=acc!==null?Math.round(acc*100)+'%':'';
-    pill.textContent=(MODULE_LABELS[m]||m)+(pct?' '+pct:'');
-    if(!isUnlocked) pill.textContent='🔒 '+(MODULE_LABELS[m]||m);
-    list.appendChild(pill);
-  });
-
-  // next unlock progress
-  const nextTier=getNextLockedTier(unlocked);
-  const nextEl=$('unlock-next-text');
-  if(nextTier){
-    // find which tier gates it — the last tier in unlocked
-    const gateTier=UNLOCK_CHAIN[UNLOCK_CHAIN.indexOf(nextTier)-1]||UNLOCK_CHAIN[0];
-    const accs=gateTier.map(m=>getModuleAccuracy(m)??0);
-    const avgPct=Math.round((accs.reduce((a,b)=>a+b,0)/accs.length)*100);
-    nextEl.innerHTML=`Unlock <strong>${(MODULE_LABELS[nextTier[0]]||nextTier[0])}</strong> — reach 80% on current set &nbsp;<progress max="80" value="${Math.min(avgPct,80)}"></progress> ${avgPct}%`;
-  } else {
-    nextEl.textContent='All modules unlocked!';
-  }
 }
 
 let _toastTimer=null;
@@ -1867,7 +1829,7 @@ function renderCategoryList(){
       el.addEventListener('click',()=>{
         state.module=item.id;
         renderCategoryList();
-        updateUnlockBar();
+        checkNewUnlocks();
         loadNewProblem();
       });
     }
@@ -2040,7 +2002,7 @@ async function skipProblem(){
   state.sessionTotal++;
   if(rec){ rec.attempts++; rec.streak=0; }
   updateAdaptiveDiff(mod, diff, false);
-  updateStats(); saveStore(); updateUnlockBar(); renderCategoryList();
+  updateStats(); saveStore(); checkNewUnlocks(); renderCategoryList();
   flashMain('wrong');
   setTimeout(()=>loadNewProblem(), 400);
 }
@@ -2215,7 +2177,7 @@ async function submitAnswer(){
   state.sessionTotal++;
   updateStats();
   saveStore();
-  updateUnlockBar();
+  checkNewUnlocks();
   renderCategoryList();
 }
 
@@ -2724,7 +2686,7 @@ $('bug-submit-btn').addEventListener('click', async ()=>{
         }
         updateStats();
         saveStore();
-        updateUnlockBar();
+        checkNewUnlocks();
         renderCategoryList();
       }
       setTimeout(resetBugReport, 1500);
@@ -3065,7 +3027,6 @@ $('study-copy-prompt').addEventListener('click', () => {
   ensureKatex(()=>{
     _prevUnlocked=getUnlockedModules();
     renderCategoryList();
-    updateUnlockBar();
     startSession();
   });
 

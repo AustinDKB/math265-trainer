@@ -227,15 +227,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 #xp-confetti-canvas { position:fixed; inset:0; pointer-events:none; z-index:49; }
 
 /* unlock bar */
-#unlock-bar { display:none; padding: 4px 12px 6px; font-size: 11px; color: var(--muted); text-align: center; }
-#unlock-bar.visible { display:block; }
-#unlock-bar .unlock-modules { display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin-bottom:4px; }
-#unlock-bar .umod { padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; letter-spacing:0.05em; }
-#unlock-bar .umod.active { background:rgba(74,222,128,0.15); color:#4ade80; }
-#unlock-bar .umod.locked { background:rgba(255,255,255,0.06); color:var(--muted); }
-#unlock-bar .umod.new { background:rgba(251,191,36,0.2); color:#fbbf24; }
-#unlock-bar .unlock-next { font-size:10px; }
-#unlock-bar progress { width:120px; height:4px; vertical-align:middle; margin:0 4px; accent-color:#4ade80; }
+/* unlock toast */
+#unlock-toast { display:none; position:fixed; top:20px; right:20px; padding:10px 18px; background:var(--accent); color:#fff; border-radius:var(--radius); font-size:13px; font-weight:600; z-index:9999; animation: toastIn 0.3s ease; }
+#unlock-toast.show { display:block; }
+@keyframes toastIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
 
 /* unlock toast */
 #unlock-toast { position:fixed; top:60px; left:50%; transform:translateX(-50%) translateY(-20px); background:#1e293b; border:1px solid #4ade80; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:600; color:#4ade80; opacity:0; transition:opacity 0.3s, transform 0.3s; pointer-events:none; z-index:999; white-space:nowrap; }
