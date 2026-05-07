@@ -18,7 +18,7 @@ def _nth_arithmetic():
             step("Substitute", f"a_{n} = {a1} + ({n}-1)({d})"),
             step("Simplify", f"= {a1} + {(n-1)*d} = {an}"),
         ],
-        inputHint=f"Type: a{n}=<answer>  e.g.  a{n}={an}",
+        inputHint=f"Type: a{n}=<value>  e.g.  a5=17",
         inputTemplate={"label": f"a_{n}=", "insert": f"a{n}="},
     )
 
@@ -39,7 +39,7 @@ def _sum_arithmetic():
             step("Find a_n", f"a_n = {a1} + ({n}-1)({d}) = {an}"),
             step("Substitute", f"S_{n} = \\frac{{{n}({a1} + {an})}}{{2}} = {s_n}"),
         ],
-        inputHint=f"Type: S{n}=<answer>  e.g.  S{n}={s_n}",
+        inputHint=f"Type: S{n}=<value>  e.g.  S5=55",
         inputTemplate={"label": f"S_{n}=", "insert": f"S{n}="},
     )
 
@@ -61,7 +61,7 @@ def _nth_geometric():
             step("Substitute", f"a_{n} = {a1} \\cdot {r}^{{{n}-1}}"),
             step("Simplify", f"= {an}"),
         ],
-        inputHint=f"Type: a{n}=<answer>  e.g.  a{n}={an}",
+        inputHint=f"Type: a{n}=<value>  e.g.  a4=27",
         inputTemplate={"label": f"a_{n}=", "insert": f"a{n}="},
     )
 
@@ -81,7 +81,7 @@ def _sum_geometric():
             step("Substitute", f"S_{n} = {a1} \\cdot \\dfrac{{{r}^{n} - 1}}{{{r} - 1}}"),
             step("Compute", f"= {a1} \\cdot \\dfrac{{{r**n} - 1}}{{{r-1}}} = {s_n}"),
         ],
-        inputHint=f"Type: S{n}=<answer>  e.g.  S{n}={s_n}",
+        inputHint=f"Type: S{n}=<value>  e.g.  S4=40",
         inputTemplate={"label": f"S_{n}=", "insert": f"S{n}="},
     )
 
@@ -104,7 +104,7 @@ def _infinite_geometric():
             step("Infinite sum formula", f"S_\\infty = \\dfrac{{a_1}}{{1-r}}"),
             step("Substitute", f"= \\dfrac{{{a1}}}{{1 - {r}}} = {a1 * r_den // (r_den - r_num)}"),
         ],
-        inputHint=f"Type: Sinf=<answer>  e.g.  Sinf={a1 * r_den // (r_den - r_num)}",
+        inputHint="Type: Sinf=<value>  e.g.  Sinf=3",
         inputTemplate={"label": "S_∞=", "insert": "Sinf="},
     )
 
@@ -149,7 +149,7 @@ def _identify_arithmetic_or_geometric():
             step("Check ratio", f"\\dfrac{{{terms[1]}}}{{{terms[0]}}} = {r}, \\quad \\dfrac{{{terms[2]}}}{{{terms[1]}}} = {r}"),
             step("Constant ratio", f"\\text{{Geometric sequence with }} r = {r}"),
         ],
-        inputHint=f"Type: geometric:r=<value>  e.g.  geometric:r={r}",
+        inputHint="Type: geometric:r=<value>  e.g.  geometric:r=3",
         inputTemplate={"label": "geometric:r=", "insert": "geometric:r="},
     )
 
