@@ -6,14 +6,12 @@ from problem_builder import problem, step
 def _solve_linear_basic():
     # 3x + 7 = 16 → x = 3
     a = R(2, 9)
-    b = R(-10, 10)
-    c = R(-20, 20)
-    # Ensure integer solution
+    b = R(1, 10) * pick([-1, 1])
     n = R(-20, 20)
     x = n
     c_val = a * x + b
     return problem(
-        problem_tex=f"{a}x + {b} = {c_val}",
+        problem_tex=f"{a}x {sign_str(b)} = {c_val}",
         answer_tex=f"x = {x}",
         answer_norm=f"x={x}",
         steps=[
@@ -25,9 +23,8 @@ def _solve_linear_basic():
 
 def _solve_linear_fractions():
     # (x + 3)/4 = 2 → x = 5
-    num = R(-8, 8)
+    num = R(1, 8) * pick([-1, 1])
     den = R(2, 6)
-    x = R(-10, 10)
     rhs = R(1, 10)
     val = den * rhs - num
     return problem(
@@ -36,7 +33,7 @@ def _solve_linear_fractions():
         answer_norm=f"x={val}",
         steps=[
             step("Multiply both sides by " + str(den), f"x {sign_str(num)} = {den} \\cdot {rhs} = {den * rhs}"),
-            step("Isolate x", f"x = {den * rhs} {sign_str(-num)}"),
+            step("Isolate x", f"x = {den * rhs} {sign_str(-num)} = {val}"),
         ],
     )
 
@@ -109,16 +106,17 @@ def _solve_for_variable():
 def _solve_linear_inequality():
     # 2x - 3 < 7 → x < 5
     a = R(2, 6)
-    b = R(-8, 8)
-    c_val = R(1, 15)
-    rhs = a * R(1, 5) + b
+    b = R(1, 8) * pick([-1, 1])
+    x_val = R(1, 5)
+    rhs = a * x_val + b
+    sol = x_val
     return problem(
         problem_tex=f"{a}x {sign_str(b)} < {rhs}",
-        answer_tex=f"x < {rhs - b} \\quad (\\text{{if }} {a} > 0)",
-        answer_norm=f"x<{rhs-b}",
+        answer_tex=f"x < {sol} \\quad (\\text{{if }} {a} > 0)",
+        answer_norm=f"x<{sol}",
         steps=[
             step("Isolate term", f"{a}x {sign_str(b)} < {rhs} \\implies {a}x < {rhs} - ({b}) = {rhs - b}"),
-            step("Divide by " + str(a), f"x < \\dfrac{{{rhs - b}}}{{{a}}} = {rhs - b}"),
+            step("Divide by " + str(a), f"x < \\dfrac{{{rhs - b}}}{{{a}}} = {sol}"),
         ],
     )
 

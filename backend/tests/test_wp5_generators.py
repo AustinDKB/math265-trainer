@@ -68,6 +68,20 @@ class TestWP5LinearEquations:
             result = checker(p, p["answerNorm"])
             assert result.get("result") == "correct", f"{fn.__name__} correct answer rejected"
 
+    def test_inequality_math_correct(self):
+        """Verify the inequality answer is mathematically correct (e.g. 5x+4<14 -> x<2, not x<10)."""
+        import re
+        fn = linear_equations.POOLS[4][0]
+        for _ in range(50):
+            p = fn()
+            prob_tex = p["problemTex"]
+            ans_norm = p["answerNorm"]
+            m = re.match(r"(\d+)x\s*([+-]\d+)\s*<\s*(-?\d+)", prob_tex.replace(" ", ""))
+            assert m, f"Could not parse problem: {prob_tex}"
+            a, b, rhs = int(m.group(1)), int(m.group(2)), int(m.group(3))
+            expected = (rhs - b) // a
+            assert f"x<{expected}" == ans_norm, f"Wrong: {prob_tex} -> expected x<{expected}, got {ans_norm}"
+
 
 class TestWP5Quadratic:
     def test_quadratic_d1_d3(self):

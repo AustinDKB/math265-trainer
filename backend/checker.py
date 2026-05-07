@@ -250,7 +250,7 @@ def check_trig_factoring_answer(problem: dict, u: str) -> dict:
 def _norm_generic(s: str) -> str:
     """Normalize user input for generic string comparison."""
     s = s.strip().lower()
-    s = s.replace(" ", "").replace("*", "").replace("\\", "")
+    s = s.replace(" ", "").replace("*", "").replace("\\", "").replace("_", "")
     s = re.sub(r"\{([^}]*)\}", r"\1", s)
     s = s.replace("()", "")
     # normalize bare trig calls: sinx → sin(x), cosx → cos(x), etc.

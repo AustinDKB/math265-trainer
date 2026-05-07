@@ -1,5 +1,5 @@
 from math_utils import R, pick, sign_str
-from problem_builder import problem, step
+from problem_builder import problem, dual_problem, step
 
 # ── sequences1 — arithmetic sequences ─────────────────────────────────────────
 
@@ -18,6 +18,8 @@ def _nth_arithmetic():
             step("Substitute", f"a_{n} = {a1} + ({n}-1)({d})"),
             step("Simplify", f"= {a1} + {(n-1)*d} = {an}"),
         ],
+        inputHint=f"Type: a{n}=<answer>  e.g.  a{n}={an}",
+        inputTemplate={"label": f"a_{n}=", "insert": f"a{n}="},
     )
 
 
@@ -37,6 +39,8 @@ def _sum_arithmetic():
             step("Find a_n", f"a_n = {a1} + ({n}-1)({d}) = {an}"),
             step("Substitute", f"S_{n} = \\frac{{{n}({a1} + {an})}}{{2}} = {s_n}"),
         ],
+        inputHint=f"Type: S{n}=<answer>  e.g.  S{n}={s_n}",
+        inputTemplate={"label": f"S_{n}=", "insert": f"S{n}="},
     )
 
 
@@ -57,6 +61,8 @@ def _nth_geometric():
             step("Substitute", f"a_{n} = {a1} \\cdot {r}^{{{n}-1}}"),
             step("Simplify", f"= {an}"),
         ],
+        inputHint=f"Type: a{n}=<answer>  e.g.  a{n}={an}",
+        inputTemplate={"label": f"a_{n}=", "insert": f"a{n}="},
     )
 
 
@@ -75,6 +81,8 @@ def _sum_geometric():
             step("Substitute", f"S_{n} = {a1} \\cdot \\dfrac{{{r}^{n} - 1}}{{{r} - 1}}"),
             step("Compute", f"= {a1} \\cdot \\dfrac{{{r**n} - 1}}{{{r-1}}} = {s_n}"),
         ],
+        inputHint=f"Type: S{n}=<answer>  e.g.  S{n}={s_n}",
+        inputTemplate={"label": f"S_{n}=", "insert": f"S{n}="},
     )
 
 
@@ -96,6 +104,8 @@ def _infinite_geometric():
             step("Infinite sum formula", f"S_\\infty = \\dfrac{{a_1}}{{1-r}}"),
             step("Substitute", f"= \\dfrac{{{a1}}}{{1 - {r}}} = {a1 * r_den // (r_den - r_num)}"),
         ],
+        inputHint=f"Type: Sinf=<answer>  e.g.  Sinf={a1 * r_den // (r_den - r_num)}",
+        inputTemplate={"label": "S_∞=", "insert": "Sinf="},
     )
 
 
@@ -108,15 +118,19 @@ def _arithmetic_word():
     n = pick([10, 12, 15, 20])
     an = a1 + (n - 1) * d
     s_n = n * (a1 + an) // 2
-    return problem(
+    return dual_problem(
         problem_tex=f"\\text{{A clock tower has {n} bells. Largest = {a1}kg, each lower weighs {abs(d)}kg less. Find weight of smallest bell and total weight.}}",
-        answer_tex=f"\\text{{Smallest: }} {an} \\text{{ kg}}; \\quad \\text{{Total: }} {s_n} \\text{{ kg}}",
-        answer_norm=f"smallest={an},total={s_n}",
+        answer1_tex=f"\\text{{Smallest: }} {an} \\text{{ kg}}",
+        answer1_norm=str(an),
+        answer2_tex=f"\\text{{Total: }} {s_n} \\text{{ kg}}",
+        answer2_norm=str(s_n),
         steps=[
             step("Arithmetic sequence", f"a_1 = {a1}, d = {d}"),
             step("Find a_n", f"a_{n} = {a1} + ({n}-1)({d}) = {an}"),
             step("Sum", f"S_{n} = \\frac{{{n}({a1} + {an})}}{{2}} = {s_n}"),
         ],
+        inputHint="Field 1: smallest bell weight  |  Field 2: total weight",
+        dualLabels={"label1": "Smallest (kg)", "label2": "Total (kg)"},
     )
 
 
@@ -135,6 +149,8 @@ def _identify_arithmetic_or_geometric():
             step("Check ratio", f"\\dfrac{{{terms[1]}}}{{{terms[0]}}} = {r}, \\quad \\dfrac{{{terms[2]}}}{{{terms[1]}}} = {r}"),
             step("Constant ratio", f"\\text{{Geometric sequence with }} r = {r}"),
         ],
+        inputHint=f"Type: geometric:r=<value>  e.g.  geometric:r={r}",
+        inputTemplate={"label": "geometric:r=", "insert": "geometric:r="},
     )
 
 
