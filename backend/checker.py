@@ -315,6 +315,50 @@ def check_dual_answer(problem: dict, input1: str, input2: str) -> dict:
     return {"result": "wrong", "wrongSlot": wrong}
 
 
+def _normalize_inequality(s: str) -> str:
+    """Normalize an inequality answer to canonical form: variable < constant.
+
+    Handles:
+      - Strip spaces/latex noise
+      - Flip  a > b  →  b < a
+      - Flip  a >= b  →  b <= a
+    """
+    s = s.strip().lower().replace(" ", "").replace("\\", "")
+    s = re.sub(r"\{([^}]*)\}", r"\1", s)
+    s = s.replace("*", "")
+
+    for op_a, op_b in [(">=", "<="), (">", "<")]:
+        if op_a in s:
+            parts = s.split(op_a)
+            if len(parts) == 2:
+                left, right = parts
+                if re.match(r'^-?\d+(\.\d+)?$', left) and re.match(r'^[a-z]$', right):
+                    return f"{right}{op_b}{left}"
+
+    return s
+
+
+def check_inequality_answer(problem: dict, u: str) -> dict:
+    """Checker for linear inequalities that accepts flipped forms like 4>x == x<4."""
+    nu = _normalize_inequality(u)
+    ans_norm = problem.get("answerNorm", "")
+    na = _normalize_inequality(ans_norm)
+
+    if nu == na:
+        return {"result": "correct"}
+
+    valid_norms = problem.get("validNorms", [])
+    if valid_norms:
+        for vn in valid_norms:
+            if nu == _normalize_inequality(vn):
+                return {"result": "correct"}
+
+    normed_problem = dict(problem)
+    normed_problem["answerNorm"] = na
+    normed_problem["validNorms"] = [_normalize_inequality(v) for v in valid_norms] if valid_norms else []
+    return check_norm_answer(normed_problem, nu)
+
+
 def check_integration_answer(problem: dict, u: str) -> dict:
     """Integration checker: strip trailing +C variants, then norm compare."""
     def strip_c(s):

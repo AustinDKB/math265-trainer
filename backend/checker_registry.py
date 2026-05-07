@@ -6,7 +6,7 @@ def get_checker(module):
         from checker import (
             check_factoring_answer, check_exponent_answer, check_fraction_answer,
             check_norm_answer, check_integration_answer, check_exp_factoring_answer,
-            check_trig_factoring_answer,
+            check_trig_factoring_answer, check_inequality_answer,
         )
         CHECKER_MAP.update({
             "factoring":       check_factoring_answer,
@@ -29,7 +29,7 @@ def get_checker(module):
             "hyperbolic_apps":        check_norm_answer,
             "center_of_mass":         check_norm_answer,
             "function_construction":  check_norm_answer,
-            "linear_equations":       check_norm_answer,
+            "linear_equations":       check_inequality_answer,
             "quadratic":              check_norm_answer,
             "polynomials":            check_norm_answer,
             "rational_expressions":   check_norm_answer,

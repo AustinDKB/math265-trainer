@@ -112,8 +112,9 @@ def _solve_linear_inequality():
     sol = x_val
     return problem(
         problem_tex=f"{a}x {sign_str(b)} < {rhs}",
-        answer_tex=f"x < {sol} \\quad (\\text{{if }} {a} > 0)",
+        answer_tex=f"x < {sol}",
         answer_norm=f"x<{sol}",
+        validNorms=[f"x<{sol}", f"{sol}>x"],
         steps=[
             step("Isolate term", f"{a}x {sign_str(b)} < {rhs} \\implies {a}x < {rhs} - ({b}) = {rhs - b}"),
             step("Divide by " + str(a), f"x < \\dfrac{{{rhs - b}}}{{{a}}} = {sol}"),
