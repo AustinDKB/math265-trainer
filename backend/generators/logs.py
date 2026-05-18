@@ -76,10 +76,25 @@ def _expand_expression():
         norm_parts.append(f"-{e}*ln({v})" if e > 1 else f"-ln({v})")
     norm = "+".join(norm_parts).replace("+-", "-")
 
+    # Norm for condensed form (used by _condense_expression)
+    compact_num_norm = "*".join(
+        f"{v}^{e}" if e > 1 else v
+        for v, e in zip(vars_num, exps_num)
+    )
+    if vars_den:
+        compact_den_norm = "*".join(
+            f"{v}^{e}" if e > 1 else v
+            for v, e in zip(vars_den, exps_den)
+        )
+        compact_norm = f"{compact_num_norm}/{compact_den_norm}"
+    else:
+        compact_norm = compact_num_norm
+
     return problem(
         problem_tex=f"\\ln\\!\\left({compact}\\right) = \\,?",
         answer_tex=expanded_tex,
         answer_norm=norm,
+        compact_norm=compact_norm,
         steps=[
             step("Apply product/quotient rules", "+".join(
                 f"\\ln({v}^{{{e}}})" if e > 1 else f"\\ln {v}"
@@ -103,7 +118,7 @@ def _condense_expression():
     return problem(
         problem_tex=f"\\text{{Condense: }}\\; {expanded} = \\,?",
         answer_tex=f"\\ln\\!\\left({orig_compact_inner}\\right)",
-        answer_norm=f"ln({orig_compact_inner.replace('{','').replace('}','').replace('\\dfrac','').replace('dfrac','')})",
+        answer_norm=f"ln({result['compact_norm']})",
         steps=[
             step("Power rule (reverse)", f"{expanded} \\to \\ln(\\ldots^n)", "coefficient → exponent"),
             step("Product/quotient rule (reverse)", f"\\ln(\\ldots) \\to \\ln\\!\\left({orig_compact_inner}\\right)", "+ means multiply, − means divide"),
@@ -239,7 +254,7 @@ def _expand_complex():
     a = R(2, 4); c = R(2, 3); b = R(1, 4)
     compact = f"\\dfrac{{x^{{{a}}}\\sqrt{{x+{b}}}}}{{(x-{b})^{{{c}}}}}"
     expanded = f"{a}\\ln x + \\dfrac{{1}}{{2}}\\ln(x+{b}) - {c}\\ln(x-{b})"
-    norm = f"{a}*ln(x)+0.5*ln(x+{b})-{c}*ln(x-{b})"
+    norm = f"{a}*ln(x)+1/2*ln(x+{b})-{c}*ln(x-{b})"
     return problem(
         problem_tex=f"\\ln\\!\\left({compact}\\right) = \\,?",
         answer_tex=expanded,

@@ -133,9 +133,9 @@ def _quotient_rule():
             f"\\dfrac{{{n}x^{{{n-1}}}(x{a_str})-x^{{{n}}}}}{{(x{a_str})^2}}"
         ),
         answer_tex=(
-            f"\\dfrac{{x^{{{n-1}}}({n-1}x{a_str})}}{{(x{a_str})^2}}"
+            f"\\dfrac{{x^{{{n-1}}}({n-1}x+{n*a})}}{{(x{a_str})^2}}"
         ),
-        answer_norm=f"x^{n-1}*(({n-1})x+{a})/(x{a_str})^2",
+        answer_norm=f"x^{n-1}*(({n-1})x+{n*a})/(x{a_str})^2",
         steps=[
             step("Factor numerator: pull out x^(n-1)",
                  f"\\frac{{x^{{{n-1}}}[{n}(x{a_str})-x]}}{{(x{a_str})^2}}"),
