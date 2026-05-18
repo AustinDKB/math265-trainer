@@ -57,7 +57,7 @@
         <button id="check-btn">Check</button>
       </div>
       <div id="answer-input-2-row">
-        <span class="dual-label">y″ =</span>
+        <span class="dual-label" id="answer-label-2">y″ =</span>
         <input id="answer-input-2" type="text" placeholder="second answer" autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
       <div id="live-preview"></div>
@@ -624,6 +624,8 @@ async function loadNewProblem(){
   const isDualLoad = !!(problem && problem.requiresDualAnswer);
   $('answer-input-2-row').classList.toggle('visible', isDualLoad);
   $('answer-label-1').style.display = isDualLoad ? 'inline' : 'none';
+  $('answer-label-1').textContent = problem.dualLabel1 || "y′ =";
+  $('answer-label-2').textContent = problem.dualLabel2 || "y″ =";
   $('answer-input-2').value='';
   $('answer-input-2').className='';
   $('answer-input-2').disabled=false;
@@ -657,7 +659,12 @@ async function submitAnswer(){
   const isDual=!!(state.currentProblem && state.currentProblem.requiresDualAnswer);
   const u=input.value.trim();
   const u2=isDual ? $('answer-input-2').value.trim() : '';
-  if(!u || (isDual && !u2)) return;
+  if(!u || (isDual && !u2)){
+    const fb=$('feedback');
+    fb.className='info';
+    fb.textContent = isDual ? 'Please enter both answers.' : 'Please enter an answer.';
+    return;
+  }
 
   $('check-btn').disabled=true;
   const _resp = await fetch(`${API_BASE}/api/check`, {

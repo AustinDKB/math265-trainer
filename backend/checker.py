@@ -47,7 +47,7 @@ def _safe_eval(s: str, x_val: float):
 
 def _numerically_equal(a: str, b: str) -> bool:
     """Check numeric equality of two expression strings at several test points."""
-    for xv in (1.3, 2.7, 4.1):
+    for xv in (1.3, 2.7, 4.1, 5.9):
         av = _safe_eval(a, xv)
         bv = _safe_eval(b, xv)
         if av is None or bv is None:
@@ -87,12 +87,15 @@ def check_factoring_answer(problem: dict, u: str) -> dict:
     if user_poly is not None and orig_poly is not None:
         if polys_equal(user_poly, orig_poly):
             factored = "(" in u or problem.get("isGrouping") or problem.get("isQuadDisguise")
-            if not factored and not problem.get("isGrouping") and not problem.get("isQuadDisguise"):
+            if not factored:
                 return {"result": "partial", "msg": "Expanded correctly but not factored — keep going"}
             return {"result": "correct"}
 
-    # String fallback
+    # String fallback: try answerNorm first, then stripped answerTex
     norm_user = u.lower().replace(" ", "").replace("*", "")
+    norm_ans_direct = problem.get("answerNorm", "").lower().replace(" ", "").replace("*", "")
+    if norm_user == norm_ans_direct:
+        return {"result": "correct"}
     norm_ans = (problem.get("answerTex", "")
                 .lower().replace(" ", "").replace("*", "")
                 .replace("\\", "").replace("{", "").replace("}", ""))
@@ -306,6 +309,8 @@ def check_dual_answer(problem: dict, input1: str, input2: str) -> dict:
     prob2 = dict(problem)
     prob2["answerNorm"] = problem.get("answerNorm2", "")
     prob2["answerTex"]  = problem.get("answerTex2", "")
+    if "validNorms2" in problem:
+        prob2["validNorms"] = problem["validNorms2"]
     r2 = check_norm_answer(prob2, input2)
     if r1["result"] == "correct" and r2["result"] == "correct":
         return {"result": "correct"}
@@ -327,7 +332,7 @@ def _normalize_inequality(s: str) -> str:
     s = re.sub(r"\{([^}]*)\}", r"\1", s)
     s = s.replace("*", "")
 
-    for op_a, op_b in [(">=", "<="), (">", "<")]:
+    for op_a, op_b in [(">=", "<="), (">", "<"), ("<=", ">="), ("<", ">")]:
         if op_a in s:
             parts = s.split(op_a)
             if len(parts) == 2:
@@ -353,10 +358,12 @@ def check_inequality_answer(problem: dict, u: str) -> dict:
             if nu == _normalize_inequality(vn):
                 return {"result": "correct"}
 
-    normed_problem = dict(problem)
-    normed_problem["answerNorm"] = na
-    normed_problem["validNorms"] = [_normalize_inequality(v) for v in valid_norms] if valid_norms else []
-    return check_norm_answer(normed_problem, nu)
+    # Direct string comparison on already-normalized values
+    if nu == na:
+        return {"result": "correct"}
+
+    # Fallback to generic checker with original (non-inequality) norms
+    return check_norm_answer(problem, u)
 
 
 def check_integration_answer(problem: dict, u: str) -> dict:

@@ -16,7 +16,7 @@ from generators import (
     sequences, probability,
 )
 from generators import ALL_MODULES
-from module_config import UNLOCK_TIERS
+from module_config import UNLOCK_TIERS, MODULES
 from checker import check_answer, check_dual_answer, check_norm_answer
 from checker_registry import get_checker
 import jsonl_engine
@@ -29,8 +29,6 @@ from db import (
 )
 
 NUM_DIFFICULTIES = 5
-
-from module_config import UNLOCK_TIERS, MODULES
 
 app = Flask(__name__)
 CORS(app)
@@ -87,6 +85,7 @@ def _get_unlocked_modules(pair_stats):
             break
         tier_ready = all(
             mod_totals.get(m, {}).get("attempts", 0) >= 5
+            and mod_totals.get(m, {}).get("attempts", 0) > 0
             and mod_totals[m]["correct"] / mod_totals[m]["attempts"] >= 0.8
             for m in tier
         )
@@ -123,7 +122,10 @@ def _build_problem(fn, module, diff, **extra):
 @app.get("/api/problem")
 def get_problem():
     module = request.args.get("module", "factoring")
-    diff = int(request.args.get("difficulty", 1))
+    try:
+        diff = int(request.args.get("difficulty", 1))
+    except ValueError:
+        return jsonify({"error": "difficulty must be an integer"}), 400
 
     if module not in GENERATORS:
         return jsonify({"error": f"unknown module: {module}"}), 400
@@ -282,7 +284,7 @@ def get_stats_overview():
 
 @app.get("/api/stats/trend")
 def get_stats_trend():
-    days = int(request.args.get("days", 30))
+    days = max(1, min(int(request.args.get("days", 30)), 365))
     return jsonify(stats_trend(days))
 
 
@@ -328,7 +330,7 @@ def post_report():
 
 @app.get("/api/reports")
 def get_reports():
-    limit = int(request.args.get("limit", 100))
+    limit = max(1, min(int(request.args.get("limit", 100)), 500))
     return jsonify(list_bug_reports(limit))
 
 
@@ -350,11 +352,7 @@ def get_unlock_status():
         unlocked_tiers.append(tier)
         if tier_idx == len(UNLOCK_TIERS) - 1:
             break
-        tier_ready = all(
-            any(r["module"] == m and r["attempts"] >= 5 and r["correct"] / r["attempts"] >= 0.8
-                for r in pair_stats)
-            for m in tier
-        )
+        tier_ready = all(m in unlocked for m in tier)
         if not tier_ready:
             break
     return jsonify({

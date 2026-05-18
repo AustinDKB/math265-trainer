@@ -102,6 +102,8 @@ def poly_scale(a, s):
 
 
 def poly_pow(p, n):
+    if n < 0:
+        raise ValueError(f"poly_pow does not support negative exponents (got {n})")
     result = {0: 1}
     for _ in range(n):
         result = poly_mul(result, p)
@@ -198,6 +200,8 @@ def expand_expression(expr):
     s = re.sub(r'\)\s*\(', ')*(', s)
     s = re.sub(r'(\d)\s*\(', r'\1*(', s)
     s = re.sub(r'(\d)(x)', r'\1*\2', s)   # 18x → 18*x
+    if re.search(r'sqrt|log|sin|cos|tan|exp', s, re.IGNORECASE):
+        raise ValueError("Non-polynomial expression — cannot expand")
     parser = _Parser(s)
     result = parser.parse_expr()
     return normalize_poly(result)

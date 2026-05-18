@@ -11,6 +11,7 @@ from generators import (
     sequences, probability,
 )
 from checker_registry import get_checker
+from checker import check_dual_answer
 
 random.seed(42)
 
@@ -125,10 +126,14 @@ class TestWP5Polynomials:
             p = _call_generator(fn)
             assert "problemTex" in p
             assert "answerNorm" in p
-            checker = get_checker("polynomials")
-            result = checker(p, p["answerNorm"])
+            if p.get("requiresDualAnswer"):
+                result = check_dual_answer(p, p["answerNorm"], p["answerNorm2"])
+                wrong = check_dual_answer(p, "999", "wrong")
+            else:
+                checker = get_checker("polynomials")
+                result = checker(p, p["answerNorm"])
+                wrong = checker(p, "999")
             assert result.get("result") == "correct", f"{fn.__name__} correct answer rejected"
-            wrong = checker(p, "999")
             assert wrong.get("result") == "wrong", f"{fn.__name__} wrong answer accepted"
 
     def test_polynomials_d4_d5(self):

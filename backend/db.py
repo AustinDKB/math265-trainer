@@ -36,8 +36,9 @@ def init_db():
         # Migrate existing DB — no-op if column already exists
         try:
             conn.execute("ALTER TABLE attempts ADD COLUMN disputed INTEGER DEFAULT 0")
-        except Exception:
-            pass
+        except sqlite3.OperationalError as e:
+            if "duplicate column" not in str(e).lower():
+                raise
         conn.execute("CREATE INDEX IF NOT EXISTS idx_module_diff ON attempts(module, difficulty)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_ts ON attempts(ts)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_problem_tex ON attempts(problem_tex)")
@@ -56,8 +57,9 @@ def init_db():
         """)
         try:
             conn.execute("ALTER TABLE bug_reports ADD COLUMN attempt_id INTEGER")
-        except Exception:
-            pass
+        except sqlite3.OperationalError as e:
+            if "duplicate column" not in str(e).lower():
+                raise
         conn.execute("""
             CREATE TABLE IF NOT EXISTS srs_cards (
                 problem_tex  TEXT PRIMARY KEY,
@@ -211,68 +213,8 @@ def get_total_xp():
 
 
 # ---------------------------------------------------------------------------
-# SRS (SM-2)
+# FSRS
 # ---------------------------------------------------------------------------
-
-def time_to_quality(time_sec, correct):
-    """Map solve time → SM-2 quality (0-5).
-    Returns None if time_sec > AFK_THRESHOLD (user was inactive — skip update)."""
-    if time_sec > AFK_THRESHOLD:
-        return None
-    if not correct:
-        return 0
-    t = min(time_sec, 120)
-    if t < 15:
-        return 5
-    if t < 30:
-        return 4
-    if t < 60:
-        return 3
-    return 2
-
-
-def _sm2_update(ef, interval, reps, quality):
-    if quality < 3:
-        reps = 0
-        interval = 1
-    else:
-        if reps == 0:
-            interval = 1
-        elif reps == 1:
-            interval = 6
-        else:
-            interval = round(interval * ef)
-        reps += 1
-    ef = max(1.3, ef + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-    next_due = int(time.time()) + interval * 86400
-    return ef, interval, reps, next_due
-
-
-def update_srs_card(problem_tex, module, difficulty, problem_json_str, quality):
-    """Upsert SRS card with SM-2 update."""
-    with get_conn() as conn:
-        row = conn.execute(
-            "SELECT ef, interval, reps FROM srs_cards WHERE problem_tex = ?",
-            (problem_tex,)
-        ).fetchone()
-        if row:
-            ef, interval, reps = row["ef"], row["interval"], row["reps"]
-        else:
-            ef, interval, reps = 2.5, 1, 0
-        ef, interval, reps, next_due = _sm2_update(ef, interval, reps, quality)
-        conn.execute("""
-            INSERT INTO srs_cards(problem_tex, module, difficulty, problem_json, ef, interval, next_due, reps, last_seen)
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(problem_tex) DO UPDATE SET
-                problem_json = excluded.problem_json,
-                ef           = excluded.ef,
-                interval     = excluded.interval,
-                next_due     = excluded.next_due,
-                reps         = excluded.reps,
-                last_seen    = excluded.last_seen
-        """, (problem_tex, module, difficulty, problem_json_str, ef, interval, next_due, reps, int(time.time())))
-        conn.commit()
-
 
 def time_to_fsrs_rating(correct, time_sec):
     """Map solve time → FSRS Rating, or None if AFK (skip SRS update)."""
@@ -309,6 +251,7 @@ def get_fsrs_due_skills(unlocked_modules):
     if not unlocked_modules:
         return []
     now_utc = datetime.now(timezone.utc)
+    # module names come from GENERATORS keys — not user input — safe to interpolate
     placeholders = ",".join("?" * len(unlocked_modules))
     with get_conn() as conn:
         rows = conn.execute(
@@ -324,25 +267,4 @@ def get_fsrs_due_skills(unlocked_modules):
     return [(m, d) for m, d, _ in due]
 
 
-def get_srs_due(unlocked_modules, limit=5):
-    """Return list of problem dicts from srs_cards where next_due <= now and module is unlocked.
-    Ordered by most overdue first."""
-    now = int(time.time())
-    placeholders = ",".join("?" * len(unlocked_modules))
-    with get_conn() as conn:
-        rows = conn.execute(f"""
-            SELECT problem_tex, module, difficulty, problem_json, next_due
-            FROM srs_cards
-            WHERE next_due <= ? AND module IN ({placeholders})
-            ORDER BY next_due ASC
-            LIMIT ?
-        """, [now] + list(unlocked_modules) + [limit]).fetchall()
-    result = []
-    for r in rows:
-        try:
-            p = json.loads(r["problem_json"])
-            p["_srs_due"] = True
-            result.append(p)
-        except Exception:
-            pass
-    return result
+

@@ -1,22 +1,38 @@
 from math_utils import R, pick, sign_str
-from problem_builder import problem, step
+from problem_builder import problem, dual_problem, step
 
 # ── poly1 — classify by degree/type ───────────────────────────────────────────
 
 def _classify_polynomial():
     cases = [
-        ("3x^4 - 2x^2 + 1", "quartic polynomial", "quartic"),
-        ("x^3 + 4x", "cubic polynomial", "cubic"),
-        ("5x^2 - 3x + 7", "quadratic polynomial", "quadratic"),
-        ("-2x + 8", "linear polynomial", "linear"),
-        ("7", "constant polynomial", "constant"),
+        ("3x^4 - 2x^2 + 1", "quartic", "4"),
+        ("x^3 + 4x", "cubic", "3"),
+        ("5x^2 - 3x + 7", "quadratic", "2"),
+        ("-2x + 8", "linear", "1"),
+        ("7", "constant", "0"),
     ]
-    expr, label, norm = pick(cases)
-    return problem(
+    expr, type_name, degree = pick(cases)
+    type_hints = {
+        "quartic":   ["quartic", "quarticpolynomial", "degree4", "4thdegree", "fourthdegree"],
+        "cubic":     ["cubic", "cubicpolynomial", "degree3", "3rddegree", "thirddegree"],
+        "quadratic": ["quadratic", "quadraticpolynomial", "degree2", "2nddegree", "seconddegree"],
+        "linear":    ["linear", "linearpolynomial", "degree1", "1stdegree", "firstdegree"],
+        "constant":  ["constant", "constantpolynomial", "degree0", "0thdegree", "zerodegree"],
+    }
+    return dual_problem(
         problem_tex=f"f(x) = {expr}. \\text{{ Classify by degree and type.}}",
-        answer_tex=label,
-        answer_norm=norm,
-        steps=[step("Identify highest power of x", label)],
+        answer1_tex=degree,
+        answer1_norm=degree,
+        answer2_tex=type_name,
+        answer2_norm=type_name,
+        steps=[
+            step("Identify highest power of x", f"\\text{{Degree: }} {degree}"),
+            step("Classify by type", f"\\text{{Type: }} {type_name}"),
+        ],
+        dualLabel1="Degree =",
+        dualLabel2="Type =",
+        inputHint=f"Enter the degree as a number (e.g. {degree}) and the type as a word (e.g. {type_name}).",
+        validNorms2=type_hints[type_name],
     )
 
 
